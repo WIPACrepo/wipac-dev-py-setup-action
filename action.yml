@@ -1,0 +1,54 @@
+name: 'WIPAC Dev Py Setup'
+description: 'GitHub Action Package for Automating Python-Package Setup'
+
+# inputs:
+#   who-to-greet:  # id of input
+#     description: 'Who to greet'
+#     required: true
+#     default: 'World'
+
+# outputs:
+#   random-number:
+#     description: "Random number"
+#     value: ${{ steps.random-number-generator.outputs.random-id }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Git config
+      run: |
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+      shell: bash
+
+    - name: Build setup.cfg + README.md (and commit)
+      run: |
+        pip3 install requests
+        echo $GITHUB_REPOSITORY
+        python3 wipac_dev_tools/setup_builder.py setup.cfg $GITHUB_REPOSITORY
+        git add setup.cfg
+        git commit -m "<bot> update setup.cfg" || true
+        git add README.md || true
+        git commit -m "<bot> update README.md" || true
+      shell: bash
+
+    - name: Build requirements.txt (and commit)
+      run: |
+        pip3 install pip-tools
+        pip-compile --upgrade
+        git add .
+        git commit -m "<bot> update requirements.txt" || true
+      shell: bash
+
+    - name: Push changes
+      run: |
+        status=`git status 2>&1 | tee`
+        ahead=`echo -n "${status}" 2> /dev/null | grep "Your branch is ahead of" &> /dev/null; echo "$?"`
+        if [ "$ahead" -eq "1" ]; then
+          echo "no changes needed"
+          exit 0
+        fi
+        git push
+        echo "changes pushed (rest of workflow canceled)"
+        exit 1  # prevent dependent job(s) since there's changes to the code
+      shell: bash
