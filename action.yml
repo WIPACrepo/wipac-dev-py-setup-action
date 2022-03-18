@@ -25,7 +25,7 @@ runs:
       run: |
         pip3 install requests
         echo $GITHUB_REPOSITORY
-        python3 wipac_dev_tools/setup_builder.py setup.cfg $GITHUB_REPOSITORY
+        python3 setup_builder.py setup.cfg $GITHUB_REPOSITORY
         git add setup.cfg
         git commit -m "<bot> update setup.cfg" || true
         git add README.md || true
