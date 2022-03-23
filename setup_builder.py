@@ -58,22 +58,37 @@ class BuilderSection:
 
     pypi_name: str
     python_min: str  # python_requires
+    python_max: str = ""  # python_requires
     keywords_spaced: str = ""  # comes as "A B C"
 
     def _python3_min_max(self) -> PythonMinMax:
         """Get the `PythonMinMax` version of `self.python_min`."""
-        m = re.match(r"(?P<maj>\d+)\.(?P<min>\d+)$", self.python_min)
-        if not m:
-            raise Exception(f"'python_min' is not a valid release: '{self.python_min}'")
 
-        major, minor = int(m.groupdict()["maj"]), int(m.groupdict()["min"])
+        def get_py3_minor(py_release: str, attr_name: str) -> int:
+            m = re.match(r"(?P<maj>\d+)\.(?P<min>\d+)$", py_release)
+            if not m:
+                raise Exception(f"'{attr_name}' is not a valid release: '{py_release}'")
 
-        if major < 3:
-            raise Exception("Python-release automation does not work for python <3.")
-        if major >= 4:
-            raise Exception("Python-release automation does not work for python 4+.")
+            major, minor = int(m.groupdict()["maj"]), int(m.groupdict()["min"])
 
-        versions = ((3, minor), get_latest_py3_release())
+            if major < 3:
+                raise Exception(
+                    f"Python-release automation ('{attr_name}') does not work for python <3."
+                )
+            if major >= 4:
+                raise Exception(
+                    f"Python-release automation ('{attr_name}') does not work for python 4+."
+                )
+
+            return minor
+
+        min_minor = get_py3_minor(self.python_min, "python_min")
+        if not self.python_max:
+            versions = ((3, min_minor), get_latest_py3_release())
+        else:
+            max_minor = get_py3_minor(self.python_max, "python_max")
+            versions = ((3, min_minor), (3, max_minor))
+
         return cast(PythonMinMax, tuple(sorted(versions)))
 
     def python_requires(self) -> str:
