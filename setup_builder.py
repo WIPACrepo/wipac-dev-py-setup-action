@@ -57,6 +57,7 @@ class BuilderSection:
     """Encapsulates the `BUILDER_SECTION_NAME` section & checks for required/invalid fields."""
 
     pypi_name: str
+    package_paths: str = ""
     python_min: str  # python_requires
     python_max: str = ""  # python_requires
     keywords_spaced: str = ""  # comes as "A B C"
@@ -111,6 +112,10 @@ class BuilderSection:
             for r in range(py_min_max[0][1], py_min_max[1][1] + 1)
         ]
 
+    def packages(self) -> List[str]:
+        """Get a list of directories for Python packages."""
+        return self.package_paths.strip().split()
+
     def keywords_list(self) -> List[str]:
         """Get the user-defined keywords as a list."""
         return self.keywords_spaced.strip().split()
@@ -134,8 +139,9 @@ def long_description_content_type(extension: str) -> str:
 class FromFiles:
     """Get things that require reading files."""
 
-    def __init__(self, root: str) -> None:
+    def __init__(self, root: str, bsec: BuilderSection) -> None:
         assert os.path.exists(root)
+        self._bsec = bsec
         self.root = os.path.abspath(root)
         self.pkg_path = self._get_package()
         self.package = os.path.basename(self.pkg_path)
@@ -155,7 +161,9 @@ class FromFiles:
                 if "__init__.py" in os.listdir(directory):
                     yield directory
 
-        pkgs = list(_get_packages())
+        pkgs = self._bsec.packages()
+        if not pkgs:
+            pkgs = list(_get_packages())
         if not pkgs:
             raise Exception(
                 f"No package found in '{self.root}'. Are you missing an __init__.py?"
@@ -280,7 +288,7 @@ def _build_out_sections(
     """
 
     bsec = BuilderSection(**dict(cfg[BUILDER_SECTION_NAME]))  # checks req/extra fields
-    ffile = FromFiles(root_path)  # get things that require reading files
+    ffile = FromFiles(root_path, bsec)  # get things that require reading files
     gh_api = GitHubAPI(github_full_repo)
 
     # [metadata]
@@ -325,7 +333,12 @@ def _build_out_sections(
 
     # [options] -- override/augment specific options
     cfg["options"]["python_requires"] = bsec.python_requires()
-    cfg["options"]["packages"] = "find:"  # NOTE: this finds all packages & sub-packages
+    packages = bsec.packages()
+    if packages:
+        cfg["options"]["packages"] = list_to_dangling(packages)
+    # else: this uses setuptools autodetection
+    #       https://setuptools.pypa.io/en/latest/userguide/package_discovery.html#automatic-discovery
+
     if cfg["options"].get("install_requires", fallback=""):
         # sort requirements if they're dangling
         if "\n" in cfg["options"]["install_requires"].strip():
