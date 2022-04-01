@@ -338,8 +338,10 @@ def _build_out_sections(
     if packages:
         cfg["options"]["packages"] = list_to_dangling(packages)
     else:
-        cfg["options"]["packages"] = 'find:'
-        cfg["options.packages.find"]["exclude"] = list_to_dangling(DEFAULT_DIRECTORY_EXCLUDE)
+        cfg["options"]["packages"] = "find:"
+        cfg["options.packages.find"] = {
+            "exclude": list_to_dangling(DEFAULT_DIRECTORY_EXCLUDE),
+        }
 
     if cfg["options"].get("install_requires", fallback=""):
         # sort requirements if they're dangling
