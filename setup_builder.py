@@ -140,7 +140,7 @@ class MetadataSection:
     download_url: str
     project_urls: str
 
-    def merge_asdict(self, dict_in: Dict[str, Any]) -> Dict[str, Any]:
+    def add_unique_fields(self, dict_in: Dict[str, Any]) -> Dict[str, Any]:
         """Merge `dict_in` to a dict-cast copy of `self`.
 
         `self` is given precedence for duplicate keys.
@@ -319,7 +319,7 @@ def _build_out_sections(
     gh_api = GitHubAPI(github_full_repo)
 
     # [metadata]
-    metadata_section = MetadataSection(
+    msec = MetadataSection(
         name=bsec.pypi_name,
         version=f"attr: {ffile.package}.__version__",  # "wipac_dev_tools.__version__"
         url=gh_api.url,
@@ -344,7 +344,7 @@ def _build_out_sections(
             ],
         ),
     )
-    cfg["metadata"] = metadata_section.merge_asdict(dict(cfg["metadata"]))
+    cfg["metadata"] = msec.add_unique_fields(dict(cfg["metadata"]))
 
     # [semantic_release]
     cfg["semantic_release"] = {
