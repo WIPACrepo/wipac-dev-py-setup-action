@@ -5,10 +5,10 @@ Used in CI/CD, used by GH Action.
 
 import argparse
 import configparser
+import dataclasses
 import os
 import re
-from dataclasses import dataclass
-from typing import Iterator, List, Optional, Tuple, cast
+from typing import Any, Dict, Iterator, List, Optional, Tuple, cast
 
 import requests
 
@@ -53,7 +53,7 @@ class GitHubAPI:
         self.description = cast(str, _json["description"])
 
 
-@dataclass
+@dataclasses.dataclass
 class BuilderSection:
     """Encapsulates the `BUILDER_SECTION_NAME` section & checks for required/invalid fields."""
 
@@ -120,6 +120,32 @@ class BuilderSection:
     def keywords_list(self) -> List[str]:
         """Get the user-defined keywords as a list."""
         return self.keywords_spaced.strip().split()
+
+
+@dataclasses.dataclass
+class MetadataSection:
+    """Encapsulates the *minimal* `[metadata]` section & checks for required/invalid fields."""
+
+    name: str
+    version: str
+    url: str
+    author: str
+    author_email: str
+    description: str
+    long_description: str
+    long_description_content_type: str
+    keywords: str
+    license: str
+    classifiers: str
+    download_url: str
+    project_urls: str
+
+    def merge_asdict(self, dict_in: Dict[str, Any]) -> Dict[str, Any]:
+        """Merge `dict_in` to a dict-cast copy of `self`.
+
+        `self` is given precedence for duplicate keys.
+        """
+        return {**dict_in, **dataclasses.asdict(self)}
 
 
 def list_to_dangling(lines: List[str], sort: bool = False) -> str:
@@ -293,33 +319,32 @@ def _build_out_sections(
     gh_api = GitHubAPI(github_full_repo)
 
     # [metadata]
-    cfg["metadata"] = {
-        "name": bsec.pypi_name,
-        "version": f"attr: {ffile.package}.__version__",  # "wipac_dev_tools.__version__"
-        "url": gh_api.url,
-        "author": AUTHOR,
-        "author_email": AUTHOR_EMAIL,
-        "description": gh_api.description,
-        "long_description": f"file: README.{ffile.readme_ext}",
-        "long_description_content_type": long_description_content_type(
-            ffile.readme_ext
-        ),
-        "keywords": list_to_dangling(bsec.keywords_list() + DEFAULT_KEYWORDS),
-        "license": LICENSE,
-        "classifiers": list_to_dangling(
+    metadata_section = MetadataSection(
+        name=bsec.pypi_name,
+        version=f"attr: {ffile.package}.__version__",  # "wipac_dev_tools.__version__"
+        url=gh_api.url,
+        author=AUTHOR,
+        author_email=AUTHOR_EMAIL,
+        description=gh_api.description,
+        long_description=f"file: README.{ffile.readme_ext}",
+        long_description_content_type=long_description_content_type(ffile.readme_ext),
+        keywords=list_to_dangling(bsec.keywords_list() + DEFAULT_KEYWORDS),
+        license=LICENSE,
+        classifiers=list_to_dangling(
             [ffile.development_status]
             + ["License :: OSI Approved :: MIT License"]
             + bsec.python_classifiers(),
         ),
-        "download_url": f"https://pypi.org/project/{bsec.pypi_name}/",
-        "project_urls": list_to_dangling(
+        download_url=f"https://pypi.org/project/{bsec.pypi_name}/",
+        project_urls=list_to_dangling(
             [
                 f"Tracker = {gh_api.url}/issues",
                 f"Source = {gh_api.url}",
                 # f"Documentation = {}",
             ],
         ),
-    }
+    )
+    cfg["metadata"] = metadata_section.merge_asdict(dict(cfg["metadata"]))
 
     # [semantic_release]
     cfg["semantic_release"] = {
@@ -377,8 +402,9 @@ def write_setup_cfg(
     cfg = configparser.RawConfigParser(allow_no_value=True, comment_prefixes="/")
     cfg.read(setup_cfg)
     assert cfg.has_section(BUILDER_SECTION_NAME)  # TODO
-    cfg.remove_section("metadata")  # will be overridden
-    cfg.remove_section("semantic_release")  # will be overridden
+    if not cfg.has_section("metadata"):  # will only override some fields
+        cfg["metadata"] = {}
+    cfg.remove_section("semantic_release")  # will be completely overridden
     if not cfg.has_section("options"):  # will only override some fields
         cfg["options"] = {}
     if not cfg.has_section("options.package_data"):  # will only override some fields
