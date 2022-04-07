@@ -438,10 +438,13 @@ def write_setup_cfg(
     # Comment generated sections w/ comments saying so & clean up whitespace
     with open(setup_cfg) as f:
         c = f.read()
-        c = c.replace("[metadata]", f"[metadata]  # {GENERATED_STR}")
+        c = c.replace(
+            "[metadata]",
+            f"[metadata]  # {GENERATED_STR}: {', '.join(f.name for f in dataclasses.fields(MetadataSection))}",
+        )
         c = c.replace("[semantic_release]", f"[semantic_release]  # {GENERATED_STR}")
         c = c.replace(
-            "[options]", f"[options]  # {GENERATED_STR}: 'python_requires', 'packages'"
+            "[options]", f"[options]  # {GENERATED_STR}: python_requires, packages"
         )
         c = c.replace(
             "[options.package_data]", f"[options.package_data]  # {GENERATED_STR}: '*'"
