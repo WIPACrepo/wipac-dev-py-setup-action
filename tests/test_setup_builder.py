@@ -23,7 +23,7 @@ def setup_cfg_path() -> str:
 
     os.mkdir(f"{_dir}/my_package")
     with open(f"{_dir}/my_package/__init__.py", "w") as f:
-        f.write("__version__ = 'X.Y.Z'\n")
+        f.write("__version__ = '1.2.3'\n")
 
     return f"{_dir}/setup.cfg"
 
