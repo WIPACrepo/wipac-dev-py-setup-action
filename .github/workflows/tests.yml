@@ -22,6 +22,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - run: pip install -r requirements-dev.txt
       - run: |
-          pip install -r requirements-dev.txt
-          pytest tests/setup_builder.py -vvv
+          pytest tests/test_setup_builder.py -vvv
