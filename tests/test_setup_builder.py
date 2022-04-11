@@ -20,6 +20,7 @@ def setup_cfg_path() -> str:
     os.mkdir(_dir)
     os.mkdir(f"{_dir}/my_package")
     pathlib.Path(f"{_dir}/my_package/__init__.py").touch()
+    pathlib.Path(f"{_dir}/README.md").touch()
     return f"{_dir}/setup.cfg"
 
 
