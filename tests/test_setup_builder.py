@@ -33,6 +33,7 @@ def directory() -> str:
     os.mkdir(f"{_dir}/.circleci")
     pathlib.Path(f"{_dir}/.circleci/config.yml").touch()
 
+    print(_dir)
     return _dir
 
 
@@ -142,6 +143,7 @@ flake8-ignore = E501 E231 E226
         expected = setup_cfg_out.replace("    ", "\t").split("\n")
         for actual_line in f.readlines():
             print(actual_line, end="")
+        print("- " * 20)
         for i, actual_line in enumerate(f.readlines()):
             assert actual_line == expected[i] + "\n"
 
@@ -261,6 +263,7 @@ flake8-ignore = E501 E231 E226
         expected = setup_cfg_out.replace("    ", "\t").split("\n")
         for actual_line in f.readlines():
             print(actual_line, end="")
+        print("- " * 20)
         for i, actual_line in enumerate(f.readlines()):
             assert actual_line == expected[i] + "\n"
 
@@ -381,6 +384,7 @@ flake8-ignore = E501 E231 E226
         expected = setup_cfg_out.replace("    ", "\t").split("\n")
         for actual_line in f.readlines():
             print(actual_line, end="")
+        print("- " * 20)
         for i, actual_line in enumerate(f.readlines()):
             assert actual_line == expected[i] + "\n"
 
@@ -504,6 +508,7 @@ flake8-ignore = E501 E231 E226
         expected = setup_cfg_out.replace("    ", "\t").split("\n")
         for actual_line in f.readlines():
             print(actual_line, end="")
+        print("- " * 20)
         for i, actual_line in enumerate(f.readlines()):
             assert actual_line == expected[i] + "\n"
 
@@ -645,5 +650,6 @@ flake8-ignore = E501 E231 E226
         expected = setup_cfg_out.replace("    ", "\t").split("\n")
         for actual_line in f.readlines():
             print(actual_line, end="")
+        print("- " * 20)
         for i, actual_line in enumerate(f.readlines()):
             assert actual_line == expected[i] + "\n"
