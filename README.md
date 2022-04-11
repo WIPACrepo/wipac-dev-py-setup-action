@@ -19,7 +19,7 @@ Writes needed config to publish a package to PyPI.
    * python_min - minimum Python version
 
    Optional:
-   * package_paths - space-separated list of directories to package
+   * package_dirs - space-separated list of directories to package
    * python_max - maximum Python version
    * keywords_spaced - space-separated keyword list
 

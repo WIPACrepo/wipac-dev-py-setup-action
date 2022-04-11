@@ -386,13 +386,13 @@ flake8-ignore = E501 E231 E226
 
 
 def test_30(directory: str, requests_mock: Any) -> None:
-    """Test using [wipac:cicd_setup_builder] with `package_paths`."""
+    """Test using [wipac:cicd_setup_builder] with `package_dirs`."""
     setup_cfg_path = f"{directory}/setup.cfg"
 
     setup_cfg_in = """[wipac:cicd_setup_builder]
 pypi_name = wipac-mock-package
 python_min = 3.6
-package_paths = mock_package
+package_dirs = mock_package
 keywords_spaced = python REST tools utilities OpenTelemetry tracing telemetry
 
 [options]

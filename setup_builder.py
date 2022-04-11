@@ -79,7 +79,7 @@ class BuilderSection(Section):
     pypi_name: str
     python_min: str  # python_requires
     python_max: str = ""  # python_requires
-    package_paths: str = ""
+    package_dirs: str = ""
     keywords_spaced: str = ""  # comes as "A B C"
 
     def _python3_min_max(self) -> PythonMinMax:
@@ -134,7 +134,7 @@ class BuilderSection(Section):
 
     def packages(self) -> List[str]:
         """Get a list of directories for Python packages."""
-        return self.package_paths.strip().split()
+        return self.package_dirs.strip().split()
 
     def keywords_list(self) -> List[str]:
         """Get the user-defined keywords as a list."""
@@ -202,13 +202,13 @@ class FromFiles:
             raise NotADirectoryError(root)
         self._bsec = bsec
         self.root = os.path.abspath(root)
-        self.pkg_path = self._get_package()
+        self.pkg_path = self._get_package_path()
         self.package = os.path.basename(self.pkg_path)
         self.readme, self.readme_ext = self._get_readme_ext()
         self.version = self._get_version()
         self.development_status = self._get_development_status()
 
-    def _get_package(self) -> str:
+    def _get_package_path(self) -> str:
         """Find the package."""
 
         def _get_packages() -> Iterator[str]:
@@ -220,7 +220,7 @@ class FromFiles:
                 if "__init__.py" in os.listdir(directory):
                     yield directory
 
-        pkgs = self._bsec.packages()
+        pkgs = [os.path.join(self.root, p) for p in self._bsec.packages()]
         if not pkgs:
             pkgs = list(_get_packages())
         if not pkgs:
