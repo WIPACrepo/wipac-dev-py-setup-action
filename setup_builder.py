@@ -237,8 +237,8 @@ class FromFiles:
         """Return the 'README' file and its extension."""
         for fname in os.listdir(self.root):
             if fname.startswith("README."):
-                namename, ext = os.path.splitext(fname)
-                return namename, FilenameExtension(ext)
+                _, ext = os.path.splitext(fname)
+                return fname, FilenameExtension(ext)
         raise Exception(f"No README file found in '{self.root}'")
 
     def _get_version(self) -> str:
