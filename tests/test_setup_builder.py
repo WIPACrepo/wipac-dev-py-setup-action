@@ -334,7 +334,6 @@ classifiers =
     Programming Language :: Python :: 3.7
     Programming Language :: Python :: 3.8
     Programming Language :: Python :: 3.9
-    Programming Language :: Python :: 3.10
 download_url = https://pypi.org/project/wipac-mock-package/
 project_urls =
     Tracker = https://github.com/foobarbaz-org/foobarbaz-repo/issues
