@@ -149,6 +149,7 @@ flake8-ignore = E501 E231 E226
 
     with open(setup_cfg_path) as f:
         expected = setup_cfg_out.replace("    ", "\t").split("\n")
-        for i, actual_line in enumerate(f.readlines()):
+        for actual_line in f.readlines():
             print(actual_line, end="")
+        for i, actual_line in enumerate(f.readlines()):
             assert actual_line == expected[i] + "\n"
