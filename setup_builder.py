@@ -63,7 +63,17 @@ class GitHubAPI:
 
 
 @dataclasses.dataclass
-class BuilderSection:
+class Section:
+    def add_unique_fields(self, dict_in: Dict[str, Any]) -> Dict[str, Any]:
+        """Merge `dict_in` to a dict-cast copy of `self`.
+
+        `self` is given precedence for duplicate keys.
+        """
+        return {**dict_in, **dataclasses.asdict(self)}
+
+
+@dataclasses.dataclass
+class BuilderSection(Section):
     """Encapsulates the `BUILDER_SECTION_NAME` section & checks for required/invalid fields."""
 
     pypi_name: str
@@ -132,7 +142,7 @@ class BuilderSection:
 
 
 @dataclasses.dataclass
-class MetadataSection:
+class MetadataSection(Section):
     """Encapsulates the *minimal* `[metadata]` section & checks for required/invalid fields."""
 
     name: str
@@ -149,12 +159,23 @@ class MetadataSection:
     download_url: str
     project_urls: str
 
-    def add_unique_fields(self, dict_in: Dict[str, Any]) -> Dict[str, Any]:
-        """Merge `dict_in` to a dict-cast copy of `self`.
 
-        `self` is given precedence for duplicate keys.
-        """
-        return {**dict_in, **dataclasses.asdict(self)}
+@dataclasses.dataclass
+class OptionsSection(Section):
+    """Encapsulates the *minimal* `[options]` section & checks for required/invalid fields."""
+
+    python_requires: str
+    packages: str
+    install_requires: str
+
+    def __post_init__(self) -> None:
+        if not self.packages:
+            self.packages = "find:"
+
+        # sort requirements if they're dangling
+        if "\n" in self.install_requires.strip():
+            as_lines = self.install_requires.strip().split("\n")
+            self.install_requires = list_to_dangling(as_lines, sort=True)
 
 
 def list_to_dangling(lines: List[str], sort: bool = False) -> str:
@@ -169,7 +190,7 @@ def long_description_content_type(extension: FilenameExtension) -> str:
             FilenameExtension.DOT_MD: "text/markdown",
             FilenameExtension.DOT_RST: "text/x-rst",
         }[extension]
-    except ValueError:
+    except KeyError:
         return "text/plain"
 
 
@@ -371,33 +392,23 @@ def _build_out_sections(
         "branch": gh_api.default_branch,
     }
 
-    # [options] -- override/augment specific options
+    # [options]
     if not cfg.has_section("options"):  # will only override some fields
         cfg["options"] = {}
+    osec = OptionsSection(
+        python_requires=bsec.python_requires(),
+        packages=list_to_dangling(bsec.packages()),
+        install_requires=cfg["options"].get("install_requires", fallback=""),
+    )
+    cfg["options"] = osec.add_unique_fields(dict(cfg["options"]))
 
-    # [options][python_requires]
-    cfg["options"]["python_requires"] = bsec.python_requires()
-
-    # [options][packages], [options.packages.find]
-    packages = bsec.packages()
-    if packages:
-        cfg["options"]["packages"] = list_to_dangling(packages)
-    else:
-        cfg["options"]["packages"] = "find:"
+    # [options.packages.find]
+    if cfg["options"]["packages"] == "find:":
         cfg["options.packages.find"] = {
             "exclude": list_to_dangling(DEFAULT_DIRECTORY_EXCLUDE),
         }
 
-    # [options][install_requires]
-    if cfg["options"].get("install_requires", fallback=""):
-        # sort requirements if they're dangling
-        if "\n" in cfg["options"]["install_requires"].strip():
-            as_lines = cfg["options"]["install_requires"].strip().split("\n")
-            cfg["options"]["install_requires"] = list_to_dangling(as_lines, sort=True)
-    else:
-        cfg["options"]["install_requires"] = ""
-
-    # [options.package_data] -- add 'py.typed'
+    # [options.package_data]
     if not cfg.has_section("options.package_data"):  # will only override some fields
         cfg["options.package_data"] = {}
     if "py.typed" not in cfg["options.package_data"].get("*", fallback=""):
