@@ -169,7 +169,7 @@ class OptionsSection(Section):
     install_requires: str
 
     def __post_init__(self) -> None:
-        if not self.packages:
+        if not self.packages.strip():
             self.packages = "find:"
 
         # sort requirements if they're dangling
@@ -180,7 +180,9 @@ class OptionsSection(Section):
 
 def list_to_dangling(lines: List[str], sort: bool = False) -> str:
     """Create a "dangling" multi-line formatted list."""
-    return "\n" + "\n".join(sorted(lines) if sort else lines)
+    stripped = [ln.strip() for ln in lines]  # strip each
+    stripped = [ln for ln in stripped if ln]  # kick each out if its empty
+    return "\n" + "\n".join(sorted(stripped) if sort else stripped)
 
 
 def long_description_content_type(extension: FilenameExtension) -> str:
