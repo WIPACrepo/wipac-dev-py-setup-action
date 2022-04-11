@@ -18,11 +18,11 @@ def setup_cfg_path() -> str:
     _dir = f"test-dir-{uuid.uuid1()}"
 
     os.mkdir(_dir)
-    with open(f"{_dir}/README.md") as f:
+    with open(f"{_dir}/README.md", "w") as f:
         f.write("# This is a test package, it's not real\n")
 
     os.mkdir(f"{_dir}/my_package")
-    with open(f"{_dir}/my_package/__init__.py") as f:
+    with open(f"{_dir}/my_package/__init__.py", "w") as f:
         f.write("__version__ = 'X.Y.Z'\n")
 
     return f"{_dir}/setup.cfg"
