@@ -144,6 +144,15 @@ flake8-ignore = E501 E231 E226
             print(actual_line, end="")
         for i, actual_line in enumerate(f.readlines()):
             assert actual_line == expected[i] + "\n"
+
+
+def test_10(directory: str, requests_mock: Any) -> None:
+    """Test using [wipac:cicd_setup_builder] with `keywords_spaced`."""
+    setup_cfg_path = f"{directory}/setup.cfg"
+
+    setup_cfg_in = """[wipac:cicd_setup_builder]
+pypi_name = wipac-mock-package
+python_min = 3.6
 keywords_spaced = python REST tools utilities OpenTelemetry tracing telemetry
 
 [options]
