@@ -3,6 +3,7 @@
 # pylint:disable=redefined-outer-name
 
 import os
+import pathlib
 import sys
 import uuid
 from typing import Any
@@ -28,6 +29,9 @@ def directory() -> str:
     os.mkdir(f"{_dir}/my_package")
     with open(f"{_dir}/my_package/__init__.py", "w") as f:
         f.write("__version__ = '1.2.3'\n")
+
+    os.mkdir(f"{_dir}/.circleci")
+    pathlib.Path(f"{_dir}/.circleci/config.yml").touch()
 
     return _dir
 

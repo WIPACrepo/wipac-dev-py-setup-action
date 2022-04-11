@@ -290,16 +290,16 @@ class READMEMarkdownManager:
 
     def __init__(
         self,
-        readme: str,
+        ffile: FromFiles,
         github_full_repo: str,
         bsec: BuilderSection,
         gh_api: GitHubAPI,
     ) -> None:
-        self.readme = readme
+        self.ffile = ffile
         self.github_full_repo = github_full_repo
         self.bsec = bsec
         self.gh_api = gh_api
-        with open(readme, "r") as f:
+        with open(ffile.readme, "r") as f:
             lines_to_keep = []
             in_badges = False
             for line in f.readlines():
@@ -314,12 +314,17 @@ class READMEMarkdownManager:
                 lines_to_keep.append(line)
         self.lines = self.badges_lines() + lines_to_keep
 
+    @property
+    def readme(self) -> str:
+        """Get the README file."""
+        return self.ffile.readme
+
     def badges_lines(self) -> List[str]:
         """Create and return the lines used to append to a README.md containing various linked-badges."""
         badges = [REAMDE_BADGES_START_DELIMITER, "\n"]
 
         circleci = f"https://app.circleci.com/pipelines/github/{self.github_full_repo}?branch={self.gh_api.default_branch}&filter=all"
-        if requests.get(circleci).status_code == 200:
+        if os.path.exists(f"{self.ffile.root}/.circleci/config.yml"):
             badges.append(
                 f"[![CircleCI](https://img.shields.io/circleci/build/github/{self.github_full_repo})]({circleci}) "
             )
@@ -420,7 +425,7 @@ def _build_out_sections(
 
     # Automate some README stuff
     if ffile.readme_ext == FilenameExtension.DOT_MD:
-        return READMEMarkdownManager(ffile.readme, github_full_repo, bsec, gh_api)
+        return READMEMarkdownManager(ffile, github_full_repo, bsec, gh_api)
     return None
 
 
