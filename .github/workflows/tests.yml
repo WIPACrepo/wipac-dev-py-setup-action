@@ -1,0 +1,11 @@
+name: tests
+
+on: [push]
+
+jobs:
+
+  setup_builder:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          pytest tests/setup_builder.py -vvv
