@@ -148,6 +148,7 @@ flake8-ignore = E501 E231 E226
     setup_builder.main(setup_cfg_path, GITHUB_FULL_REPO)
 
     with open(setup_cfg_path) as f:
-        out = setup_cfg_out.replace("    ", "\t").split("\n")
-        for i, line in enumerate(f.readlines()):
-            assert line == out[i] + "\n"
+        expected = setup_cfg_out.replace("    ", "\t").split("\n")
+        for i, actual_line in enumerate(f.readlines()):
+            print(actual_line, end="")
+            assert actual_line == expected[i] + "\n"
