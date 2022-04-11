@@ -120,6 +120,15 @@ packages = find:
 telemetry =
     wipac-telemetry
 
+[options.packages.find]
+exclude =
+    test
+    tests
+    doc
+    docs
+    resource
+    resources
+
 [flake8]
 ignore = E226,E231,E501
 
@@ -241,6 +250,15 @@ packages = find:
 [options.extras_require]
 telemetry =
     wipac-telemetry
+
+[options.packages.find]
+exclude =
+    test
+    tests
+    doc
+    docs
+    resource
+    resources
 
 [flake8]
 ignore = E226,E231,E501
@@ -364,6 +382,15 @@ packages = find:
 [options.extras_require]
 telemetry =
     wipac-telemetry
+
+[options.packages.find]
+exclude =
+    test
+    tests
+    doc
+    docs
+    resource
+    resources
 
 [flake8]
 ignore = E226,E231,E501
@@ -635,6 +662,15 @@ packages = find:
 [options.extras_require]
 telemetry =
     wipac-telemetry
+
+[options.packages.find]
+exclude =
+    test
+    tests
+    doc
+    docs
+    resource
+    resources
 
 [flake8]
 ignore = E226,E231,E501
