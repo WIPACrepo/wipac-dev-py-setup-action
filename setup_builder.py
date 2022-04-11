@@ -5,10 +5,11 @@ Used in CI/CD, used by GH Action.
 
 import argparse
 import configparser
+import dataclasses
+import enum
 import os
 import re
-from dataclasses import dataclass
-from typing import Iterator, List, Optional, Tuple, cast
+from typing import Any, Dict, Iterator, List, Optional, Tuple, cast
 
 import requests
 
@@ -24,6 +25,14 @@ REAMDE_BADGES_START_DELIMITER = "<!--- Top of README Badges (automated) --->"
 REAMDE_BADGES_END_DELIMITER = "<!--- End of README Badges (automated) --->"
 
 _PYTHON_MINOR_RELEASE_MAX = 50
+
+
+class FilenameExtension(enum.Enum):
+    """Extensions of a file."""
+
+    DOT_MD = ".md"
+    DOT_RST = ".rst"
+
 
 PythonMinMax = Tuple[Tuple[int, int], Tuple[int, int]]
 
@@ -53,14 +62,24 @@ class GitHubAPI:
         self.description = cast(str, _json["description"])
 
 
-@dataclass
-class BuilderSection:
+@dataclasses.dataclass
+class Section:
+    def add_unique_fields(self, dict_in: Dict[str, Any]) -> Dict[str, Any]:
+        """Merge `dict_in` to a dict-cast copy of `self`.
+
+        `self` is given precedence for duplicate keys.
+        """
+        return {**dict_in, **dataclasses.asdict(self)}
+
+
+@dataclasses.dataclass
+class BuilderSection(Section):
     """Encapsulates the `BUILDER_SECTION_NAME` section & checks for required/invalid fields."""
 
     pypi_name: str
     python_min: str  # python_requires
     python_max: str = ""  # python_requires
-    package_paths: str = ""
+    package_dirs: str = ""
     keywords_spaced: str = ""  # comes as "A B C"
 
     def _python3_min_max(self) -> PythonMinMax:
@@ -115,25 +134,65 @@ class BuilderSection:
 
     def packages(self) -> List[str]:
         """Get a list of directories for Python packages."""
-        return self.package_paths.strip().split()
+        return self.package_dirs.strip().split()
 
     def keywords_list(self) -> List[str]:
         """Get the user-defined keywords as a list."""
         return self.keywords_spaced.strip().split()
 
 
+@dataclasses.dataclass
+class MetadataSection(Section):
+    """Encapsulates the *minimal* `[metadata]` section & checks for required/invalid fields."""
+
+    name: str
+    version: str
+    url: str
+    author: str
+    author_email: str
+    description: str
+    long_description: str
+    long_description_content_type: str
+    keywords: str
+    license: str
+    classifiers: str
+    download_url: str
+    project_urls: str
+
+
+@dataclasses.dataclass
+class OptionsSection(Section):
+    """Encapsulates the *minimal* `[options]` section & checks for required/invalid fields."""
+
+    python_requires: str
+    packages: str
+    install_requires: str
+
+    def __post_init__(self) -> None:
+        if not self.packages.strip():
+            self.packages = "find:"
+
+        # sort requirements if they're dangling
+        if "\n" in self.install_requires.strip():
+            as_lines = self.install_requires.strip().split("\n")
+            self.install_requires = list_to_dangling(as_lines, sort=True)
+
+
 def list_to_dangling(lines: List[str], sort: bool = False) -> str:
     """Create a "dangling" multi-line formatted list."""
-    return "\n" + "\n".join(sorted(lines) if sort else lines)
+    stripped = [ln.strip() for ln in lines]  # strip each
+    stripped = [ln for ln in stripped if ln]  # kick each out if its empty
+    return "\n" + "\n".join(sorted(stripped) if sort else stripped)
 
 
-def long_description_content_type(extension: str) -> str:
+def long_description_content_type(extension: FilenameExtension) -> str:
     """Return the long_description_content_type for the given file extension (no dot)."""
-    if extension == "md":
-        return "text/markdown"
-    elif extension == ".rst":
-        return "text/x-rst"
-    else:
+    try:
+        return {
+            FilenameExtension.DOT_MD: "text/markdown",
+            FilenameExtension.DOT_RST: "text/x-rst",
+        }[extension]
+    except KeyError:
         return "text/plain"
 
 
@@ -141,16 +200,17 @@ class FromFiles:
     """Get things that require reading files."""
 
     def __init__(self, root: str, bsec: BuilderSection) -> None:
-        assert os.path.exists(root)
+        if not os.path.exists(root):
+            raise NotADirectoryError(root)
         self._bsec = bsec
         self.root = os.path.abspath(root)
-        self.pkg_path = self._get_package()
+        self.pkg_path = self._get_package_path()
         self.package = os.path.basename(self.pkg_path)
         self.readme, self.readme_ext = self._get_readme_ext()
         self.version = self._get_version()
         self.development_status = self._get_development_status()
 
-    def _get_package(self) -> str:
+    def _get_package_path(self) -> str:
         """Find the package."""
 
         def _get_packages() -> Iterator[str]:
@@ -162,7 +222,7 @@ class FromFiles:
                 if "__init__.py" in os.listdir(directory):
                     yield directory
 
-        pkgs = self._bsec.packages()
+        pkgs = [os.path.join(self.root, p) for p in self._bsec.packages()]
         if not pkgs:
             pkgs = list(_get_packages())
         if not pkgs:
@@ -175,11 +235,12 @@ class FromFiles:
             )
         return pkgs[0]
 
-    def _get_readme_ext(self) -> Tuple[str, str]:
+    def _get_readme_ext(self) -> Tuple[str, FilenameExtension]:
         """Return the 'README' file and its extension."""
         for fname in os.listdir(self.root):
             if fname.startswith("README."):
-                return fname, fname.split("README.")[1]
+                _, ext = os.path.splitext(fname)
+                return fname, FilenameExtension(ext)
         raise Exception(f"No README file found in '{self.root}'")
 
     def _get_version(self) -> str:
@@ -231,16 +292,16 @@ class READMEMarkdownManager:
 
     def __init__(
         self,
-        readme: str,
+        ffile: FromFiles,
         github_full_repo: str,
         bsec: BuilderSection,
         gh_api: GitHubAPI,
     ) -> None:
-        self.readme = readme
+        self.ffile = ffile
         self.github_full_repo = github_full_repo
         self.bsec = bsec
         self.gh_api = gh_api
-        with open(readme, "r") as f:
+        with open(ffile.readme, "r") as f:
             lines_to_keep = []
             in_badges = False
             for line in f.readlines():
@@ -255,12 +316,17 @@ class READMEMarkdownManager:
                 lines_to_keep.append(line)
         self.lines = self.badges_lines() + lines_to_keep
 
+    @property
+    def readme(self) -> str:
+        """Get the README file."""
+        return self.ffile.readme
+
     def badges_lines(self) -> List[str]:
         """Create and return the lines used to append to a README.md containing various linked-badges."""
         badges = [REAMDE_BADGES_START_DELIMITER, "\n"]
 
         circleci = f"https://app.circleci.com/pipelines/github/{self.github_full_repo}?branch={self.gh_api.default_branch}&filter=all"
-        if requests.get(circleci).status_code == 200:
+        if os.path.exists(f"{self.ffile.root}/.circleci/config.yml"):
             badges.append(
                 f"[![CircleCI](https://img.shields.io/circleci/build/github/{self.github_full_repo})]({circleci}) "
             )
@@ -283,45 +349,46 @@ class READMEMarkdownManager:
 def _build_out_sections(
     cfg: configparser.RawConfigParser, root_path: str, github_full_repo: str
 ) -> Optional[READMEMarkdownManager]:
-    """Build out the `[metadata]`, `[semantic_release]`, and `[options]` sections.
+    """Build out the `[metadata]`, `[semantic_release]`, and `[options]` sections in `cfg`.
 
     Return a 'READMEMarkdownManager' instance to write out. If, necessary.
     """
-
     bsec = BuilderSection(**dict(cfg[BUILDER_SECTION_NAME]))  # checks req/extra fields
     ffile = FromFiles(root_path, bsec)  # get things that require reading files
     gh_api = GitHubAPI(github_full_repo)
 
     # [metadata]
-    cfg["metadata"] = {
-        "name": bsec.pypi_name,
-        "version": f"attr: {ffile.package}.__version__",  # "wipac_dev_tools.__version__"
-        "url": gh_api.url,
-        "author": AUTHOR,
-        "author_email": AUTHOR_EMAIL,
-        "description": gh_api.description,
-        "long_description": f"file: README.{ffile.readme_ext}",
-        "long_description_content_type": long_description_content_type(
-            ffile.readme_ext
-        ),
-        "keywords": list_to_dangling(bsec.keywords_list() + DEFAULT_KEYWORDS),
-        "license": LICENSE,
-        "classifiers": list_to_dangling(
+    if not cfg.has_section("metadata"):  # will only override some fields
+        cfg["metadata"] = {}
+    msec = MetadataSection(
+        name=bsec.pypi_name,
+        version=f"attr: {ffile.package}.__version__",  # "wipac_dev_tools.__version__"
+        url=gh_api.url,
+        author=AUTHOR,
+        author_email=AUTHOR_EMAIL,
+        description=gh_api.description,
+        long_description=f"file: README{ffile.readme_ext.value}",
+        long_description_content_type=long_description_content_type(ffile.readme_ext),
+        keywords=list_to_dangling(bsec.keywords_list() + DEFAULT_KEYWORDS),
+        license=LICENSE,
+        classifiers=list_to_dangling(
             [ffile.development_status]
             + ["License :: OSI Approved :: MIT License"]
             + bsec.python_classifiers(),
         ),
-        "download_url": f"https://pypi.org/project/{bsec.pypi_name}/",
-        "project_urls": list_to_dangling(
+        download_url=f"https://pypi.org/project/{bsec.pypi_name}/",
+        project_urls=list_to_dangling(
             [
                 f"Tracker = {gh_api.url}/issues",
                 f"Source = {gh_api.url}",
                 # f"Documentation = {}",
             ],
         ),
-    }
+    )
+    cfg["metadata"] = msec.add_unique_fields(dict(cfg["metadata"]))
 
     # [semantic_release]
+    cfg.remove_section("semantic_release")  # will be completely overridden
     cfg["semantic_release"] = {
         "version_variable": f"{ffile.package}/__init__.py:__version__",  # "wipac_dev_tools/__init__.py:__version__"
         "upload_to_pypi": "True",
@@ -332,26 +399,25 @@ def _build_out_sections(
         "branch": gh_api.default_branch,
     }
 
-    # [options] -- override/augment specific options
-    cfg["options"]["python_requires"] = bsec.python_requires()
-    packages = bsec.packages()
-    if packages:
-        cfg["options"]["packages"] = list_to_dangling(packages)
-    else:
-        cfg["options"]["packages"] = "find:"
+    # [options]
+    if not cfg.has_section("options"):  # will only override some fields
+        cfg["options"] = {}
+    osec = OptionsSection(
+        python_requires=bsec.python_requires(),
+        packages=list_to_dangling(bsec.packages()),
+        install_requires=cfg["options"].get("install_requires", fallback=""),
+    )
+    cfg["options"] = osec.add_unique_fields(dict(cfg["options"]))
+
+    # [options.packages.find]
+    if cfg["options"]["packages"] == "find:":
         cfg["options.packages.find"] = {
             "exclude": list_to_dangling(DEFAULT_DIRECTORY_EXCLUDE),
         }
 
-    if cfg["options"].get("install_requires", fallback=""):
-        # sort requirements if they're dangling
-        if "\n" in cfg["options"]["install_requires"].strip():
-            as_lines = cfg["options"]["install_requires"].strip().split("\n")
-            cfg["options"]["install_requires"] = list_to_dangling(as_lines, sort=True)
-    else:
-        cfg["options"]["install_requires"] = ""
-
-    # [options.package_data] -- add 'py.typed'
+    # [options.package_data]
+    if not cfg.has_section("options.package_data"):  # will only override some fields
+        cfg["options.package_data"] = {}
     if "py.typed" not in cfg["options.package_data"].get("*", fallback=""):
         if not cfg["options.package_data"].get("*"):
             star_data = "py.typed"
@@ -360,9 +426,13 @@ def _build_out_sections(
         cfg["options.package_data"]["*"] = star_data
 
     # Automate some README stuff
-    if ffile.readme_ext == "md":
-        return READMEMarkdownManager(ffile.readme, github_full_repo, bsec, gh_api)
+    if ffile.readme_ext == FilenameExtension.DOT_MD:
+        return READMEMarkdownManager(ffile, github_full_repo, bsec, gh_api)
     return None
+
+
+class MissingSectionException(Exception):
+    """Raise when the wanted section is missing."""
 
 
 def write_setup_cfg(
@@ -376,16 +446,8 @@ def write_setup_cfg(
 
     cfg = configparser.RawConfigParser(allow_no_value=True, comment_prefixes="/")
     cfg.read(setup_cfg)
-    assert cfg.has_section(BUILDER_SECTION_NAME)  # TODO
-    cfg.remove_section("metadata")  # will be overridden
-    cfg.remove_section("semantic_release")  # will be overridden
-    if not cfg.has_section("options"):  # will only override some fields
-        cfg["options"] = {}
-    if not cfg.has_section("options.package_data"):  # will only override some fields
-        cfg["options.package_data"] = {}
-
-    # NOTE: 'install_requires' (& 'extras_require') are important and shouldn't be overridden
-    # NOTE: 'entry_points' is to the user's discretion and isn't touched
+    if not cfg.has_section(BUILDER_SECTION_NAME):
+        raise MissingSectionException(f"'setup.cfg' is missing {BUILDER_SECTION_NAME}")
 
     readme_mgr = _build_out_sections(cfg, os.path.dirname(setup_cfg), github_full_repo)
 
@@ -412,16 +474,18 @@ def write_setup_cfg(
     # Comment generated sections w/ comments saying so & clean up whitespace
     with open(setup_cfg) as f:
         c = f.read()
-        c = c.replace("[metadata]", f"[metadata]  # {GENERATED_STR}")
+        c = c.replace(
+            "[metadata]",
+            f"[metadata]  # {GENERATED_STR}: {', '.join(f.name for f in dataclasses.fields(MetadataSection))}",
+        )
         c = c.replace("[semantic_release]", f"[semantic_release]  # {GENERATED_STR}")
         c = c.replace(
-            "[options]", f"[options]  # {GENERATED_STR}: 'python_requires', 'packages'"
+            "[options]", f"[options]  # {GENERATED_STR}: python_requires, packages"
         )
         c = c.replace(
             "[options.package_data]", f"[options.package_data]  # {GENERATED_STR}: '*'"
         )
         c = re.sub(r"(\t| )+\n", "\n", c)  # remove trailing whitespace
-        print(c)
     with open(setup_cfg, "w") as f:
         f.write(c)
 

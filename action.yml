@@ -23,7 +23,7 @@ runs:
 
     - name: Build setup.cfg + README.md (and commit)
       run: |
-        pip3 install requests
+        pip3 install -r ${{ github.action_path }}/requirements.txt
         echo $GITHUB_REPOSITORY
         python3 ${{ github.action_path }}/setup_builder.py setup.cfg $GITHUB_REPOSITORY
         git add setup.cfg

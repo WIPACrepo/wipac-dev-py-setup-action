@@ -1,0 +1,29 @@
+name: tests
+
+on: [push]
+
+jobs:
+
+  flake8:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+      - uses: WIPACrepo/wipac-dev-flake8-action@v1
+
+  mypy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+      - uses: WIPACrepo/wipac-dev-mypy-action@v1
+
+  setup_builder:
+    runs-on: ubuntu-latest
+    env:
+      PY_COLORS: "1"
+    steps:
+      - uses: actions/checkout@v3
+      - run: pip install -r requirements-dev.txt
+      - run: |
+          pytest tests/test_setup_builder.py -vvv
