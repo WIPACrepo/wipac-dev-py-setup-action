@@ -145,6 +145,7 @@ flake8-ignore = E501 E231 E226
             print(actual_line, end="")
         print("- " * 20)
         for i, actual_line in enumerate(f.readlines()):
+            print(actual_line, end="")
             assert actual_line == expected[i] + "\n"
 
 
@@ -265,6 +266,7 @@ flake8-ignore = E501 E231 E226
             print(actual_line, end="")
         print("- " * 20)
         for i, actual_line in enumerate(f.readlines()):
+            print(actual_line, end="")
             assert actual_line == expected[i] + "\n"
 
 
@@ -386,6 +388,7 @@ flake8-ignore = E501 E231 E226
             print(actual_line, end="")
         print("- " * 20)
         for i, actual_line in enumerate(f.readlines()):
+            print(actual_line, end="")
             assert actual_line == expected[i] + "\n"
 
     assert 0
@@ -510,6 +513,7 @@ flake8-ignore = E501 E231 E226
             print(actual_line, end="")
         print("- " * 20)
         for i, actual_line in enumerate(f.readlines()):
+            print(actual_line, end="")
             assert actual_line == expected[i] + "\n"
 
 
@@ -652,4 +656,5 @@ flake8-ignore = E501 E231 E226
             print(actual_line, end="")
         print("- " * 20)
         for i, actual_line in enumerate(f.readlines()):
+            print(actual_line, end="")
             assert actual_line == expected[i] + "\n"
