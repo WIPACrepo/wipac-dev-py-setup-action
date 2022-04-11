@@ -421,8 +421,6 @@ flake8-ignore = E501 E231 E226
             print(actual_line, end="")
             assert actual_line == expected[i] + "\n"
 
-    assert 0
-
 
 def test_30_package_dirs(directory: str, requests_mock: Any) -> None:
     """Test using [wipac:cicd_setup_builder] with `package_dirs`."""
