@@ -309,16 +309,17 @@ class READMEMarkdownManager:
 def _build_out_sections(
     cfg: configparser.RawConfigParser, root_path: str, github_full_repo: str
 ) -> Optional[READMEMarkdownManager]:
-    """Build out the `[metadata]`, `[semantic_release]`, and `[options]` sections.
+    """Build out the `[metadata]`, `[semantic_release]`, and `[options]` sections in `cfg`.
 
     Return a 'READMEMarkdownManager' instance to write out. If, necessary.
     """
-
     bsec = BuilderSection(**dict(cfg[BUILDER_SECTION_NAME]))  # checks req/extra fields
     ffile = FromFiles(root_path, bsec)  # get things that require reading files
     gh_api = GitHubAPI(github_full_repo)
 
     # [metadata]
+    if not cfg.has_section("metadata"):  # will only override some fields
+        cfg["metadata"] = {}
     msec = MetadataSection(
         name=bsec.pypi_name,
         version=f"attr: {ffile.package}.__version__",  # "wipac_dev_tools.__version__"
@@ -347,6 +348,7 @@ def _build_out_sections(
     cfg["metadata"] = msec.add_unique_fields(dict(cfg["metadata"]))
 
     # [semantic_release]
+    cfg.remove_section("semantic_release")  # will be completely overridden
     cfg["semantic_release"] = {
         "version_variable": f"{ffile.package}/__init__.py:__version__",  # "wipac_dev_tools/__init__.py:__version__"
         "upload_to_pypi": "True",
@@ -358,6 +360,8 @@ def _build_out_sections(
     }
 
     # [options] -- override/augment specific options
+    if not cfg.has_section("options"):  # will only override some fields
+        cfg["options"] = {}
     cfg["options"]["python_requires"] = bsec.python_requires()
     packages = bsec.packages()
     if packages:
@@ -377,6 +381,8 @@ def _build_out_sections(
         cfg["options"]["install_requires"] = ""
 
     # [options.package_data] -- add 'py.typed'
+    if not cfg.has_section("options.package_data"):  # will only override some fields
+        cfg["options.package_data"] = {}
     if "py.typed" not in cfg["options.package_data"].get("*", fallback=""):
         if not cfg["options.package_data"].get("*"):
             star_data = "py.typed"
@@ -390,6 +396,10 @@ def _build_out_sections(
     return None
 
 
+class MissingSectionException(Exception):
+    """Raise when the wanted section is missing."""
+
+
 def write_setup_cfg(
     setup_cfg: str, github_full_repo: str
 ) -> Optional[READMEMarkdownManager]:
@@ -401,17 +411,8 @@ def write_setup_cfg(
 
     cfg = configparser.RawConfigParser(allow_no_value=True, comment_prefixes="/")
     cfg.read(setup_cfg)
-    assert cfg.has_section(BUILDER_SECTION_NAME)  # TODO
-    if not cfg.has_section("metadata"):  # will only override some fields
-        cfg["metadata"] = {}
-    cfg.remove_section("semantic_release")  # will be completely overridden
-    if not cfg.has_section("options"):  # will only override some fields
-        cfg["options"] = {}
-    if not cfg.has_section("options.package_data"):  # will only override some fields
-        cfg["options.package_data"] = {}
-
-    # NOTE: 'install_requires' (& 'extras_require') are important and shouldn't be overridden
-    # NOTE: 'entry_points' is to the user's discretion and isn't touched
+    if not cfg.has_section(BUILDER_SECTION_NAME):
+        raise MissingSectionException(f"'setup.cfg' is missing {BUILDER_SECTION_NAME}")
 
     readme_mgr = _build_out_sections(cfg, os.path.dirname(setup_cfg), github_full_repo)
 
