@@ -365,7 +365,7 @@ def _build_out_sections(
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
         description=gh_api.description,
-        long_description=f"file: README{ffile.readme_ext}",
+        long_description=f"file: README{ffile.readme_ext.value}",
         long_description_content_type=long_description_content_type(ffile.readme_ext),
         keywords=list_to_dangling(bsec.keywords_list() + DEFAULT_KEYWORDS),
         license=LICENSE,
