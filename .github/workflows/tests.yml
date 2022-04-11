@@ -8,4 +8,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
+          pip install -r requirements.dev
           pytest tests/setup_builder.py -vvv
