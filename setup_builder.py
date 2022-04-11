@@ -484,7 +484,6 @@ def write_setup_cfg(
             "[options.package_data]", f"[options.package_data]  # {GENERATED_STR}: '*'"
         )
         c = re.sub(r"(\t| )+\n", "\n", c)  # remove trailing whitespace
-        print(c)
     with open(setup_cfg, "w") as f:
         f.write(c)
 
