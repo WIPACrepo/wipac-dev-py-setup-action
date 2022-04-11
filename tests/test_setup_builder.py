@@ -3,6 +3,7 @@
 # pylint:disable=redefined-outer-name
 
 import os
+import pathlib
 import sys
 import uuid
 
@@ -17,6 +18,8 @@ def setup_cfg_path() -> str:
     """Get path to setup.cfg in a random testing directory."""
     _dir = f"test-dir-{uuid.uuid1()}"
     os.mkdir(_dir)
+    os.mkdir(f"{_dir}/my_package")
+    pathlib.Path(f"{_dir}/my_package/__init__.py").touch()
     return f"{_dir}/setup.cfg"
 
 
