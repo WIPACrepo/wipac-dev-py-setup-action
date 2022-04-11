@@ -3,7 +3,6 @@
 # pylint:disable=redefined-outer-name
 
 import os
-import pathlib
 import sys
 import uuid
 
@@ -17,10 +16,15 @@ import setup_builder  # noqa: E402 # isort:skip # pylint:disable=import-error,wr
 def setup_cfg_path() -> str:
     """Get path to setup.cfg in a random testing directory."""
     _dir = f"test-dir-{uuid.uuid1()}"
+
     os.mkdir(_dir)
+    with open(f"{_dir}/README.md") as f:
+        f.write("# This is a test package, it's not real\n")
+
     os.mkdir(f"{_dir}/my_package")
-    pathlib.Path(f"{_dir}/my_package/__init__.py").touch()
-    pathlib.Path(f"{_dir}/README.md").touch()
+    with open(f"{_dir}/my_package/__init__.py") as f:
+        f.write("__version__ = 'X.Y.Z'\n")
+
     return f"{_dir}/setup.cfg"
 
 
