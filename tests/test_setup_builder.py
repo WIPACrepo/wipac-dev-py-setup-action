@@ -141,10 +141,11 @@ flake8-ignore = E501 E231 E226
 
     with open(setup_cfg_path) as f:
         expected = setup_cfg_out.replace("    ", "\t").split("\n")
-        for actual_line in f.readlines():
+        actual = list(f.readlines())
+        for actual_line in actual:
             print(actual_line, end="")
         print("- " * 20)
-        for i, actual_line in enumerate(f.readlines()):
+        for i, actual_line in enumerate(actual):
             print(actual_line, end="")
             assert actual_line == expected[i] + "\n"
 
@@ -262,10 +263,11 @@ flake8-ignore = E501 E231 E226
 
     with open(setup_cfg_path) as f:
         expected = setup_cfg_out.replace("    ", "\t").split("\n")
-        for actual_line in f.readlines():
+        actual = list(f.readlines())
+        for actual_line in actual:
             print(actual_line, end="")
         print("- " * 20)
-        for i, actual_line in enumerate(f.readlines()):
+        for i, actual_line in enumerate(actual):
             print(actual_line, end="")
             assert actual_line == expected[i] + "\n"
 
@@ -384,10 +386,11 @@ flake8-ignore = E501 E231 E226
 
     with open(setup_cfg_path) as f:
         expected = setup_cfg_out.replace("    ", "\t").split("\n")
-        for actual_line in f.readlines():
+        actual = list(f.readlines())
+        for actual_line in actual:
             print(actual_line, end="")
         print("- " * 20)
-        for i, actual_line in enumerate(f.readlines()):
+        for i, actual_line in enumerate(actual):
             print(actual_line, end="")
             assert actual_line == expected[i] + "\n"
 
@@ -509,10 +512,11 @@ flake8-ignore = E501 E231 E226
 
     with open(setup_cfg_path) as f:
         expected = setup_cfg_out.replace("    ", "\t").split("\n")
-        for actual_line in f.readlines():
+        actual = list(f.readlines())
+        for actual_line in actual:
             print(actual_line, end="")
         print("- " * 20)
-        for i, actual_line in enumerate(f.readlines()):
+        for i, actual_line in enumerate(actual):
             print(actual_line, end="")
             assert actual_line == expected[i] + "\n"
 
@@ -652,9 +656,10 @@ flake8-ignore = E501 E231 E226
 
     with open(setup_cfg_path) as f:
         expected = setup_cfg_out.replace("    ", "\t").split("\n")
-        for actual_line in f.readlines():
+        actual = list(f.readlines())
+        for actual_line in actual:
             print(actual_line, end="")
         print("- " * 20)
-        for i, actual_line in enumerate(f.readlines()):
+        for i, actual_line in enumerate(actual):
             print(actual_line, end="")
             assert actual_line == expected[i] + "\n"
