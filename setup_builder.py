@@ -177,7 +177,8 @@ class FromFiles:
     """Get things that require reading files."""
 
     def __init__(self, root: str, bsec: BuilderSection) -> None:
-        assert os.path.exists(root)  # TODO
+        if not os.path.exists(root):
+            raise NotADirectoryError(root)
         self._bsec = bsec
         self.root = os.path.abspath(root)
         self.pkg_path = self._get_package()
