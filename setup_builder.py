@@ -6,6 +6,7 @@ Used in CI/CD, used by GH Action.
 import argparse
 import configparser
 import dataclasses
+import enum
 import os
 import re
 from typing import Any, Dict, Iterator, List, Optional, Tuple, cast
@@ -24,6 +25,14 @@ REAMDE_BADGES_START_DELIMITER = "<!--- Top of README Badges (automated) --->"
 REAMDE_BADGES_END_DELIMITER = "<!--- End of README Badges (automated) --->"
 
 _PYTHON_MINOR_RELEASE_MAX = 50
+
+
+class FilenameExtension(enum.Enum):
+    """Extensions of a file."""
+
+    DOT_MD = ".md"
+    DOT_RST = ".rst"
+
 
 PythonMinMax = Tuple[Tuple[int, int], Tuple[int, int]]
 
@@ -153,13 +162,14 @@ def list_to_dangling(lines: List[str], sort: bool = False) -> str:
     return "\n" + "\n".join(sorted(lines) if sort else lines)
 
 
-def long_description_content_type(extension: str) -> str:
+def long_description_content_type(extension: FilenameExtension) -> str:
     """Return the long_description_content_type for the given file extension (no dot)."""
-    if extension == "md":
-        return "text/markdown"
-    elif extension == ".rst":
-        return "text/x-rst"
-    else:
+    try:
+        return {
+            FilenameExtension.DOT_MD: "text/markdown",
+            FilenameExtension.DOT_RST: "text/x-rst",
+        }[extension]
+    except ValueError:
         return "text/plain"
 
 
@@ -167,7 +177,7 @@ class FromFiles:
     """Get things that require reading files."""
 
     def __init__(self, root: str, bsec: BuilderSection) -> None:
-        assert os.path.exists(root)
+        assert os.path.exists(root)  # TODO
         self._bsec = bsec
         self.root = os.path.abspath(root)
         self.pkg_path = self._get_package()
@@ -201,11 +211,12 @@ class FromFiles:
             )
         return pkgs[0]
 
-    def _get_readme_ext(self) -> Tuple[str, str]:
+    def _get_readme_ext(self) -> Tuple[str, FilenameExtension]:
         """Return the 'README' file and its extension."""
         for fname in os.listdir(self.root):
             if fname.startswith("README."):
-                return fname, fname.split("README.")[1]
+                namename, ext = os.path.splitext(fname)
+                return namename, FilenameExtension(ext)
         raise Exception(f"No README file found in '{self.root}'")
 
     def _get_version(self) -> str:
@@ -327,7 +338,7 @@ def _build_out_sections(
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
         description=gh_api.description,
-        long_description=f"file: README.{ffile.readme_ext}",
+        long_description=f"file: README{ffile.readme_ext}",
         long_description_content_type=long_description_content_type(ffile.readme_ext),
         keywords=list_to_dangling(bsec.keywords_list() + DEFAULT_KEYWORDS),
         license=LICENSE,
@@ -362,7 +373,11 @@ def _build_out_sections(
     # [options] -- override/augment specific options
     if not cfg.has_section("options"):  # will only override some fields
         cfg["options"] = {}
+
+    # [options][python_requires]
     cfg["options"]["python_requires"] = bsec.python_requires()
+
+    # [options][packages], [options.packages.find]
     packages = bsec.packages()
     if packages:
         cfg["options"]["packages"] = list_to_dangling(packages)
@@ -372,6 +387,7 @@ def _build_out_sections(
             "exclude": list_to_dangling(DEFAULT_DIRECTORY_EXCLUDE),
         }
 
+    # [options][install_requires]
     if cfg["options"].get("install_requires", fallback=""):
         # sort requirements if they're dangling
         if "\n" in cfg["options"]["install_requires"].strip():
@@ -391,7 +407,7 @@ def _build_out_sections(
         cfg["options.package_data"]["*"] = star_data
 
     # Automate some README stuff
-    if ffile.readme_ext == "md":
+    if ffile.readme_ext == FilenameExtension.DOT_MD:
         return READMEMarkdownManager(ffile.readme, github_full_repo, bsec, gh_api)
     return None
 
