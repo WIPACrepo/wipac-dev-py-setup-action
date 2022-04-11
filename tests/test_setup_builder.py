@@ -139,7 +139,7 @@ flake8-ignore = E501 E231 E226
         json={"default_branch": "main", "description": "Ceci n’est pas une pipe"},
     )
     requests_mock.get("https://docs.python.org/release/3.10.0/")
-    requests_mock.get("https://docs.python.org/release/3.11.0/", status=404)
+    requests_mock.get("https://docs.python.org/release/3.11.0/", status_code=404)
 
     setup_builder.main(setup_cfg_path, GITHUB_FULL_REPO)
 
