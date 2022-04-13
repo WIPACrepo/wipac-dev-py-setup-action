@@ -136,9 +136,11 @@ ignore = E226,E231,E501
 flake8-ignore = E501 E231 E226
 """
 
+    # write the original setup.cfg
     with open(setup_cfg_path, "w") as f:
         f.write(setup_cfg_in)
 
+    # mock the outgoing requests
     requests_mock.get(
         f"https://api.github.com/repos/{GITHUB_FULL_REPO}",
         json={"default_branch": "main", "description": "Ceci n’est pas une pipe"},
@@ -146,8 +148,10 @@ flake8-ignore = E501 E231 E226
     requests_mock.get("https://docs.python.org/release/3.10.0/")
     requests_mock.get("https://docs.python.org/release/3.11.0/", status_code=404)
 
+    # run setup_builder
     setup_builder.main(setup_cfg_path, GITHUB_FULL_REPO)
 
+    # assert outputted setup.cfg
     with open(setup_cfg_path) as f:
         expected = setup_cfg_out.replace("    ", "\t").split("\n")
         actual = list(f.readlines())
@@ -267,9 +271,11 @@ ignore = E226,E231,E501
 flake8-ignore = E501 E231 E226
 """
 
+    # write the original setup.cfg
     with open(setup_cfg_path, "w") as f:
         f.write(setup_cfg_in)
 
+    # mock the outgoing requests
     requests_mock.get(
         f"https://api.github.com/repos/{GITHUB_FULL_REPO}",
         json={"default_branch": "main", "description": "Ceci n’est pas une pipe"},
@@ -277,8 +283,10 @@ flake8-ignore = E501 E231 E226
     requests_mock.get("https://docs.python.org/release/3.10.0/")
     requests_mock.get("https://docs.python.org/release/3.11.0/", status_code=404)
 
+    # run setup_builder
     setup_builder.main(setup_cfg_path, GITHUB_FULL_REPO)
 
+    # assert outputted setup.cfg
     with open(setup_cfg_path) as f:
         expected = setup_cfg_out.replace("    ", "\t").split("\n")
         actual = list(f.readlines())
@@ -399,9 +407,11 @@ ignore = E226,E231,E501
 flake8-ignore = E501 E231 E226
 """
 
+    # write the original setup.cfg
     with open(setup_cfg_path, "w") as f:
         f.write(setup_cfg_in)
 
+    # mock the outgoing requests
     requests_mock.get(
         f"https://api.github.com/repos/{GITHUB_FULL_REPO}",
         json={"default_branch": "main", "description": "Ceci n’est pas une pipe"},
@@ -409,8 +419,10 @@ flake8-ignore = E501 E231 E226
     requests_mock.get("https://docs.python.org/release/3.10.0/")
     requests_mock.get("https://docs.python.org/release/3.11.0/", status_code=404)
 
+    # run setup_builder
     setup_builder.main(setup_cfg_path, GITHUB_FULL_REPO)
 
+    # assert outputted setup.cfg
     with open(setup_cfg_path) as f:
         expected = setup_cfg_out.replace("    ", "\t").split("\n")
         actual = list(f.readlines())
@@ -532,9 +544,11 @@ flake8-ignore = E501 E231 E226
     os.mkdir(f"{directory}/mock_package_test")
     pathlib.Path(f"{directory}/mock_package_test/__init__.py").touch()
 
+    # write the original setup.cfg
     with open(setup_cfg_path, "w") as f:
         f.write(setup_cfg_in)
 
+    # mock the outgoing requests
     requests_mock.get(
         f"https://api.github.com/repos/{GITHUB_FULL_REPO}",
         json={"default_branch": "main", "description": "Ceci n’est pas une pipe"},
@@ -542,8 +556,10 @@ flake8-ignore = E501 E231 E226
     requests_mock.get("https://docs.python.org/release/3.10.0/")
     requests_mock.get("https://docs.python.org/release/3.11.0/", status_code=404)
 
+    # run setup_builder
     setup_builder.main(setup_cfg_path, GITHUB_FULL_REPO)
 
+    # assert outputted setup.cfg
     with open(setup_cfg_path) as f:
         expected = setup_cfg_out.replace("    ", "\t").split("\n")
         actual = list(f.readlines())
@@ -685,9 +701,11 @@ ignore = E226,E231,E501
 flake8-ignore = E501 E231 E226
 """
 
+    # write the original setup.cfg
     with open(setup_cfg_path, "w") as f:
         f.write(setup_cfg_in)
 
+    # mock the outgoing requests
     requests_mock.get(
         f"https://api.github.com/repos/{GITHUB_FULL_REPO}",
         json={"default_branch": "main", "description": "Ceci n’est pas une pipe"},
@@ -695,8 +713,10 @@ flake8-ignore = E501 E231 E226
     requests_mock.get("https://docs.python.org/release/3.10.0/")
     requests_mock.get("https://docs.python.org/release/3.11.0/", status_code=404)
 
+    # run setup_builder
     setup_builder.main(setup_cfg_path, GITHUB_FULL_REPO)
 
+    # assert outputted setup.cfg
     with open(setup_cfg_path) as f:
         expected = setup_cfg_out.replace("    ", "\t").split("\n")
         actual = list(f.readlines())
