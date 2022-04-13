@@ -408,9 +408,16 @@ def _build_out_sections(
 
     # [options.packages.find]
     if cfg["options"]["packages"] == "find:":
-        cfg["options.packages.find"] = {
-            "exclude": list_to_dangling(DEFAULT_DIRECTORY_EXCLUDE),
-        }
+        pkgs = bsec.packages()
+        cfg["options.packages.find"] = {}
+        if pkgs:
+            cfg["options.packages.find"]["include"] = list_to_dangling(
+                pkgs + [f"{p}.*" for p in pkgs]
+            )
+        else:
+            cfg["options.packages.find"]["exclude"] = list_to_dangling(
+                DEFAULT_DIRECTORY_EXCLUDE
+            )
 
     # [options.package_data]
     if not cfg.has_section("options.package_data"):  # will only override some fields
