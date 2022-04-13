@@ -165,13 +165,10 @@ class OptionsSection(Section):
     """Encapsulates the *minimal* `[options]` section & checks for required/invalid fields."""
 
     python_requires: str
-    packages: str
     install_requires: str
+    packages: str
 
     def __post_init__(self) -> None:
-        if not self.packages.strip():
-            self.packages = "find:"
-
         # sort requirements if they're dangling
         if "\n" in self.install_requires.strip():
             as_lines = self.install_requires.strip().split("\n")
@@ -404,7 +401,7 @@ def _build_out_sections(
         cfg["options"] = {}
     osec = OptionsSection(
         python_requires=bsec.python_requires(),
-        packages=list_to_dangling(bsec.packages()),
+        packages="find:",  # always use "find:", then use include/exclude
         install_requires=cfg["options"].get("install_requires", fallback=""),
     )
     cfg["options"] = osec.add_unique_fields(dict(cfg["options"]))
