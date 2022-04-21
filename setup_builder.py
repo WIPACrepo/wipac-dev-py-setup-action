@@ -76,8 +76,8 @@ class Section:
 class BuilderSection(Section):
     """Encapsulates the `BUILDER_SECTION_NAME` section & checks for required/invalid fields."""
 
-    pypi_name: str
     python_min: str  # python_requires
+    pypi_name: str = ""  # enables PyPI publishing, badges, sections, etc.
     python_max: str = ""  # python_requires
     package_dirs: str = ""
     keywords_spaced: str = ""  # comes as "A B C"
@@ -322,19 +322,39 @@ class READMEMarkdownManager:
         """Create and return the lines used to append to a README.md containing various linked-badges."""
         badges = [REAMDE_BADGES_START_DELIMITER, "\n"]
 
+        # CircleCI badge
         circleci = f"https://app.circleci.com/pipelines/github/{self.github_full_repo}?branch={self.gh_api.default_branch}&filter=all"
         if os.path.exists(f"{self.ffile.root}/.circleci/config.yml"):
             badges.append(
                 f"[![CircleCI](https://img.shields.io/circleci/build/github/{self.github_full_repo})]({circleci}) "
             )
 
-        badges += [
-            f"[![PyPI](https://img.shields.io/pypi/v/{self.bsec.pypi_name})](https://pypi.org/project/{self.bsec.pypi_name}/) ",
+        # PyPI badge
+        if self.bsec.pypi_name:
+            badges.append(
+                f"[![PyPI](https://img.shields.io/pypi/v/{self.bsec.pypi_name})](https://pypi.org/project/{self.bsec.pypi_name}/) "
+            )
+
+        # GitHub Release badge
+        badges.append(
             f"[![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/{self.github_full_repo}?include_prereleases)]({self.gh_api.url}/) ",
-            f"[![PyPI - License](https://img.shields.io/pypi/l/{self.bsec.pypi_name})]({self.gh_api.url}/blob/{self.gh_api.default_branch}/LICENSE) ",
+        )
+
+        # PYPI License badge
+        if self.bsec.pypi_name:
+            badges.append(
+                f"[![PyPI - License](https://img.shields.io/pypi/l/{self.bsec.pypi_name})]({self.gh_api.url}/blob/{self.gh_api.default_branch}/LICENSE) "
+            )
+
+        # Other GitHub badges
+        badges += [
             f"[![Lines of code](https://img.shields.io/tokei/lines/github/{self.github_full_repo})]({self.gh_api.url}/) ",
             f"[![GitHub issues](https://img.shields.io/github/issues/{self.github_full_repo})]({self.gh_api.url}/issues?q=is%3Aissue+sort%3Aupdated-desc+is%3Aopen) ",
             f"[![GitHub pull requests](https://img.shields.io/github/issues-pr/{self.github_full_repo})]({self.gh_api.url}/pulls?q=is%3Apr+sort%3Aupdated-desc+is%3Aopen) ",
+        ]
+
+        # Ending Stuff
+        badges += [
             "\n",
             REAMDE_BADGES_END_DELIMITER,
             "\n",  # only one newline here, otherwise we get an infinite commit-loop
@@ -357,38 +377,46 @@ def _build_out_sections(
     # [metadata]
     if not cfg.has_section("metadata"):  # will only override some fields
         cfg["metadata"] = {}
-    msec = MetadataSection(
-        name=bsec.pypi_name,
-        version=f"attr: {ffile.package}.__version__",  # "wipac_dev_tools.__version__"
-        url=gh_api.url,
-        author=AUTHOR,
-        author_email=AUTHOR_EMAIL,
-        description=gh_api.description,
-        long_description=f"file: README{ffile.readme_ext.value}",
-        long_description_content_type=long_description_content_type(ffile.readme_ext),
-        keywords=list_to_dangling(bsec.keywords_list() + DEFAULT_KEYWORDS),
-        license=LICENSE,
-        classifiers=list_to_dangling(
-            [ffile.development_status]
-            + ["License :: OSI Approved :: MIT License"]
-            + bsec.python_classifiers(),
-        ),
-        download_url=f"https://pypi.org/project/{bsec.pypi_name}/",
-        project_urls=list_to_dangling(
-            [
-                f"Tracker = {gh_api.url}/issues",
-                f"Source = {gh_api.url}",
-                # f"Documentation = {}",
-            ],
-        ),
-    )
-    cfg["metadata"] = msec.add_unique_fields(dict(cfg["metadata"]))
+    meta_verison = f"attr: {ffile.package}.__version__"  # "wipac_dev_tools.__version__"
+    # if we DON'T want PyPI stuff, just include the package version
+    if not bsec.pypi_name:
+        cfg["metadata"]["version"] = meta_verison
+    # if we DO want PyPI, then include everything
+    else:
+        msec = MetadataSection(
+            name=bsec.pypi_name,
+            version=meta_verison,
+            url=gh_api.url,
+            author=AUTHOR,
+            author_email=AUTHOR_EMAIL,
+            description=gh_api.description,
+            long_description=f"file: README{ffile.readme_ext.value}",
+            long_description_content_type=long_description_content_type(
+                ffile.readme_ext
+            ),
+            keywords=list_to_dangling(bsec.keywords_list() + DEFAULT_KEYWORDS),
+            license=LICENSE,
+            classifiers=list_to_dangling(
+                [ffile.development_status]
+                + ["License :: OSI Approved :: MIT License"]
+                + bsec.python_classifiers(),
+            ),
+            download_url=f"https://pypi.org/project/{bsec.pypi_name}/",
+            project_urls=list_to_dangling(
+                [
+                    f"Tracker = {gh_api.url}/issues",
+                    f"Source = {gh_api.url}",
+                    # f"Documentation = {}",
+                ],
+            ),
+        )
+        cfg["metadata"] = msec.add_unique_fields(dict(cfg["metadata"]))
 
     # [semantic_release]
     cfg.remove_section("semantic_release")  # will be completely overridden
     cfg["semantic_release"] = {
         "version_variable": f"{ffile.package}/__init__.py:__version__",  # "wipac_dev_tools/__init__.py:__version__"
-        "upload_to_pypi": "True",
+        "upload_to_pypi": "True" if bsec.pypi_name else "False",  # >>> str(bool(x))
         "patch_without_tag": "True",
         "commit_parser": "semantic_release.history.tag_parser",
         "minor_tag": "[minor]",
@@ -461,10 +489,11 @@ def write_setup_cfg(
         "metadata",
         "semantic_release",
         "options",
-        "options.package_data",
     ]
-    # and any 'options.*', if present
-    tops.extend(s for s in cfg.sections() if s.startswith("options.") and s not in tops)
+    # and any 'options.*' & sort them
+    tops.extend(
+        sorted(s for s in cfg.sections() if s.startswith("options.") and s not in tops)
+    )
 
     # Build new 'setup.cfg'
     cfg_new = configparser.RawConfigParser(allow_no_value=True)  # no interpolation
@@ -478,9 +507,14 @@ def write_setup_cfg(
     # Comment generated sections w/ comments saying so & clean up whitespace
     with open(setup_cfg) as f:
         c = f.read()
+        meta_auto_attrs = [
+            f.name
+            for f in dataclasses.fields(MetadataSection)
+            if f.name in cfg_new["metadata"].keys()
+        ]
         c = c.replace(
             "[metadata]",
-            f"[metadata]  # {GENERATED_STR}: {', '.join(f.name for f in dataclasses.fields(MetadataSection))}",
+            f"[metadata]  # {GENERATED_STR}: {', '.join(meta_auto_attrs)}",
         )
         c = c.replace("[semantic_release]", f"[semantic_release]  # {GENERATED_STR}")
         c = c.replace(
