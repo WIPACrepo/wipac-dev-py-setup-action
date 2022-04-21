@@ -490,6 +490,8 @@ def write_setup_cfg(
     tops.extend(
         sorted(s for s in cfg.sections() if s.startswith("options.") and s not in tops)
     )
+    # kick out any sections that aren't present
+    tops = [s for s in tops if s in cfg.sections()]
 
     # Build new 'setup.cfg'
     cfg_new = configparser.RawConfigParser(allow_no_value=True)  # no interpolation
