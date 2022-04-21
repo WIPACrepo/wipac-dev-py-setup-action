@@ -375,10 +375,10 @@ def _build_out_sections(
     gh_api = GitHubAPI(github_full_repo)
 
     # [metadata]
-    if not cfg.has_section("metadata"):  # will only override some fields
-        cfg["metadata"] = {}
-
     if bsec.pypi_name:
+        if not cfg.has_section("metadata"):  # will only override some fields
+            cfg["metadata"] = {}
+
         msec = MetadataSection(
             name=bsec.pypi_name,
             version=f"attr: {ffile.package}.__version__",  # "wipac_dev_tools.__version__"
