@@ -485,10 +485,11 @@ def write_setup_cfg(
         "metadata",
         "semantic_release",
         "options",
-        "options.package_data",
     ]
-    # and any 'options.*', if present
-    tops.extend(s for s in cfg.sections() if s.startswith("options.") and s not in tops)
+    # and any 'options.*' & sort them
+    tops.extend(
+        sorted(s for s in cfg.sections() if s.startswith("options.") and s not in tops)
+    )
 
     # Build new 'setup.cfg'
     cfg_new = configparser.RawConfigParser(allow_no_value=True)  # no interpolation
