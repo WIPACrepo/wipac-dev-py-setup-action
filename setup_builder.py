@@ -375,11 +375,14 @@ def _build_out_sections(
     gh_api = GitHubAPI(github_full_repo)
 
     # [metadata]
+    if not cfg.has_section("metadata"):  # will only override some fields
+        cfg["metadata"] = {}
     meta_verison = f"attr: {ffile.package}.__version__"  # "wipac_dev_tools.__version__"
-    if bsec.pypi_name:
-        if not cfg.has_section("metadata"):  # will only override some fields
-            cfg["metadata"] = {}
-
+    # if we DON'T want PyPI stuff, just include the package version
+    if not bsec.pypi_name:
+        cfg["metadata"]["version"] = meta_verison
+    # if we DO want PyPI, then include everything
+    else:
         msec = MetadataSection(
             name=bsec.pypi_name,
             version=meta_verison,
@@ -408,8 +411,6 @@ def _build_out_sections(
             ),
         )
         cfg["metadata"] = msec.add_unique_fields(dict(cfg["metadata"]))
-    else:
-        cfg["metadata"] = {"version": meta_verison}
 
     # [semantic_release]
     cfg.remove_section("semantic_release")  # will be completely overridden
