@@ -506,9 +506,14 @@ def write_setup_cfg(
     # Comment generated sections w/ comments saying so & clean up whitespace
     with open(setup_cfg) as f:
         c = f.read()
+        meta_auto_attrs = [
+            f.name
+            for f in dataclasses.fields(MetadataSection)
+            if f.name in cfg_new["metadata"].keys()
+        ]
         c = c.replace(
             "[metadata]",
-            f"[metadata]  # {GENERATED_STR}: {', '.join(f.name for f in dataclasses.fields(MetadataSection))}",
+            f"[metadata]  # {GENERATED_STR}: {', '.join(meta_auto_attrs)}",
         )
         c = c.replace("[semantic_release]", f"[semantic_release]  # {GENERATED_STR}")
         c = c.replace(
