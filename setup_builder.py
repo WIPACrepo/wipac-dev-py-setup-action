@@ -322,19 +322,39 @@ class READMEMarkdownManager:
         """Create and return the lines used to append to a README.md containing various linked-badges."""
         badges = [REAMDE_BADGES_START_DELIMITER, "\n"]
 
+        # CircleCI badge
         circleci = f"https://app.circleci.com/pipelines/github/{self.github_full_repo}?branch={self.gh_api.default_branch}&filter=all"
         if os.path.exists(f"{self.ffile.root}/.circleci/config.yml"):
             badges.append(
                 f"[![CircleCI](https://img.shields.io/circleci/build/github/{self.github_full_repo})]({circleci}) "
             )
 
-        badges += [
-            f"[![PyPI](https://img.shields.io/pypi/v/{self.bsec.pypi_name})](https://pypi.org/project/{self.bsec.pypi_name}/) ",
+        # PyPI badge
+        if self.bsec.pypi_name:
+            badges.append(
+                f"[![PyPI](https://img.shields.io/pypi/v/{self.bsec.pypi_name})](https://pypi.org/project/{self.bsec.pypi_name}/) "
+            )
+
+        # GitHub Release badge
+        badges.append(
             f"[![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/{self.github_full_repo}?include_prereleases)]({self.gh_api.url}/) ",
-            f"[![PyPI - License](https://img.shields.io/pypi/l/{self.bsec.pypi_name})]({self.gh_api.url}/blob/{self.gh_api.default_branch}/LICENSE) ",
+        )
+
+        # PYPI License badge
+        if self.bsec.pypi_name:
+            badges.append(
+                f"[![PyPI - License](https://img.shields.io/pypi/l/{self.bsec.pypi_name})]({self.gh_api.url}/blob/{self.gh_api.default_branch}/LICENSE) "
+            )
+
+        # Other GitHub badges
+        badges += [
             f"[![Lines of code](https://img.shields.io/tokei/lines/github/{self.github_full_repo})]({self.gh_api.url}/) ",
             f"[![GitHub issues](https://img.shields.io/github/issues/{self.github_full_repo})]({self.gh_api.url}/issues?q=is%3Aissue+sort%3Aupdated-desc+is%3Aopen) ",
             f"[![GitHub pull requests](https://img.shields.io/github/issues-pr/{self.github_full_repo})]({self.gh_api.url}/pulls?q=is%3Apr+sort%3Aupdated-desc+is%3Aopen) ",
+        ]
+
+        # Ending Stuff
+        badges += [
             "\n",
             REAMDE_BADGES_END_DELIMITER,
             "\n",  # only one newline here, otherwise we get an infinite commit-loop
@@ -357,32 +377,36 @@ def _build_out_sections(
     # [metadata]
     if not cfg.has_section("metadata"):  # will only override some fields
         cfg["metadata"] = {}
-    msec = MetadataSection(
-        name=bsec.pypi_name,
-        version=f"attr: {ffile.package}.__version__",  # "wipac_dev_tools.__version__"
-        url=gh_api.url,
-        author=AUTHOR,
-        author_email=AUTHOR_EMAIL,
-        description=gh_api.description,
-        long_description=f"file: README{ffile.readme_ext.value}",
-        long_description_content_type=long_description_content_type(ffile.readme_ext),
-        keywords=list_to_dangling(bsec.keywords_list() + DEFAULT_KEYWORDS),
-        license=LICENSE,
-        classifiers=list_to_dangling(
-            [ffile.development_status]
-            + ["License :: OSI Approved :: MIT License"]
-            + bsec.python_classifiers(),
-        ),
-        download_url=f"https://pypi.org/project/{bsec.pypi_name}/",
-        project_urls=list_to_dangling(
-            [
-                f"Tracker = {gh_api.url}/issues",
-                f"Source = {gh_api.url}",
-                # f"Documentation = {}",
-            ],
-        ),
-    )
-    cfg["metadata"] = msec.add_unique_fields(dict(cfg["metadata"]))
+
+    if bsec.pypi_name:
+        msec = MetadataSection(
+            name=bsec.pypi_name,
+            version=f"attr: {ffile.package}.__version__",  # "wipac_dev_tools.__version__"
+            url=gh_api.url,
+            author=AUTHOR,
+            author_email=AUTHOR_EMAIL,
+            description=gh_api.description,
+            long_description=f"file: README{ffile.readme_ext.value}",
+            long_description_content_type=long_description_content_type(
+                ffile.readme_ext
+            ),
+            keywords=list_to_dangling(bsec.keywords_list() + DEFAULT_KEYWORDS),
+            license=LICENSE,
+            classifiers=list_to_dangling(
+                [ffile.development_status]
+                + ["License :: OSI Approved :: MIT License"]
+                + bsec.python_classifiers(),
+            ),
+            download_url=f"https://pypi.org/project/{bsec.pypi_name}/",
+            project_urls=list_to_dangling(
+                [
+                    f"Tracker = {gh_api.url}/issues",
+                    f"Source = {gh_api.url}",
+                    # f"Documentation = {}",
+                ],
+            ),
+        )
+        cfg["metadata"] = msec.add_unique_fields(dict(cfg["metadata"]))
 
     # [semantic_release]
     cfg.remove_section("semantic_release")  # will be completely overridden
