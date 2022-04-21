@@ -375,13 +375,14 @@ def _build_out_sections(
     gh_api = GitHubAPI(github_full_repo)
 
     # [metadata]
+    meta_verison = f"attr: {ffile.package}.__version__"  # "wipac_dev_tools.__version__"
     if bsec.pypi_name:
         if not cfg.has_section("metadata"):  # will only override some fields
             cfg["metadata"] = {}
 
         msec = MetadataSection(
             name=bsec.pypi_name,
-            version=f"attr: {ffile.package}.__version__",  # "wipac_dev_tools.__version__"
+            version=meta_verison,
             url=gh_api.url,
             author=AUTHOR,
             author_email=AUTHOR_EMAIL,
@@ -407,6 +408,8 @@ def _build_out_sections(
             ),
         )
         cfg["metadata"] = msec.add_unique_fields(dict(cfg["metadata"]))
+    else:
+        cfg["metadata"] = {"version": meta_verison}
 
     # [semantic_release]
     cfg.remove_section("semantic_release")  # will be completely overridden
@@ -490,8 +493,6 @@ def write_setup_cfg(
     tops.extend(
         sorted(s for s in cfg.sections() if s.startswith("options.") and s not in tops)
     )
-    # kick out any sections that aren't present
-    tops = [s for s in tops if s in cfg.sections()]
 
     # Build new 'setup.cfg'
     cfg_new = configparser.RawConfigParser(allow_no_value=True)  # no interpolation
