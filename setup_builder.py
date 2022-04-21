@@ -76,8 +76,8 @@ class Section:
 class BuilderSection(Section):
     """Encapsulates the `BUILDER_SECTION_NAME` section & checks for required/invalid fields."""
 
-    pypi_name: str
     python_min: str  # python_requires
+    pypi_name: str = ""  # enables PyPI publishing, badges, sections, etc.
     python_max: str = ""  # python_requires
     package_dirs: str = ""
     keywords_spaced: str = ""  # comes as "A B C"
