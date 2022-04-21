@@ -412,7 +412,7 @@ def _build_out_sections(
     cfg.remove_section("semantic_release")  # will be completely overridden
     cfg["semantic_release"] = {
         "version_variable": f"{ffile.package}/__init__.py:__version__",  # "wipac_dev_tools/__init__.py:__version__"
-        "upload_to_pypi": "True",
+        "upload_to_pypi": "True" if bsec.pypi_name else "False",  # >>> str(bool(x))
         "patch_without_tag": "True",
         "commit_parser": "semantic_release.history.tag_parser",
         "minor_tag": "[minor]",
