@@ -19,6 +19,8 @@ This will generate the absolute minimal sections needed for making a release for
         install_requires =
             requests
             typing_extensions
+
+        <your other sections for non-wipac-dev-py-setup-action reasons>
         ```
 2. Run as GitHub Action
 3. You get:
@@ -54,6 +56,8 @@ This will generate the absolute minimal sections needed for making a release for
             docs
             resource
             resources
+
+        <your other sections for non-wipac-dev-py-setup-action reasons>
         ```
     - `README.md` with badges:
         [![CircleCI](https://img.shields.io/circleci/build/github/WIPACrepo/wipac-dev-tools)](https://app.circleci.com/pipelines/github/WIPACrepo/wipac-dev-tools?branch=main&filter=all) [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/WIPACrepo/wipac-dev-tools?include_prereleases)](https://github.com/WIPACrepo/wipac-dev-tools/) [![Lines of code](https://img.shields.io/tokei/lines/github/WIPACrepo/wipac-dev-tools)](https://github.com/WIPACrepo/wipac-dev-tools/) [![GitHub issues](https://img.shields.io/github/issues/WIPACrepo/wipac-dev-tools)](https://github.com/WIPACrepo/wipac-dev-tools/issues?q=is%3Aissue+sort%3Aupdated-desc+is%3Aopen) [![GitHub pull requests](https://img.shields.io/github/issues-pr/WIPACrepo/wipac-dev-tools)](https://github.com/WIPACrepo/wipac-dev-tools/pulls?q=is%3Apr+sort%3Aupdated-desc+is%3Aopen)
@@ -79,7 +83,7 @@ This will generate the absolute minimal sections needed for making a release for
             # via requests
         ```
 
-### Enable Generating PyPI Metadata
+### Enable Generating Metadata for PyPI-Publishing
 
 
 
