@@ -2,7 +2,54 @@
 # wipac-dev-py-setup-action
 GitHub Action Package for Automating Python-Package Setup
 
-Writes needed config to publish a package to PyPI.
+Writes needed config (`setup.cfg`) for publishing a package to PyPI.
+
+## Configuration Options
+
+### Minimal (No PyPI Metadata)
+This will generate the absolute minimal sections needed for making a release for your package.
+
+1. You define:
+    - `setup.cfg` with `[wipac:cicd_setup_builder]` section, like:
+        ```
+        [wipac:cicd_setup_builder]
+        python_min = 3.6
+        ```
+2. Run as GitHub Action
+3. You get:
+    - `setup.cfg` with all the original sections *plus*
+        + Fully-generated section(s):
+            - `[semantic_release]`
+        + Partially-generated/supplemented section(s):
+            - `[metadata]`
+                ```
+                version = attr: my_pkg.__version__
+                ```
+            - `[options]`
+                ```
+                ...
+                python_requires = >=3.6, <3.11
+                packages = find:
+                ```
+            - `[options.package_data]`
+                ```
+                * = py.typed
+                ```
+            - `[options.packages.find]`
+                ```
+                exclude =
+                    test
+                    tests
+                    doc
+                    docs
+                    resource
+                    resources
+                ```
+
+### Enable Generating PyPI Metadata
+
+
+
 
 ## Steps to Use
 
@@ -39,5 +86,5 @@ Writes needed config to publish a package to PyPI.
             uses: actions/checkout@v3
             with:
               token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          - uses: WIPACrepo/wipac-dev-py-setup-action@v1
+          - uses: WIPACrepo/wipac-dev-py-setup-action@v1.#
     ```
