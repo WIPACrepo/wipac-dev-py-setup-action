@@ -516,12 +516,21 @@ def write_setup_cfg(
             "[metadata]",
             f"[metadata]  # {GENERATED_STR}: {', '.join(meta_auto_attrs)}",
         )
-        c = c.replace("[semantic_release]", f"[semantic_release]  # {GENERATED_STR}")
         c = c.replace(
-            "[options]", f"[options]  # {GENERATED_STR}: python_requires, packages"
+            "[semantic_release]",
+            f"[semantic_release]  # {GENERATED_STR}",
         )
         c = c.replace(
-            "[options.package_data]", f"[options.package_data]  # {GENERATED_STR}: '*'"
+            "[options]",
+            f"[options]  # {GENERATED_STR}: python_requires, packages",
+        )
+        c = c.replace(
+            "[options.package_data]",
+            f"[options.package_data]  # {GENERATED_STR}: '*'",
+        )
+        c = c.replace(
+            "[options.packages.find]",
+            f"[options.packages.find]  # {GENERATED_STR}: include/exclude",
         )
         c = re.sub(r"(\t| )+\n", "\n", c)  # remove trailing whitespace
     with open(setup_cfg, "w") as f:
