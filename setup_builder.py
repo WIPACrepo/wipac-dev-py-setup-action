@@ -518,7 +518,7 @@ def write_setup_cfg(
         )
         c = c.replace(
             "[semantic_release]",
-            f"[semantic_release]  # {GENERATED_STR}",
+            f"[semantic_release]  # fully-{GENERATED_STR}",
         )
         c = c.replace(
             "[options]",
