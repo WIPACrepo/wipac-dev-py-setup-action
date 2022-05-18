@@ -2,7 +2,7 @@
 # wipac-dev-py-setup-action
 GitHub Action Package for Automating Python-Package Setup
 
-Writes needed config (`setup.cfg`) for publishing a package to PyPI.
+Auto-generates `setup.cfg` sections needed for publishing a package to PyPI, `README.md` badges, and `requirements.txt` (by way of [pip-compile](https://github.com/jazzband/pip-tools)).
 
 ## Configuration Options
 
@@ -10,7 +10,7 @@ Writes needed config (`setup.cfg`) for publishing a package to PyPI.
 This will generate the absolute minimal sections needed for making a release for your package.
 
 1. You define:
-    - `setup.cfg` with `[wipac:cicd_setup_builder]` section, like:
+    - `setup.cfg` with the `[wipac:cicd_setup_builder]` section and `[options].install_requires` list, like:
         ```
         [wipac:cicd_setup_builder]
         python_min = 3.6
@@ -56,7 +56,7 @@ This will generate the absolute minimal sections needed for making a release for
             resources
         ```
     - `README.md` with badges:
-        - [![CircleCI](https://img.shields.io/circleci/build/github/WIPACrepo/wipac-dev-tools)](https://app.circleci.com/pipelines/github/WIPACrepo/wipac-dev-tools?branch=main&filter=all) [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/WIPACrepo/wipac-dev-tools?include_prereleases)](https://github.com/WIPACrepo/wipac-dev-tools/) [![Lines of code](https://img.shields.io/tokei/lines/github/WIPACrepo/wipac-dev-tools)](https://github.com/WIPACrepo/wipac-dev-tools/) [![GitHub issues](https://img.shields.io/github/issues/WIPACrepo/wipac-dev-tools)](https://github.com/WIPACrepo/wipac-dev-tools/issues?q=is%3Aissue+sort%3Aupdated-desc+is%3Aopen) [![GitHub pull requests](https://img.shields.io/github/issues-pr/WIPACrepo/wipac-dev-tools)](https://github.com/WIPACrepo/wipac-dev-tools/pulls?q=is%3Apr+sort%3Aupdated-desc+is%3Aopen)
+        [![CircleCI](https://img.shields.io/circleci/build/github/WIPACrepo/wipac-dev-tools)](https://app.circleci.com/pipelines/github/WIPACrepo/wipac-dev-tools?branch=main&filter=all) [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/WIPACrepo/wipac-dev-tools?include_prereleases)](https://github.com/WIPACrepo/wipac-dev-tools/) [![Lines of code](https://img.shields.io/tokei/lines/github/WIPACrepo/wipac-dev-tools)](https://github.com/WIPACrepo/wipac-dev-tools/) [![GitHub issues](https://img.shields.io/github/issues/WIPACrepo/wipac-dev-tools)](https://github.com/WIPACrepo/wipac-dev-tools/issues?q=is%3Aissue+sort%3Aupdated-desc+is%3Aopen) [![GitHub pull requests](https://img.shields.io/github/issues-pr/WIPACrepo/wipac-dev-tools)](https://github.com/WIPACrepo/wipac-dev-tools/pulls?q=is%3Apr+sort%3Aupdated-desc+is%3Aopen)
     - `requirements.txt` generated from `[options].install_requires` in `setup.cfg`:
         ```
         #
