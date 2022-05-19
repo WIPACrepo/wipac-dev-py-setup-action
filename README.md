@@ -1,6 +1,8 @@
 # WIPACrepo/wipac-dev-py-setup-action
 GitHub Action Package for Automating Python-Package Setup
 
+
+
 ## Overview
 This GitHub Action prepares a repository to be GitHub-released and PyPI-published by the [Python Semantic Release GitHub Action](https://python-semantic-release.readthedocs.io/en/latest/). All that a user needs to do is define a few attributes in `setup.cfg` (see [*Main Configuration Modes*](#main-configuration-modes)).
 
@@ -27,6 +29,10 @@ These go in the `setup.cfg` file's `[options]` section:
     package-a
     package-b
 ```
+
+#### Defining Package Metadata
+These are inputted as attributes in the `setup.cfg` file's `[wipac:cicd_setup_builder]` section (see [*Main Configuration Modes*](#main-configuration-modes)) and as GitHub Action inputs (see [*Input Arguments in GitHub Action*](#input-arguments-in-github-action)). All other metadata is pulled in programmatically by parsing the repo's directory tree.
+
 
 
 ## Main Configuration Modes
