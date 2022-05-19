@@ -218,7 +218,7 @@ This will generate the absolute minimal sections needed for making a release for
 #### Pinning a Maximum Python 3 Release Version
 Add `python_max` to `[wipac:cicd_setup_builder]`. This will change `[options].python_requires` and `[metadata].classifiers` (if PyPI-metadata mode is enabled).
 
-#### Explicitly Defining Package Directories
+#### Explicitly Defining Directories for Packaging
 Add `package_dirs` to `[wipac:cicd_setup_builder]`. This is a space-separated list of directories to package. This generates a `[options.packages.find].include` list for the given packages and sub-packages. Without this, a list is generated for `[options.packages.find].exclude`, which will exclude commonly excluded directories (`test`, `tests`, `doc`, `docs`, `resource`, and `resources`).
 - **NOTE:** Multiple-package/directory support is not currently supported (https://github.com/WIPACrepo/wipac-dev-py-setup-action/issues/15)
 
