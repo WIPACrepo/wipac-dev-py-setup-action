@@ -2,7 +2,7 @@
 # wipac-dev-py-setup-action
 GitHub Action Package for Automating Python-Package Setup
 
-Auto-generates `setup.cfg` sections needed for publishing a package to PyPI, `README.md` badges, and `requirements.txt` (by way of [pip-compile](https://github.com/jazzband/pip-tools)).
+Auto-generates `setup.cfg` sections needed for publishing a package to PyPI, `README.md` badges, and `requirements.txt` (by way of [pip-compile](https://github.com/jazzband/pip-tools)). Commits are auto-pushed from the "github-actions" user (github-actions@github.com). This GitHub Action prepares a repository to be GitHub-released and PyPI-published by the [Python Semantic Release GitHub Action](https://python-semantic-release.readthedocs.io/en/latest/).
 
 GitHub Action syntax:
 ```
