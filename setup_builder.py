@@ -639,6 +639,6 @@ if __name__ == "__main__":
         args.author,
         args.author_email,
         args.base_keywords,
-        args.dirs_exclude,
+        args.directory_exclude,
         args.license,
     )
