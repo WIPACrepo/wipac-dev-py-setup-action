@@ -231,27 +231,28 @@ https://github.com/WIPACrepo/wipac-dev-py-setup-action/issues/16
 
 
 ## Full CI-Workflow: Using Alongside Other GitHub Actions
-The `wipac-dev-py-setup-action` GitHub Action pairs well with other GitHub Actions, including [wipac-dev-py-versions-action](https://github.com/WIPACrepo/wipac-dev-py-versions-action) and [Python Semantic Release](https://python-semantic-release.readthedocs.io/en/latest/). These can create a full CI/CD workflow from packaging to testing to publishing.
+The `wipac-dev-py-setup-action` GitHub Action pairs well with other GitHub Actions, including [WIPACrepo/wipac-dev-py-versions-action](https://github.com/WIPACrepo/wipac-dev-py-versions-action) and [relekang/python-semantic-release](https://python-semantic-release.readthedocs.io/en/latest/). These can be linked to create a full CI/CD workflow from packaging to testing to publishing.
 
 ### Overview: Linking Actions as Jobs with Dependencies
 *See [Example YAML](#example-yaml) for implementation details*
 1. Run linters (ex: flake8, mypy)
-    - Since linters are lightweight compared to
+    - To speed things up, don't include job-dependencies for linters.
 2. Use `WIPACrepo/wipac-dev-py-setup-action`
-    - sets up your Python package
-    - bumps required-package versions in `requirements.txt`
-    - updates README
-    - *the bot's git-push will cancel pending steps and trigger another workflow*
+    - This...
+        + sets up your Python package metadata,
+        + bumps requirements' versions in `requirements.txt`, and/or
+        + updates README
+    - *The bot's git-push will cancel pending steps and trigger another workflow.*
 3. Use `WIPACrepo/wipac-dev-py-versions-action`
-    - `pip` installs your Python package with each supported Python 3 version
-    - this will catch install errors before any tests
+    - This `pip` installs your Python package with each supported Python 3 version.
+    - This will catch install errors before any tests run.
 4. Run unit and integration tests
-    - These will catch any new errors from recently bumped required-package versions
+    - To limit startup costs, include a job-dependency for the previous jobs. This will catch any new errors from recently bumped requirements' versions.
 5. Use `relekang/python-semantic-release`
-    - This will make a new GitHub Release and a PyPI Release (if not disabled)
-    - This should use an `"if"`-constraint for the default branch (main or master)
+    - This will make a new GitHub Release and a PyPI Release (if not disabled).
+    - This should use an `"if"`-constraint for the default branch (main or master).
 
-### Example YAML
+#### Example YAML
 ```
 name: example ci/cd
 
