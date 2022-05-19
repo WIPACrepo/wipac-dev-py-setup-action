@@ -15,6 +15,7 @@ This will generate sections needed for making a release for your Python package 
         [wipac:cicd_setup_builder]
         pypi_name = wipac-mock-package
         python_min = 3.6
+        keywords_spaced = foo bar baz
 
         [options]
         install_requires =
@@ -37,6 +38,9 @@ This will generate sections needed for making a release for your Python package 
         long_description = file: README.md
         long_description_content_type = text/markdown
         keywords =
+            foo
+            bar
+            baz
             WIPAC
             IceCube
         license = MIT
@@ -184,46 +188,21 @@ This will generate the absolute minimal sections needed for making a release for
         ```
 
 
-
-
-
 ## Advanced Usage Options
 
+### Additional Attributes in `setup.cfg`/`[wipac:cicd_setup_builder]`
 
-## Steps to Use
+#### Pinning a Maximum Python 3 Release Version
+Add `python_max` to `[wipac:cicd_setup_builder]`. This will change `[options].python_requires` and `[metadata].classifiers` (if PyPI-metadata mode is enabled).
 
-1. Update setup.cfg with `[wipac:cicd_setup_builder]` section:
-    ```
-     [wipac:cicd_setup_builder]
-     pypi_name = wipac-dev-tools
-     python_min = 3.6
-     keywords_spaced = python tools utilities
-    ```
+#### Explicitly Defining Package Directories
+Add `package_dirs` to `[wipac:cicd_setup_builder]`. This is a space-separated list of directories to package. This generates a `[options.packages.find].include` list for the given packages and sub-packages. Without this, a list is generated for `[options.packages.find].exclude`, which will exclude commonly excluded directories (`test`, `tests`, `doc`, `docs`, `resource`, and `resources`).
+- **NOTE:** Multiple-package/directory support is not currently supported (https://github.com/WIPACrepo/wipac-dev-py-setup-action/issues/15)
 
-   Required:
-   * pypi_name - PyPI package name
-   * python_min - minimum Python version
+#### Not Using Keywords
+Technically, `[wipac:cicd_setup_builder].keywords_spaced` is optional. Excluding this list is generally discouraged for PyPI-published packages. "Base" keywords are added automatically regardless, see below.
 
-   Optional:
-   * package_dirs - space-separated list of directories to package (else, uses auto-detection)
-   * python_max - maximum Python version
-   * keywords_spaced - space-separated keyword list
 
-   Python package dependencies go in [options] section:
-    ```
-     [options]
-     install_requires =
-        package-a
-        package-b
-    ```
-2. Use as a step in a GitHub Action:
-    ```
-      py-setup:
-        runs-on: ubuntu-latest
-        steps:
-          - name: checkout
-            uses: actions/checkout@v3
-            with:
-              token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          - uses: WIPACrepo/wipac-dev-py-setup-action@v1.#
-    ```
+### Input Arguments in GitHub Action (**TBD**)
+https://github.com/WIPACrepo/wipac-dev-py-setup-action/issues/16
+
