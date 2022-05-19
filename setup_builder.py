@@ -249,7 +249,7 @@ class FromFiles:
         race condition, see:
         https://stackoverflow.com/a/2073599/13156561
         """
-        with open(self.pkg_path + "/__init__.py") as f:
+        with open(self.pkg_path + "/__init__.py", "r") as f:
             for line in f.readlines():
                 if "__version__" in line:
                     # grab "X.Y.Z" from `__version__ = 'X.Y.Z'`
@@ -502,10 +502,11 @@ def write_setup_cfg(
     for sec in cfg.sections():  # add rest of existing sections
         if sec not in tops:
             cfg_new[sec] = cfg[sec]
-    cfg_new.write(open(setup_cfg, "w"))
+    with open(setup_cfg, "w") as f:
+        cfg_new.write(f)
 
     # Comment generated sections w/ comments saying so & clean up whitespace
-    with open(setup_cfg) as f:
+    with open(setup_cfg, "r") as f:
         c = f.read()
         meta_auto_attrs = [
             f.name
