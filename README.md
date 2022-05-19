@@ -2,7 +2,7 @@
 # wipac-dev-py-setup-action
 GitHub Action Package for Automating Python-Package Setup
 
-Auto-generates `setup.cfg` sections needed for publishing a package to PyPI, adds `README.md` badges, and overwrites/updates `requirements.txt` (by way of [pip-compile](https://github.com/jazzband/pip-tools)). Commits are auto-pushed by the "github-actions" user (github-actions@github.com). This GitHub Action prepares a repository to be GitHub-released and PyPI-published by the [Python Semantic Release GitHub Action](https://python-semantic-release.readthedocs.io/en/latest/).
+Auto-generates `setup.cfg` sections needed for publishing a package to PyPI, adds `README.md` badges, and overwrites/updates `requirements.txt` (by way of [pip-compile](https://github.com/jazzband/pip-tools)). Commits are git-pushed by the "github-actions" user (github-actions@github.com). This GitHub Action prepares a repository to be GitHub-released and PyPI-published by the [Python Semantic Release GitHub Action](https://python-semantic-release.readthedocs.io/en/latest/).
 
 GitHub Action syntax:
 ```
@@ -229,3 +229,75 @@ Technically, `[wipac:cicd_setup_builder].keywords_spaced` is optional. Excluding
 ### Input Arguments in GitHub Action (**TBD**)
 https://github.com/WIPACrepo/wipac-dev-py-setup-action/issues/16
 
+
+## Full CI-Workflow: Using Alongside Other GitHub Actions
+The `wipac-dev-py-setup-action` GitHub Action pairs well with other GitHub Actions, including [wipac-dev-py-versions-action](https://github.com/WIPACrepo/wipac-dev-py-versions-action) and [Python Semantic Release](https://python-semantic-release.readthedocs.io/en/latest/). These can create a full CI/CD workflow from packaging to testing to publishing.
+
+### Example Steps (or Jobs with Linked Dependencies):
+*See [Example YAML](#example-yaml) for details*
+1. Run linters (ex: flake8, mypy)
+    - Since linters are lightweight compared to
+2. Use `WIPACrepo/wipac-dev-py-setup-action`
+    - sets up your Python package
+    - bumps required-package versions in `requirements.txt`
+    - updates README
+    - *the bot's git-push will cancel pending steps and trigger another workflow*
+3. Use `WIPACrepo/wipac-dev-py-versions-action`
+    - `pip` installs your Python package with each supported Python 3 version
+    - this will catch install errors before any tests
+4. Run unit and integration tests
+    - These will catch any new errors from recently bumped required-package versions
+5. Use `relekang/python-semantic-release`
+    - This will make a new GitHub Release and a PyPI Release (if not disabled)
+    - This should use an `"if"`-constraint for the default branch (main or master)
+
+### Example YAML
+```
+name: example ci/cd
+
+on: [push]
+
+jobs:
+
+  <your linters>
+
+  py-setup:
+    runs-on: ubuntu-latest
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: checkout
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      - uses: WIPACrepo/wipac-dev-py-setup-action@v#.#
+
+  py-versions:
+    needs: [py-setup]
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.versions.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v3
+      - id: versions
+        uses: WIPACrepo/wipac-dev-py-versions-action@v#.#
+
+  <your unit tests>
+
+  <your integration tests>
+
+  release:
+    if: ${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' }}
+    needs: [py-setup, pip-install]
+    runs-on: ubuntu-latest
+    concurrency: release
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Python Semantic Release
+      uses: relekang/python-semantic-release@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        repository_username: __token__
+        repository_password: ${{ secrets.PYPI_TOKEN }}
+```
