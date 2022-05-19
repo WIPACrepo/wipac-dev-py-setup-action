@@ -6,7 +6,7 @@ inputs:
     description: 'The repo author'
     required: true
   author-email:  # id of input
-    description: 'The repo author's email'
+    description: "The repo author's email"
     required: true
   base-keywords:  # id of input
     description: 'A list of keywords to add to metadata'
@@ -17,7 +17,7 @@ inputs:
     required: false
     default: 'test tests doc docs resource resources'
   license:  # id of input
-    description: 'The repo's license type'
+    description: "The repo's license type"
     required: false
     default: 'MIT'
 
