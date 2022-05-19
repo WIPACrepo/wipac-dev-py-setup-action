@@ -15,6 +15,11 @@ import setup_builder  # noqa: E402 # isort:skip # pylint:disable=import-error,wr
 
 
 GITHUB_FULL_REPO = "foobarbaz-org/foobarbaz-repo"
+AUTHOR = "WIPAC Developers"
+AUTHOR_EMAIL = "developers@icecube.wisc.edu"
+BASE_KEYWORDS = ["WIPAC", "IceCube"]
+DIRECTORY_EXCLUDE = ["test", "tests", "doc", "docs", "resource", "resources"]
+LICENSE = "MIT"
 
 
 @pytest.fixture
@@ -149,7 +154,15 @@ flake8-ignore = E501 E231 E226
     requests_mock.get("https://docs.python.org/release/3.11.0/", status_code=404)
 
     # run setup_builder
-    setup_builder.main(setup_cfg_path, GITHUB_FULL_REPO)
+    setup_builder.main(
+        setup_cfg_path,
+        GITHUB_FULL_REPO,
+        AUTHOR,
+        AUTHOR_EMAIL,
+        BASE_KEYWORDS,
+        DIRECTORY_EXCLUDE,
+        LICENSE,
+    )
 
     # assert outputted setup.cfg
     with open(setup_cfg_path) as f:
@@ -250,7 +263,15 @@ flake8-ignore = E501 E231 E226
     requests_mock.get("https://docs.python.org/release/3.11.0/", status_code=404)
 
     # run setup_builder
-    setup_builder.main(setup_cfg_path, GITHUB_FULL_REPO)
+    setup_builder.main(
+        setup_cfg_path,
+        GITHUB_FULL_REPO,
+        AUTHOR,
+        AUTHOR_EMAIL,
+        BASE_KEYWORDS,
+        DIRECTORY_EXCLUDE,
+        LICENSE,
+    )
 
     # assert outputted setup.cfg
     with open(setup_cfg_path) as f:
@@ -385,7 +406,15 @@ flake8-ignore = E501 E231 E226
     requests_mock.get("https://docs.python.org/release/3.11.0/", status_code=404)
 
     # run setup_builder
-    setup_builder.main(setup_cfg_path, GITHUB_FULL_REPO)
+    setup_builder.main(
+        setup_cfg_path,
+        GITHUB_FULL_REPO,
+        AUTHOR,
+        AUTHOR_EMAIL,
+        BASE_KEYWORDS,
+        DIRECTORY_EXCLUDE,
+        LICENSE,
+    )
 
     # assert outputted setup.cfg
     with open(setup_cfg_path) as f:
@@ -521,7 +550,15 @@ flake8-ignore = E501 E231 E226
     requests_mock.get("https://docs.python.org/release/3.11.0/", status_code=404)
 
     # run setup_builder
-    setup_builder.main(setup_cfg_path, GITHUB_FULL_REPO)
+    setup_builder.main(
+        setup_cfg_path,
+        GITHUB_FULL_REPO,
+        AUTHOR,
+        AUTHOR_EMAIL,
+        BASE_KEYWORDS,
+        DIRECTORY_EXCLUDE,
+        LICENSE,
+    )
 
     # assert outputted setup.cfg
     with open(setup_cfg_path) as f:
@@ -658,7 +695,15 @@ flake8-ignore = E501 E231 E226
     requests_mock.get("https://docs.python.org/release/3.11.0/", status_code=404)
 
     # run setup_builder
-    setup_builder.main(setup_cfg_path, GITHUB_FULL_REPO)
+    setup_builder.main(
+        setup_cfg_path,
+        GITHUB_FULL_REPO,
+        AUTHOR,
+        AUTHOR_EMAIL,
+        BASE_KEYWORDS,
+        DIRECTORY_EXCLUDE,
+        LICENSE,
+    )
 
     # assert outputted setup.cfg
     with open(setup_cfg_path) as f:
@@ -815,7 +860,15 @@ flake8-ignore = E501 E231 E226
     requests_mock.get("https://docs.python.org/release/3.11.0/", status_code=404)
 
     # run setup_builder
-    setup_builder.main(setup_cfg_path, GITHUB_FULL_REPO)
+    setup_builder.main(
+        setup_cfg_path,
+        GITHUB_FULL_REPO,
+        AUTHOR,
+        AUTHOR_EMAIL,
+        BASE_KEYWORDS,
+        DIRECTORY_EXCLUDE,
+        LICENSE,
+    )
 
     # assert outputted setup.cfg
     with open(setup_cfg_path) as f:
