@@ -616,19 +616,19 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--base-keywords",
-        nargs="+",
-        default=None,
+        nargs="*",
+        required=True,
         help="A list of keywords to add to metadata",
     )
     parser.add_argument(
         "--directory-exclude",
-        nargs="+",
-        default=["test", "tests", "doc", "docs", "resource", "resources"],
-        help="A list of keywords to add to metadata",
+        nargs="*",
+        required=True,
+        help="A list of directories to exclude from release",
     )
     parser.add_argument(
         "--license",
-        default="MIT",
+        required=True,
         help="The repo author's email",
     )
     args = parser.parse_args()
@@ -638,7 +638,7 @@ if __name__ == "__main__":
         args.github_full_repo,
         args.author,
         args.author_email,
-        args.base_keywords if args.base_keywords else [],  # None -> []
+        args.base_keywords,
         args.dirs_exclude,
         args.license,
     )
