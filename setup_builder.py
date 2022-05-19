@@ -629,7 +629,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--license",
         required=True,
-        help="The repo author's email",
+        help="The repo's license type",
     )
     args = parser.parse_args()
 

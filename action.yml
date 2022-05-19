@@ -17,8 +17,9 @@ inputs:
     required: false
     default: 'test tests doc docs resource resources'
   license:  # id of input
-    description: 'The repo author's email'
-    required: true
+    description: 'The repo's license type'
+    required: false
+    default: 'MIT'
 
 # outputs:
 #   random-number:
