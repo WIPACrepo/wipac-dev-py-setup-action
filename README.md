@@ -5,24 +5,24 @@ GitHub Action Package for Automating Python-Package Setup
 Auto-generates `setup.cfg` sections needed for publishing a package to PyPI, `README.md` badges, and `requirements.txt` (by way of [pip-compile](https://github.com/jazzband/pip-tools)).
 
 GitHub Action syntax:
-    ```
-      py-setup:
-        runs-on: ubuntu-latest
-        steps:
-          - name: checkout
-            uses: actions/checkout@v3
-            with:
-              token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          - uses: WIPACrepo/wipac-dev-py-setup-action@v1.#
-    ```
+```
+  py-setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      - uses: WIPACrepo/wipac-dev-py-setup-action@v1.#
+```
 
 Python package dependencies go in the `[options]` section:
-    ```
-     [options]
-     install_requires =
-        package-a
-        package-b
-    ```
+```
+ [options]
+ install_requires =
+    package-a
+    package-b
+```
 
 
 ## Main Configuration Modes
