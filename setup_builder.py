@@ -134,9 +134,14 @@ class BuilderSection(Section):
         """Get a list of directories for Python packages."""
         return self.package_dirs.strip().split()
 
-    def keywords_list(self) -> List[str]:
-        """Get the user-defined keywords as a list."""
-        return self.keywords_spaced.strip().split()
+    def keywords_list(self, base_keywords: List[str]) -> List[str]:
+        """Get the user-defined keywords as a list, along with any base keywords."""
+        keywords = self.keywords_spaced.strip().split() + base_keywords
+        if not keywords and self.pypi_name:
+            raise Exception(
+                "keywords but be provided when 'pypi_name' is given (PyPI-metadata mode)"
+            )
+        return keywords
 
 
 @dataclasses.dataclass
@@ -386,9 +391,10 @@ def _build_out_sections(
         cfg["metadata"]["version"] = meta_version
         cfg["metadata"]["author"] = bsec.author
         cfg["metadata"]["author_email"] = bsec.author_email
-        cfg["metadata"]["keywords"] = list_to_dangling(
-            bsec.keywords_list() + base_keywords
-        )
+        if bsec.keywords_list(base_keywords):
+            cfg["metadata"]["keywords"] = list_to_dangling(
+                bsec.keywords_list(base_keywords)
+            )
     # if we DO want PyPI, then include everything:
     else:
         msec = MetadataSection(
@@ -402,7 +408,7 @@ def _build_out_sections(
             long_description_content_type=long_description_content_type(
                 ffile.readme_ext
             ),
-            keywords=list_to_dangling(bsec.keywords_list() + base_keywords),
+            keywords=list_to_dangling(bsec.keywords_list(base_keywords)),
             license=repo_license,
             classifiers=list_to_dangling(
                 [ffile.development_status]

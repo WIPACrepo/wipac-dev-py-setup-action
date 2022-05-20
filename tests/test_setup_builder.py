@@ -277,7 +277,7 @@ flake8-ignore = E501 E231 E226
     setup_builder.main(
         setup_cfg_path,
         GITHUB_FULL_REPO,
-        BASE_KEYWORDS,
+        [],
         DIRECTORY_EXCLUDE,
         LICENSE,
     )
