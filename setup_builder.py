@@ -380,17 +380,17 @@ def _build_out_sections(
     # [metadata]
     if not cfg.has_section("metadata"):  # will only override some fields
         cfg["metadata"] = {}
-    meta_verison = f"attr: {ffile.package}.__version__"  # "wipac_dev_tools.__version__"
+    meta_version = f"attr: {ffile.package}.__version__"  # "wipac_dev_tools.__version__"
     # if we DON'T want PyPI stuff:
     if not bsec.pypi_name:
-        cfg["metadata"]["version"] = meta_verison
+        cfg["metadata"]["version"] = meta_version
         cfg["metadata"]["author"] = bsec.author
         cfg["metadata"]["author_email"] = bsec.author_email
     # if we DO want PyPI, then include everything:
     else:
         msec = MetadataSection(
             name=bsec.pypi_name,
-            version=meta_verison,
+            version=meta_version,
             url=gh_api.url,
             author=bsec.author,
             author_email=bsec.author_email,
