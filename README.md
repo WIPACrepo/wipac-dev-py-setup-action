@@ -289,7 +289,7 @@ The `wipac-dev-py-setup-action` GitHub Action pairs well with other GitHub Actio
     - This will `pip install` your Python package with each supported Python 3 version.
     - This will catch install errors before any tests run.
 4. Run unit and integration tests
-    - To limit startup costs, include a job-dependency for the previous jobs. This will catch any new errors from recently bumped package requirements.
+    - To limit startup costs, include a job-dependency for the previous jobs. This will guarantee tests are running with the most recently bumped package requirements.
 5. Use `relekang/python-semantic-release`
     - This will make a new GitHub Release and a PyPI Release (if not disabled).
     - This should use an `"if"`-constraint for the default branch (main or master).
@@ -330,7 +330,7 @@ jobs:
 
   release:
     if: ${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' }}
-    needs: [py-setup, pip-install]
+    needs: [py-setup, pip-install, tests]
     runs-on: ubuntu-latest
     concurrency: release
     steps:
