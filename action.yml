@@ -34,6 +34,7 @@ runs:
         # https://github.com/actions/runner/issues/1070
         [[ "${{ inputs.author }}" ]] || { echo "author input is empty" ; exit 1; }
         [[ "${{ inputs.author-email }}" ]] || { echo "author-email input is empty" ; exit 1; }
+      shell: bash
 
     - name: Git config
       run: |
