@@ -386,6 +386,9 @@ def _build_out_sections(
         cfg["metadata"]["version"] = meta_version
         cfg["metadata"]["author"] = bsec.author
         cfg["metadata"]["author_email"] = bsec.author_email
+        cfg["metadata"]["keywords"] = list_to_dangling(
+            bsec.keywords_list() + base_keywords
+        )
     # if we DO want PyPI, then include everything:
     else:
         msec = MetadataSection(
