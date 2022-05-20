@@ -73,12 +73,20 @@ class BuilderSection(Section):
     """Encapsulates the `BUILDER_SECTION_NAME` section & checks for required/invalid fields."""
 
     python_min: str  # python_requires
-    author: str
-    author_email: str
+    author: str = ""
+    author_email: str = ""
     pypi_name: str = ""  # enables PyPI publishing, badges, sections, etc.
     python_max: str = ""  # python_requires
     package_dirs: str = ""
     keywords_spaced: str = ""  # comes as "A B C"
+
+    def __post_init__(self) -> None:
+        if self.pypi_name:
+            if not self.author or not self.author_email:
+                raise Exception(
+                    "'author' and 'author_email' but be provided when "
+                    "'pypi_name' is given (PyPI-metadata mode)"
+                )
 
     def _python3_min_max(self) -> PythonMinMax:
         """Get the `PythonMinMax` version of `self.python_min`."""
@@ -389,8 +397,10 @@ def _build_out_sections(
     # if we DON'T want PyPI stuff:
     if not bsec.pypi_name:
         cfg["metadata"]["version"] = meta_version
-        cfg["metadata"]["author"] = bsec.author
-        cfg["metadata"]["author_email"] = bsec.author_email
+        if bsec.author:
+            cfg["metadata"]["author"] = bsec.author
+        if bsec.author_email:
+            cfg["metadata"]["author_email"] = bsec.author_email
         if bsec.keywords_list(base_keywords):
             cfg["metadata"]["keywords"] = list_to_dangling(
                 bsec.keywords_list(base_keywords)
