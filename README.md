@@ -274,7 +274,8 @@ The repo's license type.
 ## Full CI-Workflow: Using Alongside Other GitHub Actions
 The `wipac-dev-py-setup-action` GitHub Action pairs well with other GitHub Actions, including [WIPACrepo/wipac-dev-py-versions-action](https://github.com/WIPACrepo/wipac-dev-py-versions-action) and [relekang/python-semantic-release](https://python-semantic-release.readthedocs.io/en/latest/). These can be linked to create a robust CI/CD workflow for packaging, testing, and publishing.
 
-### Overview: Linking Actions as Jobs with Dependencies
+### Example: Linking Actions as Jobs with Dependencies
+#### Overview
 *See [Example YAML](#example-yaml) for implementation details*
 1. Run linters (ex: flake8, mypy)
     - To speed things up, don't include job-dependencies for linters.
