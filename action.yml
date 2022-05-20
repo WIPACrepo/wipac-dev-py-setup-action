@@ -1,11 +1,19 @@
 name: 'WIPAC Dev Py Setup'
 description: 'GitHub Action Package for Automating Python-Package Setup'
 
-# inputs:
-#   who-to-greet:  # id of input
-#     description: 'Who to greet'
-#     required: true
-#     default: 'World'
+inputs:
+  base-keywords:  # id of input
+    description: 'A list of keywords to add to metadata'
+    required: false
+    default: ''
+  directory-exclude:  # id of input
+    description: 'A list of directories to exclude from release'
+    required: false
+    default: 'test tests doc docs resource resources'
+  license:  # id of input
+    description: "The repo's license type"
+    required: false
+    default: 'MIT'
 
 # outputs:
 #   random-number:
@@ -25,7 +33,12 @@ runs:
       run: |
         pip3 install -r ${{ github.action_path }}/requirements.txt
         echo $GITHUB_REPOSITORY
-        python3 ${{ github.action_path }}/setup_builder.py setup.cfg $GITHUB_REPOSITORY
+        python3 ${{ github.action_path }}/setup_builder.py \
+          setup.cfg \
+          $GITHUB_REPOSITORY \
+          --base-keywords ${{ inputs.base-keywords }} \
+          --directory-exclude ${{ inputs.directory-exclude }} \
+          --license ${{ inputs.license }}
         git add setup.cfg
         git commit -m "<bot> update setup.cfg" || true
         git add README.md || true
