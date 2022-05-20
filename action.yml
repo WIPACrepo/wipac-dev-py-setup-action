@@ -36,8 +36,6 @@ runs:
         python3 ${{ github.action_path }}/setup_builder.py \
           setup.cfg \
           $GITHUB_REPOSITORY \
-          --author "${{ inputs.author }}" \
-          --author-email ${{ inputs.author-email }} \
           --base-keywords ${{ inputs.base-keywords }} \
           --directory-exclude ${{ inputs.directory-exclude }} \
           --license ${{ inputs.license }}
