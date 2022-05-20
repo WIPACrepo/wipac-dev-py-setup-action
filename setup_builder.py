@@ -84,7 +84,7 @@ class BuilderSection(Section):
         if self.pypi_name:
             if not self.author or not self.author_email:
                 raise Exception(
-                    "'author' and 'author_email' but be provided when "
+                    "'author' and 'author_email' must be provided when "
                     "'pypi_name' is given (PyPI-metadata mode)"
                 )
 
@@ -147,7 +147,7 @@ class BuilderSection(Section):
         keywords = self.keywords_spaced.strip().split() + base_keywords
         if not keywords and self.pypi_name:
             raise Exception(
-                "keywords but be provided when 'pypi_name' is given (PyPI-metadata mode)"
+                "keywords must be provided when 'pypi_name' is given (PyPI-metadata mode)"
             )
         return keywords
 
