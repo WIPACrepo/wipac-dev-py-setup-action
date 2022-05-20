@@ -46,6 +46,8 @@ This will generate `setup.cfg` sections needed for making a GitHub release for y
         [wipac:cicd_setup_builder]
         pypi_name = wipac-mock-package
         python_min = 3.6
+        author = WIPAC Developers
+        author_email = developers@icecube.wisc.edu
         keywords_spaced = foo bar baz
 
         [options]
@@ -243,19 +245,32 @@ This will generate the absolute minimal sections needed for making a release for
 
 ### Additional Attributes in `setup.cfg`/`[wipac:cicd_setup_builder]`
 
-#### Pinning a Maximum Python 3 Release Version
-Add `python_max` to `[wipac:cicd_setup_builder]`. This will change `[options].python_requires` and `[metadata].classifiers` (if PyPI-metadata mode is enabled). Defining a max version is generally discouraged since new Python 3 versions are usually backward-compatible. Use this if there's a troublesome package requirement.
+#### `python_max`
+Use this to pin the maximum compatible Python 3 release version. This will change `[options].python_requires` and `[metadata].classifiers` (if PyPI-metadata mode is enabled). Defining a max version is generally discouraged since new Python 3 versions are usually backward-compatible. Use this if there's a troublesome package requirement.
+Default: None
 
-#### Explicitly Defining Directories for Packaging
-Add `package_dirs` to `[wipac:cicd_setup_builder]`. This is a space-separated list of directories to package. This generates a `[options.packages.find].include` list for the given packages and sub-packages. Without this, a list is generated for `[options.packages.find].exclude`, which will exclude commonly non-released directories (`test`, `tests`, `doc`, `docs`, `resource`, and `resources`).
+#### `package_dirs`
+Use this to explicitly define directories for packaging. This is a space-separated list of directories to package. This generates a `[options.packages.find].include` list for the given packages and sub-packages. Without this, a list is generated for `[options.packages.find].exclude`, which will exclude commonly non-released directories (see [*directory-exclude*](#directory-exclude)).
 - **NOTE:** Multiple-package/directory support is not currently supported (https://github.com/WIPACrepo/wipac-dev-py-setup-action/issues/15)
+Default: N/A
 
-#### Not Using Keywords
-Technically, `[wipac:cicd_setup_builder].keywords_spaced` is optional. Excluding this list is generally discouraged for PyPI-published packages. "Base" keywords are added automatically regardless, see [*Input Arguments in GitHub Action*](#input-arguments-in-github-action).
+#### `keywords_spaced`
+Using this list is generally encouraged for PyPI-published packages as it helps with SEO. However, technically, `[wipac:cicd_setup_builder].keywords_spaced` is optional. Any "base keywords" are automatically added regardless, see [*Input Arguments in GitHub Action*](#input-arguments-in-github-action).
+Default: None
 
 
 ### Input Arguments in GitHub Action
-**TBD**: https://github.com/WIPACrepo/wipac-dev-py-setup-action/issues/16
+#### `base-keywords`
+A list of keywords to add to `[metadata]`, space-delimited. These are aggregated with those given in `[wipac:cicd_setup_builder].keywords_spaced`. This is a good place to add organization-standard keywords (as opposed to repo-specific keywords).
+Default: None
+
+#### `directory-exclude`
+A list of directories to exclude from release, space-delimited.
+Default: 'test tests doc docs resource resources'
+
+#### `license`
+The repo's license type.
+Default: 'MIT'
 
 
 ## Full CI-Workflow: Using Alongside Other GitHub Actions
