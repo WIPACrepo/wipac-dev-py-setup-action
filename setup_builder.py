@@ -73,6 +73,8 @@ class BuilderSection(Section):
     """Encapsulates the `BUILDER_SECTION_NAME` section & checks for required/invalid fields."""
 
     python_min: str  # python_requires
+    author: str
+    author_email: str
     pypi_name: str = ""  # enables PyPI publishing, badges, sections, etc.
     python_max: str = ""  # python_requires
     package_dirs: str = ""
@@ -363,8 +365,6 @@ def _build_out_sections(
     cfg: configparser.RawConfigParser,
     root_path: str,
     github_full_repo: str,
-    author: str,
-    author_email: str,
     base_keywords: List[str],
     dirs_exclude: List[str],
     repo_license: str,
@@ -390,8 +390,8 @@ def _build_out_sections(
             name=bsec.pypi_name,
             version=meta_verison,
             url=gh_api.url,
-            author=author,
-            author_email=author_email,
+            author=bsec.author,
+            author_email=bsec.author_email,
             description=gh_api.description,
             long_description=f"file: README{ffile.readme_ext.value}",
             long_description_content_type=long_description_content_type(
@@ -471,8 +471,6 @@ class MissingSectionException(Exception):
 def write_setup_cfg(
     setup_cfg: str,
     github_full_repo: str,
-    author: str,
-    author_email: str,
     base_keywords: List[str],
     dirs_exclude: List[str],
     repo_license: str,
@@ -492,8 +490,6 @@ def write_setup_cfg(
         cfg,
         os.path.dirname(setup_cfg),
         github_full_repo,
-        author,
-        author_email,
         base_keywords,
         dirs_exclude,
         repo_license,
@@ -550,8 +546,6 @@ def write_setup_cfg(
 def main(
     setup_cfg: str,
     github_full_repo: str,
-    author: str,
-    author_email: str,
     base_keywords: List[str],
     dirs_exclude: List[str],
     repo_license: str,
@@ -561,8 +555,6 @@ def main(
     readme_mgr = write_setup_cfg(
         setup_cfg,
         github_full_repo,
-        author,
-        author_email,
         base_keywords,
         dirs_exclude,
         repo_license,
@@ -605,16 +597,6 @@ if __name__ == "__main__":
         help="Fully-named GitHub repo, ex: WIPACrepo/wipac-dev-tools",
     )
     parser.add_argument(
-        "--author",
-        required=True,
-        help="The repo author",
-    )
-    parser.add_argument(
-        "--author-email",
-        required=True,
-        help="The repo author's email",
-    )
-    parser.add_argument(
         "--base-keywords",
         nargs="*",
         required=True,
@@ -636,8 +618,6 @@ if __name__ == "__main__":
     main(
         args.setup_cfg_file,
         args.github_full_repo,
-        args.author,
-        args.author_email,
         args.base_keywords,
         args.directory_exclude,
         args.license,

@@ -2,12 +2,6 @@ name: 'WIPAC Dev Py Setup'
 description: 'GitHub Action Package for Automating Python-Package Setup'
 
 inputs:
-  author:  # id of input
-    description: 'The repo author'
-    required: true
-  author-email:  # id of input
-    description: "The repo author's email"
-    required: true
   base-keywords:  # id of input
     description: 'A list of keywords to add to metadata'
     required: false
@@ -29,13 +23,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Check Required Input Args
-      run: |
-        # https://github.com/actions/runner/issues/1070
-        [[ "${{ inputs.author }}" ]] || { echo "'author' input is empty" ; exit 1; }
-        [[ "${{ inputs.author-email }}" ]] || { echo "'author-email' input is empty" ; exit 1; }
-      shell: bash
-
     - name: Git config
       run: |
         git config user.name github-actions
