@@ -260,7 +260,7 @@ class FromFiles:
         race condition, see:
         https://stackoverflow.com/a/2073599/13156561
         """
-        with open(self.pkg_path + "/__init__.py", "r") as f:
+        with open(os.path.join(self.pkg_path, "__init__.py"), "r") as f:
             for line in f.readlines():
                 if "__version__" in line:
                     # grab "X.Y.Z" from `__version__ = 'X.Y.Z'`
