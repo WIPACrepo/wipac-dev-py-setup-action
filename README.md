@@ -247,30 +247,30 @@ This will generate the absolute minimal sections needed for making a release for
 
 #### `python_max`
 Use this to pin the maximum compatible Python 3 release version. This will change `[options].python_requires` and `[metadata].classifiers` (if PyPI-metadata mode is enabled). Defining a max version is generally discouraged since new Python 3 versions are usually backward-compatible. Use this if there's a troublesome package requirement.
-Default: None
+- Default: None
 
 #### `package_dirs`
 Use this to explicitly define directories for packaging. This is a space-separated list of directories to package. This generates a `[options.packages.find].include` list for the given packages and sub-packages. Without this, a list is generated for `[options.packages.find].exclude`, which will exclude commonly non-released directories (see [*directory-exclude*](#directory-exclude)).
-- **NOTE:** Multiple-package/directory support is not currently supported (https://github.com/WIPACrepo/wipac-dev-py-setup-action/issues/15)
-Default: N/A
+- **NOTE:** *Multi-package/multi-directory packaging is not currently supported (https://github.com/wipacrepo/wipac-dev-py-setup-action/issues/15)*
+- Default: N/A
 
 #### `keywords_spaced`
 Using this list is generally encouraged for PyPI-published packages as it helps with SEO. However, technically, `[wipac:cicd_setup_builder].keywords_spaced` is optional. Any "base keywords" are automatically added regardless, see [*Input Arguments in GitHub Action*](#input-arguments-in-github-action).
-Default: None
+- Default: None
 
 
 ### Input Arguments in GitHub Action
 #### `base-keywords`
 A list of keywords to add to `[metadata]`, space-delimited. These are aggregated with those given in `[wipac:cicd_setup_builder].keywords_spaced`. This is a good place to add organization-standard keywords (as opposed to repo-specific keywords).
-Default: None
+- Default: None
 
 #### `directory-exclude`
 A list of directories to exclude from release, space-delimited.
-Default: 'test tests doc docs resource resources'
+- Default: 'test tests doc docs resource resources'
 
 #### `license`
 The repo's license type.
-Default: 'MIT'
+- Default: 'MIT'
 
 
 ## Full CI-Workflow: Using Alongside Other GitHub Actions
