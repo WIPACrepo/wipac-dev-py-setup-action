@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v4
       - uses: WIPACrepo/wipac-dev-mypy-action@v1
 
   setup_builder:
@@ -24,6 +24,7 @@ jobs:
       PY_COLORS: "1"
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
       - run: pip install -r requirements-dev.txt
       - run: |
           pytest tests/test_setup_builder.py -vvv
