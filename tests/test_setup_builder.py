@@ -33,7 +33,6 @@ def assert_outputted_setup_cfg(setup_cfg_path: Path, setup_cfg_out: str) -> None
             print(actual_line, end="")
         print("- " * 20)
         for i, actual_line in enumerate(actual):
-            print(actual_line, end="")
             assert actual_line == expected[i] + "\n"
 
 
