@@ -22,6 +22,18 @@ DIRECTORY_EXCLUDE = ["test", "tests", "doc", "docs", "resource", "resources"]
 LICENSE = "MIT"
 
 
+def assert_outputted_setup_cfg(setup_cfg_path: Path, setup_cfg_out: str) -> None:
+    with open(setup_cfg_path) as f:
+        expected = setup_cfg_out.replace("    ", "\t").split("\n")
+        actual = list(f.readlines())
+        for actual_line in actual:
+            print(actual_line, end="")
+        print("- " * 20)
+        for i, actual_line in enumerate(actual):
+            print(actual_line, end="")
+            assert actual_line == expected[i] + "\n"
+
+
 @pytest.fixture
 def directory() -> str:
     """Get path to setup.cfg in a random testing directory."""
@@ -167,15 +179,7 @@ flake8-ignore = E501 E231 E226
     )
 
     # assert outputted setup.cfg
-    with open(setup_cfg_path) as f:
-        expected = setup_cfg_out.replace("    ", "\t").split("\n")
-        actual = list(f.readlines())
-        for actual_line in actual:
-            print(actual_line, end="")
-        print("- " * 20)
-        for i, actual_line in enumerate(actual):
-            print(actual_line, end="")
-            assert actual_line == expected[i] + "\n"
+    assert_outputted_setup_cfg(setup_cfg_path, setup_cfg_out)
 
 
 def test_01_minimum_section_no_pypi(directory: str, requests_mock: Any) -> None:
@@ -283,15 +287,7 @@ flake8-ignore = E501 E231 E226
     )
 
     # assert outputted setup.cfg
-    with open(setup_cfg_path) as f:
-        expected = setup_cfg_out.replace("    ", "\t").split("\n")
-        actual = list(f.readlines())
-        for actual_line in actual:
-            print(actual_line, end="")
-        print("- " * 20)
-        for i, actual_line in enumerate(actual):
-            print(actual_line, end="")
-            assert actual_line == expected[i] + "\n"
+    assert_outputted_setup_cfg(setup_cfg_path, setup_cfg_out)
 
 
 def test_02_minimum_section_no_pypi_no_keywords_no_author(
@@ -392,15 +388,7 @@ flake8-ignore = E501 E231 E226
     )
 
     # assert outputted setup.cfg
-    with open(setup_cfg_path) as f:
-        expected = setup_cfg_out.replace("    ", "\t").split("\n")
-        actual = list(f.readlines())
-        for actual_line in actual:
-            print(actual_line, end="")
-        print("- " * 20)
-        for i, actual_line in enumerate(actual):
-            print(actual_line, end="")
-            assert actual_line == expected[i] + "\n"
+    assert_outputted_setup_cfg(setup_cfg_path, setup_cfg_out)
 
 
 def test_10_keywords_spaced(directory: str, requests_mock: Any) -> None:
@@ -537,15 +525,7 @@ flake8-ignore = E501 E231 E226
     )
 
     # assert outputted setup.cfg
-    with open(setup_cfg_path) as f:
-        expected = setup_cfg_out.replace("    ", "\t").split("\n")
-        actual = list(f.readlines())
-        for actual_line in actual:
-            print(actual_line, end="")
-        print("- " * 20)
-        for i, actual_line in enumerate(actual):
-            print(actual_line, end="")
-            assert actual_line == expected[i] + "\n"
+    assert_outputted_setup_cfg(setup_cfg_path, setup_cfg_out)
 
 
 def test_20_python_max(directory: str, requests_mock: Any) -> None:
@@ -683,15 +663,7 @@ flake8-ignore = E501 E231 E226
     )
 
     # assert outputted setup.cfg
-    with open(setup_cfg_path) as f:
-        expected = setup_cfg_out.replace("    ", "\t").split("\n")
-        actual = list(f.readlines())
-        for actual_line in actual:
-            print(actual_line, end="")
-        print("- " * 20)
-        for i, actual_line in enumerate(actual):
-            print(actual_line, end="")
-            assert actual_line == expected[i] + "\n"
+    assert_outputted_setup_cfg(setup_cfg_path, setup_cfg_out)
 
 
 def test_30_package_dirs__single(directory: str, requests_mock: Any) -> None:
@@ -830,15 +802,7 @@ flake8-ignore = E501 E231 E226
     )
 
     # assert outputted setup.cfg
-    with open(setup_cfg_path) as f:
-        expected = setup_cfg_out.replace("    ", "\t").split("\n")
-        actual = list(f.readlines())
-        for actual_line in actual:
-            print(actual_line, end="")
-        print("- " * 20)
-        for i, actual_line in enumerate(actual):
-            print(actual_line, end="")
-            assert actual_line == expected[i] + "\n"
+    assert_outputted_setup_cfg(setup_cfg_path, setup_cfg_out)
 
 
 def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
@@ -989,15 +953,7 @@ flake8-ignore = E501 E231 E226
     )
 
     # assert outputted setup.cfg
-    with open(setup_cfg_path) as f:
-        expected = setup_cfg_out.replace("    ", "\t").split("\n")
-        actual = list(f.readlines())
-        for actual_line in actual:
-            print(actual_line, end="")
-        print("- " * 20)
-        for i, actual_line in enumerate(actual):
-            print(actual_line, end="")
-            assert actual_line == expected[i] + "\n"
+    assert_outputted_setup_cfg(setup_cfg_path, setup_cfg_out)
 
 
 def test_36_package_dirs__multi_missing_init__error(
@@ -1147,15 +1103,7 @@ flake8-ignore = E501 E231 E226
     )
 
     # assert outputted setup.cfg
-    with open(setup_cfg_path) as f:
-        expected = setup_cfg_out.replace("    ", "\t").split("\n")
-        actual = list(f.readlines())
-        for actual_line in actual:
-            print(actual_line, end="")
-        print("- " * 20)
-        for i, actual_line in enumerate(actual):
-            print(actual_line, end="")
-            assert actual_line == expected[i] + "\n"
+    assert_outputted_setup_cfg(setup_cfg_path, setup_cfg_out)
 
 
 def test_37_package_dirs__multi_missing_version__error(
@@ -1306,15 +1254,7 @@ flake8-ignore = E501 E231 E226
     )
 
     # assert outputted setup.cfg
-    with open(setup_cfg_path) as f:
-        expected = setup_cfg_out.replace("    ", "\t").split("\n")
-        actual = list(f.readlines())
-        for actual_line in actual:
-            print(actual_line, end="")
-        print("- " * 20)
-        for i, actual_line in enumerate(actual):
-            print(actual_line, end="")
-            assert actual_line == expected[i] + "\n"
+    assert_outputted_setup_cfg(setup_cfg_path, setup_cfg_out)
 
 
 def test_38_package_dirs__multi_mismatch_version__error(
@@ -1467,15 +1407,7 @@ flake8-ignore = E501 E231 E226
     )
 
     # assert outputted setup.cfg
-    with open(setup_cfg_path) as f:
-        expected = setup_cfg_out.replace("    ", "\t").split("\n")
-        actual = list(f.readlines())
-        for actual_line in actual:
-            print(actual_line, end="")
-        print("- " * 20)
-        for i, actual_line in enumerate(actual):
-            print(actual_line, end="")
-            assert actual_line == expected[i] + "\n"
+    assert_outputted_setup_cfg(setup_cfg_path, setup_cfg_out)
 
 
 def test_40_extra_fields(directory: str, requests_mock: Any) -> None:
@@ -1634,12 +1566,4 @@ flake8-ignore = E501 E231 E226
     )
 
     # assert outputted setup.cfg
-    with open(setup_cfg_path) as f:
-        expected = setup_cfg_out.replace("    ", "\t").split("\n")
-        actual = list(f.readlines())
-        for actual_line in actual:
-            print(actual_line, end="")
-        print("- " * 20)
-        for i, actual_line in enumerate(actual):
-            print(actual_line, end="")
-            assert actual_line == expected[i] + "\n"
+    assert_outputted_setup_cfg(setup_cfg_path, setup_cfg_out)
