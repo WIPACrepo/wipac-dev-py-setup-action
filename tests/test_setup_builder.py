@@ -24,8 +24,11 @@ LICENSE = "MIT"
 
 def assert_outputted_setup_cfg(setup_cfg_path: Path, setup_cfg_out: str) -> None:
     with open(setup_cfg_path) as f:
+        print("EXPECTED:")
+        print(setup_cfg_out + "\n")
         expected = setup_cfg_out.replace("    ", "\t").split("\n")
         actual = list(f.readlines())
+        print("ACTUAL:")
         for actual_line in actual:
             print(actual_line, end="")
         print("- " * 20)
