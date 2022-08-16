@@ -9,6 +9,7 @@ import dataclasses
 import enum
 import os
 import re
+from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Tuple, cast
 
 import requests
@@ -207,19 +208,21 @@ def long_description_content_type(extension: FilenameExtension) -> str:
 class FromFiles:
     """Get things that require reading files."""
 
-    def __init__(self, root: str, bsec: BuilderSection) -> None:
+    def __init__(self, root: Path, bsec: BuilderSection) -> None:
         if not os.path.exists(root):
             raise NotADirectoryError(root)
         self._bsec = bsec
-        self.root = os.path.abspath(root)
-        self.pkg_path = self._get_package_path()
-        self.package = os.path.basename(self.pkg_path)
+        self.root = root.resolve()
+
+        pkg_paths = self._get_package_paths()
+        self.packages = [p.name for p in pkg_paths]
+        self.version = self._get_version(pkg_paths)
+
         self.readme, self.readme_ext = self._get_readme_ext()
-        self.version = self._get_version()
         self.development_status = self._get_development_status()
 
-    def _get_package_path(self) -> str:
-        """Find the package."""
+    def _get_package_paths(self) -> List[Path]:
+        """Find the package path(s)."""
 
         def _get_packages() -> Iterator[str]:
             """This is essentially [options]'s `packages = find:`."""
@@ -230,18 +233,30 @@ class FromFiles:
                 if "__init__.py" in os.listdir(directory):
                     yield directory
 
-        pkgs = [os.path.join(self.root, p) for p in self._bsec.packages()]
-        if not pkgs:
-            pkgs = list(_get_packages())
-        if not pkgs:
+        if not (available_pkgs := list(_get_packages())):
             raise Exception(
                 f"No package found in '{self.root}'. Are you missing an __init__.py?"
             )
-        if len(pkgs) > 1:
+
+        # check the setup.cfg: package_dirs
+        if self._bsec.packages():
+            if extra := [p for p in self._bsec.packages() if p not in available_pkgs]:
+                plural = len(extra) > 1
+                raise Exception(
+                    f"Package director{'ies' if plural else 'y'} not found: '{extra}' (defined in setup.cfg). "
+                    f"{'Are' if plural else 'Is'} the director{'ies' if plural else 'y'} "
+                    f"missing {'' if plural else 'an'} __init__.py file{'s' if plural else ''}?"
+                )
+            return [self.root / p for p in self._bsec.packages()]
+
+        # use the auto-detected package (if there's ONE)
+        if len(available_pkgs) > 1:
             raise Exception(
-                f"More than one package found in '{self.root}' ({pkgs}). Remove extra __init__.py files."
+                f"More than one package found in '{self.root}' ({available_pkgs}). "
+                f"Either remove the extra __init__.py files, "
+                f"or list *all* your desired packages in 'package_dirs'."
             )
-        return pkgs[0]
+        return [self.root / available_pkgs[0]]
 
     def _get_readme_ext(self) -> Tuple[str, FilenameExtension]:
         """Return the 'README' file and its extension."""
@@ -251,7 +266,8 @@ class FromFiles:
                 return fname, FilenameExtension(ext)
         raise Exception(f"No README file found in '{self.root}'")
 
-    def _get_version(self) -> str:
+    @staticmethod
+    def _get_version(pkg_paths: List[Path]) -> str:
         """Get the package's `__version__` string.
 
         This is essentially [metadata]'s `version = attr: <module-path to __version__>`.
@@ -260,14 +276,24 @@ class FromFiles:
         race condition, see:
         https://stackoverflow.com/a/2073599/13156561
         """
-        with open(os.path.join(self.pkg_path, "__init__.py"), "r") as f:
-            for line in f.readlines():
-                if "__version__" in line:
-                    # grab "X.Y.Z" from `__version__ = 'X.Y.Z'`
-                    # - quote-style insensitive
-                    return line.replace('"', "'").split("=")[-1].split("'")[1]
 
-        raise Exception(f"cannot find __version__ in {self.pkg_path}/__init__.py")
+        def version(ppath: Path) -> str:
+            with open(ppath / "__init__.py") as f:
+                for line in f.readlines():
+                    if "__version__" in line:
+                        # grab "X.Y.Z" from `__version__ = 'X.Y.Z'`
+                        # - quote-style insensitive
+                        return line.replace('"', "'").split("=")[-1].split("'")[1]
+
+            raise Exception(f"cannot find __version__ in {ppath}/__init__.py")
+
+        pacakge_versions = {p: version(p) for p in pkg_paths}
+        if len(set(pacakge_versions.values())) != 1:
+            raise Exception(
+                f"Version mismatch between packages: {pacakge_versions}. "
+                f"All __version__ tuples must be the same."
+            )
+        return list(pacakge_versions.values())[0]
 
     def _get_development_status(self) -> str:
         """Detect the development status from the package's version.
@@ -309,7 +335,7 @@ class READMEMarkdownManager:
         self.github_full_repo = github_full_repo
         self.bsec = bsec
         self.gh_api = gh_api
-        with open(ffile.readme, "r") as f:
+        with open(ffile.readme) as f:
             lines_to_keep = []
             in_badges = False
             for line in f.readlines():
@@ -376,7 +402,7 @@ class READMEMarkdownManager:
 
 def _build_out_sections(
     cfg: configparser.RawConfigParser,
-    root_path: str,
+    root_path: Path,
     github_full_repo: str,
     base_keywords: List[str],
     dirs_exclude: List[str],
@@ -393,10 +419,12 @@ def _build_out_sections(
     # [metadata]
     if not cfg.has_section("metadata"):  # will only override some fields
         cfg["metadata"] = {}
-    meta_version = f"attr: {ffile.package}.__version__"  # "wipac_dev_tools.__version__"
+    meta_version_single = (  # even if there are >1 packages, use just one (they're all the same)
+        f"attr: {ffile.packages[0]}.__version__"  # "wipac_dev_tools.__version__"
+    )
     # if we DON'T want PyPI stuff:
     if not bsec.pypi_name:
-        cfg["metadata"]["version"] = meta_version
+        cfg["metadata"]["version"] = meta_version_single
         if bsec.author:
             cfg["metadata"]["author"] = bsec.author
         if bsec.author_email:
@@ -409,7 +437,7 @@ def _build_out_sections(
     else:
         msec = MetadataSection(
             name=bsec.pypi_name,
-            version=meta_version,
+            version=meta_version_single,
             url=gh_api.url,
             author=bsec.author,
             author_email=bsec.author_email,
@@ -439,7 +467,11 @@ def _build_out_sections(
     # [semantic_release]
     cfg.remove_section("semantic_release")  # will be completely overridden
     cfg["semantic_release"] = {
-        "version_variable": f"{ffile.package}/__init__.py:__version__",  # "wipac_dev_tools/__init__.py:__version__"
+        # "wipac_dev_tools/__init__.py:__version__"
+        # "wipac_dev_tools/__init__.py:__version__,wipac_foo_tools/__init__.py:__version__"
+        "version_variable": ",".join(
+            f"{p}/__init__.py:__version__" for p in ffile.packages
+        ),
         "upload_to_pypi": "True" if bsec.pypi_name else "False",  # >>> str(bool(x))
         "patch_without_tag": "True",
         "commit_parser": "semantic_release.history.tag_parser",
@@ -460,11 +492,10 @@ def _build_out_sections(
 
     # [options.packages.find]
     if cfg["options"]["packages"] == "find:":
-        pkgs = bsec.packages()
         cfg["options.packages.find"] = {}
-        if pkgs:
+        if bsec.packages():
             cfg["options.packages.find"]["include"] = list_to_dangling(
-                pkgs + [f"{p}.*" for p in pkgs]
+                bsec.packages() + [f"{p}.*" for p in bsec.packages()]
             )
         else:
             cfg["options.packages.find"]["exclude"] = list_to_dangling(dirs_exclude)
@@ -490,7 +521,7 @@ class MissingSectionException(Exception):
 
 
 def write_setup_cfg(
-    setup_cfg: str,
+    setup_cfg: Path,
     github_full_repo: str,
     base_keywords: List[str],
     dirs_exclude: List[str],
@@ -500,7 +531,7 @@ def write_setup_cfg(
 
     Return a 'READMEMarkdownManager' instance to write out. If, necessary.
     """
-    setup_cfg = os.path.abspath(setup_cfg)
+    setup_cfg = setup_cfg.resolve()
 
     cfg = configparser.RawConfigParser(allow_no_value=True, comment_prefixes="/")
     cfg.read(setup_cfg)
@@ -509,7 +540,7 @@ def write_setup_cfg(
 
     readme_mgr = _build_out_sections(
         cfg,
-        os.path.dirname(setup_cfg),
+        setup_cfg.parent,
         github_full_repo,
         base_keywords,
         dirs_exclude,
@@ -574,7 +605,7 @@ def write_setup_cfg(
 
 
 def main(
-    setup_cfg: str,
+    setup_cfg: Path,
     github_full_repo: str,
     base_keywords: List[str],
     dirs_exclude: List[str],
@@ -646,7 +677,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     main(
-        args.setup_cfg_file,
+        Path(args.setup_cfg_file),
         args.github_full_repo,
         args.base_keywords,
         args.directory_exclude,
