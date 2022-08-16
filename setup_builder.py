@@ -218,12 +218,9 @@ class FromFiles:
 
         def _get_packages() -> Iterator[str]:
             """This is essentially [options]'s `packages = find:`."""
-            for directory in os.listdir(self.root):
-                directory = os.path.join(self.root, directory)
-                if not os.path.isdir(directory):
-                    continue
-                if "__init__.py" in os.listdir(directory):
-                    yield directory
+            for directory in [p for p in self.root.iterdir() if p.is_dir()]:
+                if "__init__.py" in [p.name for p in directory.iterdir()]:
+                    yield directory.name
 
         if not (available_pkgs := list(_get_packages())):
             raise Exception(
