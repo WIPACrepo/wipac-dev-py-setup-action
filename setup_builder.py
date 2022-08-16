@@ -235,7 +235,8 @@ class FromFiles:
             if extra := [p for p in self._bsec.packages() if p not in available_pkgs]:
                 plural = len(extra) > 1
                 raise Exception(
-                    f"Package director{'ies' if plural else 'y'} not found: '{extra}' (defined in setup.cfg). "
+                    f"Package director{'ies' if plural else 'y'} not found: "
+                    f"{', '.join(extra)} (defined in setup.cfg). "
                     f"{'Are' if plural else 'Is'} the director{'ies' if plural else 'y'} "
                     f"missing {'' if plural else 'an'} __init__.py file{'s' if plural else ''}?"
                 )
@@ -244,7 +245,7 @@ class FromFiles:
         # use the auto-detected package (if there's ONE)
         if len(available_pkgs) > 1:
             raise Exception(
-                f"More than one package found in '{self.root}' ({available_pkgs}). "
+                f"More than one package found in '{self.root}': {', '.join(available_pkgs)}. "
                 f"Either remove the extra __init__.py files, "
                 f"or list *all* your desired packages in 'package_dirs'."
             )
