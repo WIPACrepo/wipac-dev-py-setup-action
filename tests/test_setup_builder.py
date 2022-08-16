@@ -1015,7 +1015,7 @@ flake8-ignore = E501 E231 E226
     # run setup_builder
     with pytest.raises(
         Exception,
-        match="Package directory not found: another_one (defined in setup.cfg). Is the directory missing an __init__.py?",
+        match=r"Package directory not found: another_one \(defined in setup\.cfg\)\. Is the directory missing an __init__\.py\?",
     ):
         setup_builder.main(
             setup_cfg_path,
