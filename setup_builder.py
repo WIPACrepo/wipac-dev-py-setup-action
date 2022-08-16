@@ -233,13 +233,18 @@ class FromFiles:
         # check the setup.cfg: package_dirs
         if self._bsec.packages():
             if extra := [p for p in self._bsec.packages() if p not in available_pkgs]:
-                plural = len(extra) > 1
+                if len(extra) == 1:
+                    raise Exception(
+                        f"Package directory not found: "
+                        f"{', '.join(extra)} (defined in setup.cfg). "
+                        f"Is the directory missing an __init__.py?"
+                    )
                 raise Exception(
-                    f"Package director{'ies' if plural else 'y'} not found: "
-                    f"{', '.join(extra)} (defined in setup.cfg). "
-                    f"{'Are' if plural else 'Is'} the director{'ies' if plural else 'y'} "
-                    f"missing {'' if plural else 'an'} __init__.py file{'s' if plural else ''}?"
+                    f"Package directories not found: "
+                    f"{extra[0]} (defined in setup.cfg). "
+                    f"Are the directories missing __init__.py files?"
                 )
+
             return [self.root / p for p in self._bsec.packages()]
 
         # use the auto-detected package (if there's ONE)
