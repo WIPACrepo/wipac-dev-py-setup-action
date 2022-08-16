@@ -256,7 +256,7 @@ class FromFiles:
         for fname in self.root.iterdir():
             if fname.stem == "README":
                 return Path(fname)
-        raise Exception(f"No README file found in '{self.root}'")
+        raise FileNotFoundError(f"No README file found in '{self.root}'")
 
     @staticmethod
     def _get_version(pkg_paths: List[Path]) -> str:
