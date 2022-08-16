@@ -16,6 +16,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
       - uses: WIPACrepo/wipac-dev-mypy-action@v1
 
   setup_builder:
@@ -25,6 +27,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
       - run: pip install -r requirements-dev.txt
       - run: |
           pytest tests/test_setup_builder.py -vvv
