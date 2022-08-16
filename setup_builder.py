@@ -6,7 +6,6 @@ Used in CI/CD, used by GH Action.
 import argparse
 import configparser
 import dataclasses
-import enum
 import os
 import re
 from pathlib import Path
@@ -20,13 +19,6 @@ REAMDE_BADGES_START_DELIMITER = "<!--- Top of README Badges (automated) --->"
 REAMDE_BADGES_END_DELIMITER = "<!--- End of README Badges (automated) --->"
 
 _PYTHON_MINOR_RELEASE_MAX = 50
-
-
-class FilenameExtension(enum.Enum):
-    """Extensions of a file."""
-
-    DOT_MD = ".md"
-    DOT_RST = ".rst"
 
 
 PythonMinMax = Tuple[Tuple[int, int], Tuple[int, int]]
@@ -194,15 +186,15 @@ def list_to_dangling(lines: List[str], sort: bool = False) -> str:
     return "\n" + "\n".join(sorted(stripped) if sort else stripped)
 
 
-def long_description_content_type(extension: FilenameExtension) -> str:
-    """Return the long_description_content_type for the given file extension (no dot)."""
-    try:
-        return {
-            FilenameExtension.DOT_MD: "text/markdown",
-            FilenameExtension.DOT_RST: "text/x-rst",
-        }[extension]
-    except KeyError:
-        return "text/plain"
+def long_description_content_type(readme_path: Path) -> str:
+    """Return the long_description_content_type for the given file extension."""
+    match readme_path.suffix:
+        case ".md":
+            return "text/markdown"
+        case ".rst":
+            return "text/x-rst"
+        case _:
+            return "text/plain"
 
 
 class FromFiles:
@@ -218,7 +210,7 @@ class FromFiles:
         self.packages = [p.name for p in pkg_paths]
         self.version = self._get_version(pkg_paths)
 
-        self.readme, self.readme_ext = self._get_readme_ext()
+        self.readme_path = self._get_readme_path()
         self.development_status = self._get_development_status()
 
     def _get_package_paths(self) -> List[Path]:
@@ -258,12 +250,11 @@ class FromFiles:
             )
         return [self.root / available_pkgs[0]]
 
-    def _get_readme_ext(self) -> Tuple[str, FilenameExtension]:
+    def _get_readme_path(self) -> Path:
         """Return the 'README' file and its extension."""
-        for fname in os.listdir(self.root):
-            if fname.startswith("README."):
-                _, ext = os.path.splitext(fname)
-                return fname, FilenameExtension(ext)
+        for fname in self.root.iterdir():
+            if fname.stem == "README":
+                return Path(fname)
         raise Exception(f"No README file found in '{self.root}'")
 
     @staticmethod
@@ -335,7 +326,7 @@ class READMEMarkdownManager:
         self.github_full_repo = github_full_repo
         self.bsec = bsec
         self.gh_api = gh_api
-        with open(ffile.readme) as f:
+        with open(ffile.readme_path) as f:
             lines_to_keep = []
             in_badges = False
             for line in f.readlines():
@@ -351,9 +342,9 @@ class READMEMarkdownManager:
         self.lines = self.badges_lines() + lines_to_keep
 
     @property
-    def readme(self) -> str:
-        """Get the README file."""
-        return self.ffile.readme
+    def readme_path(self) -> Path:
+        """Get the README file path."""
+        return self.ffile.readme_path
 
     def badges_lines(self) -> List[str]:
         """Create and return the lines used to append to a README.md containing various linked-badges."""
@@ -442,9 +433,9 @@ def _build_out_sections(
             author=bsec.author,
             author_email=bsec.author_email,
             description=gh_api.description,
-            long_description=f"file: README{ffile.readme_ext.value}",
+            long_description=f"file: {ffile.readme_path.name}",
             long_description_content_type=long_description_content_type(
-                ffile.readme_ext
+                ffile.readme_path
             ),
             keywords=list_to_dangling(bsec.keywords_list(base_keywords)),
             license=repo_license,
@@ -511,7 +502,7 @@ def _build_out_sections(
         cfg["options.package_data"]["*"] = star_data
 
     # Automate some README stuff
-    if ffile.readme_ext == FilenameExtension.DOT_MD:
+    if ffile.readme_path.suffix == ".md":
         return READMEMarkdownManager(ffile, github_full_repo, bsec, gh_api)
     return None
 
@@ -570,7 +561,7 @@ def write_setup_cfg(
         cfg_new.write(f)
 
     # Comment generated sections w/ comments saying so & clean up whitespace
-    with open(setup_cfg, "r") as f:
+    with open(setup_cfg) as f:
         c = f.read()
         meta_auto_attrs = [
             f.name
@@ -623,7 +614,7 @@ def main(
 
     # also, write the readme, if necessary
     if readme_mgr:
-        with open(readme_mgr.readme, "w") as f:
+        with open(readme_mgr.readme_path, "w") as f:
             for line in readme_mgr.lines:
                 f.write(line)
 
