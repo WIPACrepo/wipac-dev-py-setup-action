@@ -850,7 +850,9 @@ pypi_name = wipac-mock-package
 python_min = 3.6
 author = {AUTHOR}
 author_email = {AUTHOR_EMAIL}
-package_dirs = mock_package
+package_dirs =
+    mock_package
+    another_one
 keywords_spaced = python REST tools utilities OpenTelemetry tracing telemetry
 
 [options]
