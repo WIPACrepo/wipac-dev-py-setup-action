@@ -6,6 +6,7 @@ import os
 import pathlib
 import sys
 import uuid
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -44,7 +45,7 @@ def directory() -> str:
 
 def test_00_minimum_section(directory: str, requests_mock: Any) -> None:
     """Test using a minimum [wipac:cicd_setup_builder]."""
-    setup_cfg_path = f"{directory}/setup.cfg"
+    setup_cfg_path = Path(f"{directory}/setup.cfg")
 
     setup_cfg_in = f"""[wipac:cicd_setup_builder]
 pypi_name = wipac-mock-package
@@ -180,7 +181,7 @@ flake8-ignore = E501 E231 E226
 
 def test_01_minimum_section_no_pypi(directory: str, requests_mock: Any) -> None:
     """Test using a minimum [wipac:cicd_setup_builder] without PyPI attributes."""
-    setup_cfg_path = f"{directory}/setup.cfg"
+    setup_cfg_path = Path(f"{directory}/setup.cfg")
 
     setup_cfg_in = f"""[wipac:cicd_setup_builder]
 python_min = 3.6
@@ -298,7 +299,7 @@ def test_02_minimum_section_no_pypi_no_keywords_no_author(
     directory: str, requests_mock: Any
 ) -> None:
     """Test using a minimum [wipac:cicd_setup_builder] without PyPI attributes."""
-    setup_cfg_path = f"{directory}/setup.cfg"
+    setup_cfg_path = Path(f"{directory}/setup.cfg")
 
     setup_cfg_in = """[wipac:cicd_setup_builder]
 python_min = 3.6
@@ -405,7 +406,7 @@ flake8-ignore = E501 E231 E226
 
 def test_10_keywords_spaced(directory: str, requests_mock: Any) -> None:
     """Test using [wipac:cicd_setup_builder] with `keywords_spaced`."""
-    setup_cfg_path = f"{directory}/setup.cfg"
+    setup_cfg_path = Path(f"{directory}/setup.cfg")
 
     setup_cfg_in = f"""[wipac:cicd_setup_builder]
 pypi_name = wipac-mock-package
@@ -550,7 +551,7 @@ flake8-ignore = E501 E231 E226
 
 def test_20_python_max(directory: str, requests_mock: Any) -> None:
     """Test using [wipac:cicd_setup_builder] with `python_max`."""
-    setup_cfg_path = f"{directory}/setup.cfg"
+    setup_cfg_path = Path(f"{directory}/setup.cfg")
 
     setup_cfg_in = f"""[wipac:cicd_setup_builder]
 pypi_name = wipac-mock-package
@@ -696,7 +697,7 @@ flake8-ignore = E501 E231 E226
 
 def test_30_package_dirs(directory: str, requests_mock: Any) -> None:
     """Test using [wipac:cicd_setup_builder] with `package_dirs`."""
-    setup_cfg_path = f"{directory}/setup.cfg"
+    setup_cfg_path = Path(f"{directory}/setup.cfg")
 
     setup_cfg_in = f"""[wipac:cicd_setup_builder]
 pypi_name = wipac-mock-package
@@ -843,7 +844,7 @@ flake8-ignore = E501 E231 E226
 
 def test_40_extra_fields(directory: str, requests_mock: Any) -> None:
     """Test using [wipac:cicd_setup_builder] with extra stuff in [options] & [metadata]."""
-    setup_cfg_path = f"{directory}/setup.cfg"
+    setup_cfg_path = Path(f"{directory}/setup.cfg")
 
     setup_cfg_in = f"""[wipac:cicd_setup_builder]
 pypi_name = wipac-mock-package
