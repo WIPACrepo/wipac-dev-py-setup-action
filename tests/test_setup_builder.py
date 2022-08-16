@@ -1084,7 +1084,7 @@ flake8-ignore = E501 E231 E226
     # run setup_builder
     with pytest.raises(
         Exception,
-        match=r"Exception: cannot find __version__ in .*/another_one/__init__\.py",
+        match=r"Cannot find __version__ in .*/another_one/__init__\.py",
     ):
         setup_builder.main(
             setup_cfg_path,
@@ -1153,9 +1153,7 @@ flake8-ignore = E501 E231 E226
     requests_mock.get("https://docs.python.org/release/3.11.0/", status_code=404)
 
     # run setup_builder
-    with pytest.raises(
-        Exception, match=r"Exception: Version mismatch between packages*"
-    ):
+    with pytest.raises(Exception, match=r"Version mismatch between packages*"):
         setup_builder.main(
             setup_cfg_path,
             GITHUB_FULL_REPO,

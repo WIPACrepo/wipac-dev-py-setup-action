@@ -279,7 +279,7 @@ class FromFiles:
                         # - quote-style insensitive
                         return line.replace('"', "'").split("=")[-1].split("'")[1]
 
-            raise Exception(f"cannot find __version__ in {ppath}/__init__.py")
+            raise Exception(f"Cannot find __version__ in {ppath}/__init__.py")
 
         pacakge_versions = {p: version(p) for p in pkg_paths}
         if len(set(pacakge_versions.values())) != 1:
