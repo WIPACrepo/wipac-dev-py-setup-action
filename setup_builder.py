@@ -624,12 +624,13 @@ def main(
 
 if __name__ == "__main__":
 
-    def _assert_setup_cfg(arg: str) -> str:
-        if not (arg.endswith("/setup.cfg") or arg == "setup.cfg"):
+    def _type_setup_cfg(arg: str) -> Path:
+        fpath = Path(arg)
+        if fpath.name != "setup.cfg":
             raise ValueError()  # excepted by argparse & formatted nicely
-        if not os.path.exists(arg):
+        if not fpath.exists():
             raise FileNotFoundError(arg)
-        return arg
+        return fpath
 
     def _assert_github_full_repo(arg: str) -> str:
         if not re.match(r"(\w|-)+/(\w|-)+$", arg):
@@ -643,7 +644,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "setup_cfg_file",
-        type=_assert_setup_cfg,
+        type=_type_setup_cfg,
         help="path to the 'setup.cfg' file",
     )
     parser.add_argument(
@@ -671,7 +672,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     main(
-        Path(args.setup_cfg_file),
+        args.setup_cfg_file,
         args.github_full_repo,
         args.base_keywords,
         args.directory_exclude,
