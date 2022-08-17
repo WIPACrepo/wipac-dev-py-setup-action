@@ -281,13 +281,13 @@ class FromFiles:
 
             raise Exception(f"Cannot find __version__ in {ppath}/__init__.py")
 
-        pacakge_versions = {p: version(p) for p in pkg_paths}
-        if len(set(pacakge_versions.values())) != 1:
+        pkg_versions = {p: version(p) for p in pkg_paths}
+        if len(set(pkg_versions.values())) != 1:
             raise Exception(
-                f"Version mismatch between packages: {pacakge_versions}. "
+                f"Version mismatch between packages: {pkg_versions}. "
                 f"All __version__ tuples must be the same."
             )
-        return list(pacakge_versions.values())[0]
+        return list(pkg_versions.values())[0]
 
     def _get_development_status(self) -> str:
         """Detect the development status from the package's version.
