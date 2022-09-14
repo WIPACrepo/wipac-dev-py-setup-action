@@ -21,6 +21,9 @@ This GitHub Action prepares a repository to be GitHub-released and PyPI-publishe
       - uses: WIPACrepo/wipac-dev-py-setup-action@v#.#
 ```
 
+#### Personal Access Token
+Supplying a generated personal access token (`secrets.PERSONAL_ACCESS_TOKEN`) will allow the action to push commits *and still* trigger GH workflows. The token needs "repo" permissions.
+
 #### Defining Python Package Dependencies
 These go in the `setup.cfg` file's `[options]` section:
 ```
