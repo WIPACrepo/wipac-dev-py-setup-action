@@ -52,9 +52,18 @@ runs:
     - name: Build requirements.txt (and commit)
       run: |
         pip3 install pip-tools
+
         pip-compile --upgrade
         git add .
         git commit -m "<bot> update requirements.txt" || true
+
+        # generate req.txt for each extras_require
+        python3 ${{ github.action_path }}/list_extras.py setup.cfg | while read line; do
+          echo $line
+          pip-compile --upgrade --extra $line --output-file="requirements-${line}.txt"
+          git add .
+          git commit -m "<bot> update requirements-${line}.txt" || true
+        done
       shell: bash
 
     - name: Push changes
