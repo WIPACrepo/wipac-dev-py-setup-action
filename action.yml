@@ -37,12 +37,14 @@ runs:
       run: |
         pip3 install -r ${{ github.action_path }}/requirements.txt
         echo $GITHUB_REPOSITORY
+        echo "setup.cfg (+ README.md)"
         python3 ${{ github.action_path }}/setup_builder.py \
           setup.cfg \
           $GITHUB_REPOSITORY \
           --base-keywords ${{ inputs.base-keywords }} \
           --directory-exclude ${{ inputs.directory-exclude }} \
           --license ${{ inputs.license }}
+        cat setup.cfg
         git add setup.cfg
         git commit -m "<bot> update setup.cfg" || true
         git add README.md || true
