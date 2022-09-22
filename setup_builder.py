@@ -202,25 +202,29 @@ def long_description_content_type(readme_path: Path) -> str:
 class FromFiles:
     """Get things that require reading files."""
 
-    def __init__(self, root: Path, bsec: BuilderSection) -> None:
+    def __init__(
+        self, root: Path, bsec: BuilderSection, dirs_exclude: List[str]
+    ) -> None:
         if not os.path.exists(root):
             raise NotADirectoryError(root)
         self._bsec = bsec
         self.root = root.resolve()
 
-        pkg_paths = self._get_package_paths()
+        pkg_paths = self._get_package_paths(dirs_exclude)
         self.packages = [p.name for p in pkg_paths]
         self.version = self._get_version(pkg_paths)
 
         self.readme_path = self._get_readme_path()
         self.development_status = self._get_development_status()
 
-    def _get_package_paths(self) -> List[Path]:
+    def _get_package_paths(self, dirs_exclude: List[str]) -> List[Path]:
         """Find the package path(s)."""
 
         def _get_packages() -> Iterator[str]:
             """This is essentially [options]'s `packages = find:`."""
             for directory in [p for p in self.root.iterdir() if p.is_dir()]:
+                if directory.name in dirs_exclude:
+                    continue
                 if "__init__.py" in [p.name for p in directory.iterdir()]:
                     yield directory.name
 
@@ -231,31 +235,31 @@ class FromFiles:
 
         # check the setup.cfg: package_dirs
         if self._bsec.packages():
-            if extra := [p for p in self._bsec.packages() if p not in available_pkgs]:
-                if len(extra) == 1:
+            if not_ins := [p for p in self._bsec.packages() if p not in available_pkgs]:
+                if len(not_ins) == 1:
                     raise Exception(
                         f"Package directory not found: "
-                        f"{', '.join(extra)} (defined in setup.cfg). "
+                        f"{', '.join(not_ins)} (defined in setup.cfg). "
                         f"Is the directory missing an __init__.py?"
                     )
                 raise Exception(
                     f"Package directories not found: "
-                    f"{extra[0]} (defined in setup.cfg). "
+                    f"{not_ins[0]} (defined in setup.cfg). "
                     f"Are the directories missing __init__.py files?"
                 )
 
             return [self.root / p for p in self._bsec.packages()]
-
         # use the auto-detected package (if there's ONE)
-        if len(available_pkgs) > 1:
-            raise Exception(
-                f"More than one package found in '{self.root}': {', '.join(available_pkgs)}. "
-                f"Either "
-                f"[1] list *all* your desired packages in your setup.cfg's 'package_dirs', "
-                f"[2] remove the extra __init__.py file(s), "
-                f"or [3] list which packages to ignore in your GitHub Action step's 'with.directory-exclude'."
-            )
-        return [self.root / available_pkgs[0]]
+        else:
+            if len(available_pkgs) > 1:
+                raise Exception(
+                    f"More than one package found in '{self.root}': {', '.join(available_pkgs)}. "
+                    f"Either "
+                    f"[1] list *all* your desired packages in your setup.cfg's 'package_dirs', "
+                    f"[2] remove the extra __init__.py file(s), "
+                    f"or [3] list which packages to ignore in your GitHub Action step's 'with.directory-exclude'."
+                )
+            return [self.root / available_pkgs[0]]
 
     def _get_readme_path(self) -> Path:
         """Return the 'README' file and its extension."""
@@ -411,7 +415,7 @@ def _build_out_sections(
     Return a 'READMEMarkdownManager' instance to write out. If, necessary.
     """
     bsec = BuilderSection(**dict(cfg[BUILDER_SECTION_NAME]))  # checks req/extra fields
-    ffile = FromFiles(root_path, bsec)  # get things that require reading files
+    ffile = FromFiles(root_path, bsec, dirs_exclude)  # things requiring reading files
     gh_api = GitHubAPI(github_full_repo)
 
     # [metadata]
@@ -495,7 +499,7 @@ def _build_out_sections(
             cfg["options.packages.find"]["include"] = list_to_dangling(
                 bsec.packages() + [f"{p}.*" for p in bsec.packages()]
             )
-        else:
+        if dirs_exclude:
             cfg["options.packages.find"]["exclude"] = list_to_dangling(dirs_exclude)
 
     # [options.package_data]
