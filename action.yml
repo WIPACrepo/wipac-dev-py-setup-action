@@ -9,7 +9,7 @@ inputs:
   directory-exclude:  # id of input
     description: 'A list of directories to exclude from release'
     required: false
-    default: 'test tests doc docs resource resources'
+    default: 'test tests doc docs resource resources example examples'
   license:  # id of input
     description: "The repo's license type"
     required: false
