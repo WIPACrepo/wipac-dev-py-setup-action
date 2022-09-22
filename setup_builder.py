@@ -250,8 +250,10 @@ class FromFiles:
         if len(available_pkgs) > 1:
             raise Exception(
                 f"More than one package found in '{self.root}': {', '.join(available_pkgs)}. "
-                f"Either remove the extra __init__.py files, "
-                f"or list *all* your desired packages in 'package_dirs'."
+                f"Either "
+                f"[1] list *all* your desired packages in your setup.cfg's 'package_dirs', "
+                f"[2] remove the extra __init__.py file(s), "
+                f"or [3] list which packages to ignore in your GitHub Action step's 'with.directory-exclude'."
             )
         return [self.root / available_pkgs[0]]
 
