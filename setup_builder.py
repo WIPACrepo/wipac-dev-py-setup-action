@@ -242,12 +242,12 @@ class FromFiles:
                 if len(not_ins) == 1:
                     raise Exception(
                         f"Package directory not found: "
-                        f"{', '.join(not_ins)} (defined in setup.cfg). "
+                        f"{not_ins[0]} (defined in setup.cfg). "
                         f"Is the directory missing an __init__.py?"
                     )
                 raise Exception(
                     f"Package directories not found: "
-                    f"{not_ins[0]} (defined in setup.cfg). "
+                    f"{', '.join(not_ins)} (defined in setup.cfg). "
                     f"Are the directories missing __init__.py files?"
                 )
 
