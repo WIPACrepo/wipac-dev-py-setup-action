@@ -770,6 +770,13 @@ telemetry =
 include =
     mock_package
     mock_package.*
+exclude =
+    test
+    tests
+    doc
+    docs
+    resource
+    resources
 
 [flake8]
 ignore = E226,E231,E501
@@ -915,6 +922,13 @@ include =
     another_one
     mock_package.*
     another_one.*
+exclude =
+    test
+    tests
+    doc
+    docs
+    resource
+    resources
 
 [flake8]
 ignore = E226,E231,E501

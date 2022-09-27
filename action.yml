@@ -9,7 +9,7 @@ inputs:
   directory-exclude:  # id of input
     description: 'A list of directories to exclude from release'
     required: false
-    default: 'test tests doc docs resource resources'
+    default: 'test tests doc docs resource resources example examples'
   license:  # id of input
     description: "The repo's license type"
     required: false
@@ -36,13 +36,16 @@ runs:
     - name: Build setup.cfg + README.md (and commit)
       run: |
         pip3 install -r ${{ github.action_path }}/requirements.txt
+        pip3 install wipac-dev-tools
         echo $GITHUB_REPOSITORY
+        echo "setup.cfg (+ README.md)"
         python3 ${{ github.action_path }}/setup_builder.py \
           setup.cfg \
           $GITHUB_REPOSITORY \
           --base-keywords ${{ inputs.base-keywords }} \
           --directory-exclude ${{ inputs.directory-exclude }} \
           --license ${{ inputs.license }}
+        cat setup.cfg
         git add setup.cfg
         git commit -m "<bot> update setup.cfg" || true
         git add README.md || true
@@ -52,9 +55,18 @@ runs:
     - name: Build requirements.txt (and commit)
       run: |
         pip3 install pip-tools
+
         pip-compile --upgrade
         git add .
         git commit -m "<bot> update requirements.txt" || true
+
+        # generate req.txt for each extras_require
+        python3 ${{ github.action_path }}/list_extras.py setup.cfg | while read line; do
+          echo $line
+          pip-compile --upgrade --extra $line --output-file="requirements-${line}.txt"
+          git add .
+          git commit -m "<bot> update requirements-${line}.txt" || true
+        done
       shell: bash
 
     - name: Push changes
