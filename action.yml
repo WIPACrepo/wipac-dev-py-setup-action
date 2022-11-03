@@ -76,10 +76,10 @@ runs:
         done
 
         # commit each changed file individually
-        git diff --name-only
-        for DELTA_FILE in $(git diff --name-only); do
-          git add $DELTA_FILE
-          git commit -m "<bot> update ${DELTA_FILE}"
+        DELTA_FILES=$(git ls-files --modified --others --exclude-standard --directory)
+        for file in $DELTA_FILES; do
+          git add $file
+          git commit -m "<bot> update ${file}"
         done
 
       shell: bash
