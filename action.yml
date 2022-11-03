@@ -77,6 +77,7 @@ runs:
         done
 
         # commit each changed file individually
+        git diff --name-only
         for DELTA_FILE in $(git diff --name-only); do
           git add $DELTA_FILE
           git commit -m "<bot> update ${DELTA_FILE}"
