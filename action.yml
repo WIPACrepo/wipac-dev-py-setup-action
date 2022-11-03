@@ -58,11 +58,10 @@ runs:
 
         # do main requirements.txt in subproc
         echo "requirements.txt"
-        pip-compile --upgrade &
+        pip-compile --upgrade --output-file="requirements.txt" &
 
         # get all extras
         EXTRAS=$(python3 ${{ github.action_path }}/list_extras.py setup.cfg)
-        echo "extras: ${EXTRAS}"
 
         # generate req*.txt for each extras_require (each in a subproc)
         for extra in $EXTRAS; do
