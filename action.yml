@@ -56,21 +56,22 @@ runs:
       run: |
         pip3 install pip-tools
 
-        pip-compile --upgrade
-        git add .
-        git commit -m "<bot> update requirements.txt" || true
+        # do main requirements.txt in subproc
+        echo "requirements.txt"
+        pip-compile --upgrade &
 
         # get all extras
         EXTRAS=$(python3 ${{ github.action_path }}/list_extras.py setup.cfg)
         echo $EXTRAS
 
-        # generate req*.txt for each extras_require (in a subproc)
+        # generate req*.txt for each extras_require (each in a subproc)
         for extra in $EXTRAS; do
           echo $extra
           pip-compile --upgrade --extra $extra --output-file="requirements-${extra}.txt" &
         done
 
         # wait for all subprocs
+        wait -n # main requirements.txt
         for extra in $EXTRAS; do
           wait -n
         done
@@ -78,7 +79,7 @@ runs:
         # commit each changed file individually
         for DELTA_FILE in $(git diff --name-only); do
           git add $DELTA_FILE
-          git commit -m "<bot> update requirements-${DELTA_FILE}.txt"
+          git commit -m "<bot> update ${DELTA_FILE}"
         done
 
       shell: bash
