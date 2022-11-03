@@ -1,4 +1,5 @@
-"""Print the list of setup/pip extras (options.extras_require section) for a setup.cfg."""
+"""Print the list of setup/pip extras (options.extras_require section) for a
+setup.cfg."""
 
 
 import argparse

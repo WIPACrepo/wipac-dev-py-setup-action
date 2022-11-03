@@ -76,7 +76,7 @@ runs:
         done
 
         # commit each changed file individually
-        for DELTA_FILE in $(git diff --name-only); then
+        for DELTA_FILE in $(git diff --name-only); do
           git add $DELTA_FILE
           git commit -m "<bot> update requirements-${DELTA_FILE}.txt"
         done
