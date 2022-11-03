@@ -60,13 +60,27 @@ runs:
         git add .
         git commit -m "<bot> update requirements.txt" || true
 
-        # generate req.txt for each extras_require
-        python3 ${{ github.action_path }}/list_extras.py setup.cfg | while read line; do
-          echo $line
-          pip-compile --upgrade --extra $line --output-file="requirements-${line}.txt"
-          git add .
-          git commit -m "<bot> update requirements-${line}.txt" || true
+        # get all extras
+        EXTRAS=$(python3 ${{ github.action_path }}/list_extras.py setup.cfg)
+        echo $EXTRAS
+
+        # generate req*.txt for each extras_require (in a subproc)
+        for extra in $EXTRAS; do
+          echo $extra
+          pip-compile --upgrade --extra $extra --output-file="requirements-${extra}.txt" &
         done
+
+        # wait for all subprocs
+        for extra in $EXTRAS; do
+          wait -n
+        done
+
+        # commit each changed file individually
+        for DELTA_FILE in $(git diff --name-only); then
+          git add $DELTA_FILE
+          git commit -m "<bot> update requirements-${DELTA_FILE}.txt"
+        done
+
       shell: bash
 
     - name: Push changes
