@@ -20,6 +20,7 @@ AUTHOR_EMAIL = "developers@icecube.wisc.edu"
 BASE_KEYWORDS = ["WIPAC", "IceCube"]
 DIRECTORY_EXCLUDE = ["test", "tests", "doc", "docs", "resource", "resources"]
 LICENSE = "MIT"
+TOKEN = "token"
 
 
 def assert_outputted_setup_cfg(setup_cfg_path: Path, setup_cfg_out: str) -> None:
@@ -178,6 +179,7 @@ flake8-ignore = E501 E231 E226
         BASE_KEYWORDS,
         DIRECTORY_EXCLUDE,
         LICENSE,
+        TOKEN,
     )
 
     # assert outputted setup.cfg
@@ -286,6 +288,7 @@ flake8-ignore = E501 E231 E226
         BASE_KEYWORDS,
         DIRECTORY_EXCLUDE,
         LICENSE,
+        TOKEN,
     )
 
     # assert outputted setup.cfg
@@ -387,6 +390,7 @@ flake8-ignore = E501 E231 E226
         [],
         DIRECTORY_EXCLUDE,
         LICENSE,
+        TOKEN,
     )
 
     # assert outputted setup.cfg
@@ -524,6 +528,7 @@ flake8-ignore = E501 E231 E226
         BASE_KEYWORDS,
         DIRECTORY_EXCLUDE,
         LICENSE,
+        TOKEN,
     )
 
     # assert outputted setup.cfg
@@ -662,6 +667,7 @@ flake8-ignore = E501 E231 E226
         BASE_KEYWORDS,
         DIRECTORY_EXCLUDE,
         LICENSE,
+        TOKEN,
     )
 
     # assert outputted setup.cfg
@@ -808,6 +814,7 @@ flake8-ignore = E501 E231 E226
         BASE_KEYWORDS,
         DIRECTORY_EXCLUDE,
         LICENSE,
+        TOKEN,
     )
 
     # assert outputted setup.cfg
@@ -966,6 +973,7 @@ flake8-ignore = E501 E231 E226
         BASE_KEYWORDS,
         DIRECTORY_EXCLUDE,
         LICENSE,
+        TOKEN,
     )
 
     # assert outputted setup.cfg
@@ -1037,6 +1045,7 @@ flake8-ignore = E501 E231 E226
             BASE_KEYWORDS,
             DIRECTORY_EXCLUDE,
             LICENSE,
+            TOKEN,
         )
 
 
@@ -1106,6 +1115,7 @@ flake8-ignore = E501 E231 E226
             BASE_KEYWORDS,
             DIRECTORY_EXCLUDE,
             LICENSE,
+            TOKEN,
         )
 
 
@@ -1174,6 +1184,7 @@ flake8-ignore = E501 E231 E226
             BASE_KEYWORDS,
             DIRECTORY_EXCLUDE,
             LICENSE,
+            TOKEN,
         )
 
 
@@ -1330,6 +1341,7 @@ flake8-ignore = E501 E231 E226
         BASE_KEYWORDS,
         DIRECTORY_EXCLUDE,
         LICENSE,
+        TOKEN,
     )
 
     # assert outputted setup.cfg

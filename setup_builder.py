@@ -44,10 +44,16 @@ def get_latest_py3_release() -> Tuple[int, int]:
 class GitHubAPI:
     """Relay info from the GitHub API."""
 
-    def __init__(self, github_full_repo: str) -> None:
+    def __init__(self, github_full_repo: str, oauth_token: str) -> None:
         self.url = f"https://github.com/{github_full_repo}"
 
-        _json = requests.get(f"https://api.github.com/repos/{github_full_repo}").json()
+        _headers = {'authorization': f'Bearer {oauth_token}'}
+        _req = requests.get(
+            f"https://api.github.com/repos/{github_full_repo}",
+            headers=_headers,
+        )
+        _req.raise_for_status()
+        _json = _req.json()
         self.default_branch = cast(str, _json["default_branch"])  # main/master/etc.
         self.description = cast(str, _json["description"])
 
@@ -412,6 +418,7 @@ def _build_out_sections(
     base_keywords: List[str],
     dirs_exclude: List[str],
     repo_license: str,
+    token: str,
 ) -> Optional[READMEMarkdownManager]:
     """Build out the `[metadata]`, `[semantic_release]`, and `[options]` sections in `cfg`.
 
@@ -419,7 +426,7 @@ def _build_out_sections(
     """
     bsec = BuilderSection(**dict(cfg[BUILDER_SECTION_NAME]))  # checks req/extra fields
     ffile = FromFiles(root_path, bsec, dirs_exclude)  # things requiring reading files
-    gh_api = GitHubAPI(github_full_repo)
+    gh_api = GitHubAPI(github_full_repo, oauth_token=token)
 
     # [metadata]
     if not cfg.has_section("metadata"):  # will only override some fields
@@ -531,6 +538,7 @@ def write_setup_cfg(
     base_keywords: List[str],
     dirs_exclude: List[str],
     repo_license: str,
+    token: str,
 ) -> Optional[READMEMarkdownManager]:
     """Build/write the `setup.cfg` sections according to `BUILDER_SECTION_NAME`.
 
@@ -550,6 +558,7 @@ def write_setup_cfg(
         base_keywords,
         dirs_exclude,
         repo_license,
+        token,
     )
 
     # Re-order some sections to the top
@@ -615,6 +624,7 @@ def main(
     base_keywords: List[str],
     dirs_exclude: List[str],
     repo_license: str,
+    token: str,
 ) -> None:
     """Read and write all necessary files."""
     # build & write the setup.cfg
@@ -624,6 +634,7 @@ def main(
         base_keywords,
         dirs_exclude,
         repo_license,
+        token,
     )
 
     # also, write the readme, if necessary
@@ -675,6 +686,11 @@ if __name__ == "__main__":
         required=True,
         help="The repo's license type",
     )
+    parser.add_argument(
+        "--token",
+        required=True,
+        help="An OAuth2 token, ususally GITHUB_TOKEN",
+    )
     args = parser.parse_args()
     logging_tools.log_argparse_args(args, logger=LOGGER, level="WARNING")
 
@@ -684,4 +700,5 @@ if __name__ == "__main__":
         args.base_keywords,
         args.directory_exclude,
         args.license,
+        args.token,
     )
