@@ -44,7 +44,8 @@ runs:
           $GITHUB_REPOSITORY \
           --base-keywords ${{ inputs.base-keywords }} \
           --directory-exclude ${{ inputs.directory-exclude }} \
-          --license ${{ inputs.license }}
+          --license ${{ inputs.license }} \
+          --token ${{ secrets.GITHUB_TOKEN }}
         cat setup.cfg
         git add setup.cfg
         git commit -m "<bot> update setup.cfg" || true
