@@ -3,6 +3,8 @@
 Used in CI/CD, used by GH Action.
 """
 
+# docfmt: skip-file-ric-evans
+
 import argparse
 import configparser
 import dataclasses
@@ -47,7 +49,7 @@ class GitHubAPI:
     def __init__(self, github_full_repo: str, oauth_token: str) -> None:
         self.url = f"https://github.com/{github_full_repo}"
 
-        _headers = {'authorization': f'Bearer {oauth_token}'}
+        _headers = {"authorization": f"Bearer {oauth_token}"}
         _req = requests.get(
             f"https://api.github.com/repos/{github_full_repo}",
             headers=_headers,
@@ -486,9 +488,10 @@ def _build_out_sections(
         ),
         "upload_to_pypi": "True" if bsec.pypi_name else "False",  # >>> str(bool(x))
         "patch_without_tag": "True",
-        "commit_parser": "semantic_release.history.tag_parser",
-        "minor_tag": "[minor]",
-        "fix_tag": "[fix]",
+        "commit_parser": "semantic_release.history.emoji_parser",
+        "major_emoji": "[major]",
+        "minor_emoji": "[minor]",
+        "patch_emoji": "[fix], [patch]",
         "branch": gh_api.default_branch,
     }
 
