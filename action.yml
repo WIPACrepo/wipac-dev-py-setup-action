@@ -14,6 +14,14 @@ inputs:
     description: "The repo's license type"
     required: false
     default: 'MIT'
+  git_committer_name:
+    description: 'The human name for the “committer” field'
+    required: false
+    default: github-actions
+  git_committer_email:
+    description: 'The email address for the “committer” field'
+    required: false
+    default: github-actions@github.com
 
 # outputs:
 #   random-number:
@@ -29,8 +37,8 @@ runs:
 
     - name: Git config
       run: |
-        git config user.name github-actions
-        git config user.email github-actions@github.com
+        git config user.name ${{ inputs.git_committer_name }}
+        git config user.email ${{ inputs.git_committer_email }}
       shell: bash
 
     - name: Build setup.cfg + README.md (and commit)
