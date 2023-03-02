@@ -7,7 +7,7 @@ GitHub Action Package for Automating Python-Package Setup
 This GitHub Action prepares a repository to be GitHub-released and PyPI-published by the [Python Semantic Release GitHub Action](https://python-semantic-release.readthedocs.io/en/latest/). All that a user needs to do is define a few attributes in `setup.cfg` (see [*Main Configuration Modes*](#main-configuration-modes)).
 
 ### Details
-`setup.cfg` sections needed for publishing a package to PyPI are auto-generated, hyper-linked badges are added to the `README.md`, and the root directory's `requirements.txt` is overwritten/updated (by way of [pip-compile](https://github.com/jazzband/pip-tools)). Commits are git-pushed by the "github-actions" bot (github-actions@github.com).
+`setup.cfg` sections needed for publishing a package to PyPI are auto-generated, hyper-linked badges are added to the `README.md`, and the root directory's `requirements.txt` is overwritten/updated (by way of [pip-compile](https://github.com/jazzband/pip-tools)). Commits are git-pushed by the "github-actions" bot (github-actions@github.com) by default, or your chosen actor configured by inputs (`git_committer_name` & `git_committer_email`).
 
 #### GitHub Action Syntax
 ```
