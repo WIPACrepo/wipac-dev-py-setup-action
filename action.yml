@@ -15,11 +15,11 @@ inputs:
     required: false
     default: 'MIT'
   git_committer_name:
-    description: 'The human name for the “committer” field'
+    description: 'The name used for "git config user.name"'
     required: false
     default: github-actions
   git_committer_email:
-    description: 'The email address for the “committer” field'
+    description: 'The email used for "git config user.email"'
     required: false
     default: github-actions@github.com
 
