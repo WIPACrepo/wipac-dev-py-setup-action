@@ -14,6 +14,14 @@ inputs:
     description: "The repo's license type"
     required: false
     default: 'MIT'
+  git_committer_name:
+    description: 'The name used for "git config user.name"'
+    required: false
+    default: github-actions
+  git_committer_email:
+    description: 'The email used for "git config user.email"'
+    required: false
+    default: github-actions@github.com
 
 # outputs:
 #   random-number:
@@ -25,12 +33,12 @@ runs:
   steps:
     - uses: actions/setup-python@v4
       with:
-        python-version: '3.10'  # NOTE: update, someday
+        python-version: '3.10'  # NOTE: update, someday. Also tests.yml
 
     - name: Git config
       run: |
-        git config user.name github-actions
-        git config user.email github-actions@github.com
+        git config user.name ${{ inputs.git_committer_name }}
+        git config user.email ${{ inputs.git_committer_email }}
       shell: bash
 
     - name: Build setup.cfg + README.md (and commit)
