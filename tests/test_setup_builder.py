@@ -300,6 +300,7 @@ def test_02_minimum_section_no_pypi_no_keywords_no_author(
     setup_cfg_path = Path(f"{directory}/setup.cfg")
 
     cicd_setup_builder = """[wipac:cicd_setup_builder]
+python_min = 3.6
 """
 
     setup_cfg_in = f"""{cicd_setup_builder}
