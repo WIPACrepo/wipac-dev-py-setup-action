@@ -414,7 +414,6 @@ keywords_spaced = python REST tools "REST tools" utilities "OpenTelemetry" traci
 """
 
     setup_cfg_in = f"""{cicd_setup_builder}
-
 [options]
 install_requires =
     pyjwt
