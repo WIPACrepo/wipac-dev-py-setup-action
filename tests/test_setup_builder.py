@@ -413,7 +413,7 @@ author_email = {AUTHOR_EMAIL}
 keywords_spaced = python REST tools "REST tools" utilities "OpenTelemetry" tracing telemetry "3+ word string keywords"
 """
 
-    setup_cfg_in = f"""{cicd_setup_builder}
+    setup_cfg_in = f"""{cicd_setup_builder.rstrip('\n')}
 [options]
 install_requires =
     pyjwt
