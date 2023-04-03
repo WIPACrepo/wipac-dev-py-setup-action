@@ -149,7 +149,29 @@ class BuilderSection(Section):
 
     def keywords_list(self, base_keywords: List[str]) -> List[str]:
         """Get the user-defined keywords as a list, along with any base keywords."""
-        keywords = self.keywords_spaced.strip().split() + base_keywords
+        keywords = []
+        phrase = []
+        for word in self.keywords_spaced.strip().split():
+            # "foo" -> strip & add
+            if word.startswith('"') and word.endswith('"'):
+                keywords.append(word.strip('"'))
+            # "BAR -> store
+            elif word.startswith('"'):
+                phrase = [word.lstrip('"')]
+            # BAZ" -> pop & add phrase
+            elif word.endswith('"'):
+                phrase.append(word.rstrip('"'))
+                keywords.append(" ".join(phrase))
+                phrase = []
+            # are we within quotes? prev: "BAR; now: bat; later: BAZ" ("BAR bat BAZ")
+            elif phrase:
+                phrase.append(word)
+            # normal case (not within quotes)
+            else:
+                keywords.append(word)
+
+        keywords.extend(base_keywords)
+
         if not keywords and self.pypi_name:
             raise Exception(
                 "keywords must be provided in setup.cfg ([wipac:cicd_setup_builder]) "

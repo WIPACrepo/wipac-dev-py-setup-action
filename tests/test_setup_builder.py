@@ -410,7 +410,7 @@ pypi_name = wipac-mock-package
 python_min = 3.6
 author = {AUTHOR}
 author_email = {AUTHOR_EMAIL}
-keywords_spaced = python REST tools "REST tools" utilities OpenTelemetry tracing telemetry
+keywords_spaced = python REST tools "REST tools" utilities "OpenTelemetry" tracing telemetry "3+ word string keywords"
 
 [options]
 install_requires =
@@ -456,6 +456,7 @@ keywords =
     OpenTelemetry
     tracing
     telemetry
+    3+ word string keywords
     WIPAC
     IceCube
 license = MIT
