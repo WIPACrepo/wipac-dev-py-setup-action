@@ -68,7 +68,6 @@ python_min = 3.6
 author = {AUTHOR}
 author_email = {AUTHOR_EMAIL}
 """
-    cicd_setup_builder = cicd_setup_builder.rstrip("\n")
 
     setup_cfg_in = f"""{cicd_setup_builder}
 [options]
@@ -195,7 +194,6 @@ python_min = 3.6
 author = {AUTHOR}
 author_email = {AUTHOR_EMAIL}
 """
-    cicd_setup_builder = cicd_setup_builder.rstrip("\n")
 
     setup_cfg_in = f"""{cicd_setup_builder}
 [options]
@@ -303,7 +301,6 @@ def test_02_minimum_section_no_pypi_no_keywords_no_author(
 
     cicd_setup_builder = """[wipac:cicd_setup_builder]
 """
-    cicd_setup_builder = cicd_setup_builder.rstrip("\n")
 
     setup_cfg_in = f"""{cicd_setup_builder}
 [options]
@@ -411,7 +408,6 @@ author = {AUTHOR}
 author_email = {AUTHOR_EMAIL}
 keywords_spaced = python REST tools "REST tools" utilities "OpenTelemetry" tracing telemetry "3+ word string keywords"
 """
-    cicd_setup_builder = cicd_setup_builder.rstrip("\n")
 
     setup_cfg_in = f"""{cicd_setup_builder}
 [options]
@@ -550,7 +546,6 @@ author = {AUTHOR}
 author_email = {AUTHOR_EMAIL}
 keywords_spaced = python REST tools utilities OpenTelemetry tracing telemetry
 """
-    cicd_setup_builder = cicd_setup_builder.rstrip("\n")
 
     setup_cfg_in = f"""{cicd_setup_builder}
 [options]
@@ -686,7 +681,6 @@ author_email = {AUTHOR_EMAIL}
 package_dirs = mock_package
 keywords_spaced = python REST tools utilities OpenTelemetry tracing telemetry
 """
-    cicd_setup_builder = cicd_setup_builder.rstrip("\n")
 
     setup_cfg_in = f"""{cicd_setup_builder}
 [options]
@@ -832,7 +826,6 @@ package_dirs =
     another_one
 keywords_spaced = python REST tools utilities OpenTelemetry tracing telemetry
 """
-    cicd_setup_builder = cicd_setup_builder.rstrip("\n")
 
     setup_cfg_in = f"""{cicd_setup_builder}
 [options]
@@ -988,7 +981,6 @@ package_dirs =
     another_one
 keywords_spaced = python REST tools utilities OpenTelemetry tracing telemetry
 """
-    cicd_setup_builder = cicd_setup_builder.rstrip("\n")
 
     setup_cfg_in = f"""{cicd_setup_builder}
 [options]
@@ -1060,7 +1052,6 @@ package_dirs =
     another_one
 keywords_spaced = python REST tools utilities OpenTelemetry tracing telemetry
 """
-    cicd_setup_builder = cicd_setup_builder.rstrip("\n")
 
     setup_cfg_in = f"""{cicd_setup_builder}
 [options]
@@ -1133,7 +1124,6 @@ package_dirs =
     another_one
 keywords_spaced = python REST tools utilities OpenTelemetry tracing telemetry
 """
-    cicd_setup_builder = cicd_setup_builder.rstrip("\n")
 
     setup_cfg_in = f"""{cicd_setup_builder}
 [options]
@@ -1200,7 +1190,6 @@ author = {AUTHOR}
 author_email = {AUTHOR_EMAIL}
 keywords_spaced = python REST tools utilities OpenTelemetry tracing telemetry
 """
-    cicd_setup_builder = cicd_setup_builder.rstrip("\n")
 
     setup_cfg_in = f"""{cicd_setup_builder}
 [metadata]
