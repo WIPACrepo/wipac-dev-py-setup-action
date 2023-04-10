@@ -71,7 +71,7 @@ runs:
         with open("setup.cfg") as f:
           for line in f.readlines():
             if line.startswith("version_variable = "):
-              line_to_parse = line
+              line_to_parse = line.strip()  # remove newline
         if not line_to_parse:
           raise Exception("Cannot addd py.typed files (missing version_variable in setup.cfg)")
 
