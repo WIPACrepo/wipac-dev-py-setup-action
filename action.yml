@@ -77,7 +77,10 @@ runs:
 
         dirs = []
         for version_path in line_to_parse.removeprefix("version_variable = ").split(","):
-          dirs.append(version_path.removesuffix("__init__.py:__version__"))
+          print(version_path)
+          dpath = version_path.removesuffix("__init__.py:__version__")
+          print(dpath)
+          dirs.append(dpath)
 
         for dpath in dirs:
           Path(dpath).touch()  # create if needed!
