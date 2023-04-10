@@ -75,15 +75,13 @@ runs:
         if not line_to_parse:
           raise Exception("Cannot addd py.typed files (missing version_variable in setup.cfg)")
 
-        dirs = []
         for version_path in line_to_parse.removeprefix("version_variable = ").split(","):
           print(version_path)
           dpath = version_path.removesuffix("__init__.py:__version__")
           print(dpath)
-          dirs.append(dpath)
-
-        for dpath in dirs:
-          Path(dpath).touch()  # create if needed!
+          fpath = Path(dpath) / "py.typed"
+          print(fpath)
+          fpath.touch()  # create if needed!
         '
         git add .  # won't error if nothing to add
         git commit -m "<bot> add py.typed file(s)" || true
