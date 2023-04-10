@@ -61,6 +61,33 @@ runs:
         git commit -m "<bot> update README.md" || true
       shell: bash
 
+    - name: Add py.typed file(s) (and commit)
+      run: |
+        python -c '
+        import os
+        from pathlib import Path
+
+        line_to_parse = ""
+        with open("setup.cfg") as f:
+          for line in f.readlines():
+            if line.startswith("version_variable = "):
+              line_to_parse = line.strip()  # remove newline
+        if not line_to_parse:
+          raise Exception("Cannot addd py.typed files (missing version_variable in setup.cfg)")
+
+        for version_path in line_to_parse.removeprefix("version_variable = ").split(","):
+          print(version_path)
+          dpath = version_path.removesuffix("__init__.py:__version__")
+          print(dpath)
+          fpath = Path(dpath) / "py.typed"
+          print(fpath)
+          fpath.touch()  # create if needed!
+        '
+        git add .  # won't error if nothing to add
+        git commit -m "<bot> add py.typed file(s)" || true
+
+      shell: bash
+
     - name: Build requirements.txt (and commit)
       run: |
         pip3 install pip-tools
