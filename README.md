@@ -159,6 +159,9 @@ This will generate `setup.cfg` sections needed for making a GitHub release for y
             # via requests
         ```
 
+#### Note: Python's Classifier "Development Status"
+This is determined by auto-detecting the package's current version. If the git commit message is intending to trigger Semantic Release's version bumping action and the new version will qualify for a new "Development Status", then that Status is used ahead of time.
+
 
 ### Minimal Mode: No PyPI Metadata
 This will generate the absolute minimal sections needed for making a release for your Python package.

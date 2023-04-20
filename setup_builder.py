@@ -26,6 +26,14 @@ _PYTHON_MINOR_RELEASE_MAX = 50
 
 LOGGER = logging.getLogger("setup-builder")
 
+SEMANTIC_RELEASE_MAJOR = ["[major]"]
+SEMANTIC_RELEASE_MINOR = ["[minor]"]
+SEMANTIC_RELEASE_PATCH = ["[fix]", "[patch]"]
+
+DEV_STATUS_ALPHA_0_0_Z = "Development Status :: 3 - Alpha"
+DEV_STATUS_BETA_0_Y_Z = "Development Status :: 4 - Beta"
+DEV_STATUS_PROD_X_Y_Z = "Development Status :: 5 - Production/Stable"
+
 PythonMinMax = Tuple[Tuple[int, int], Tuple[int, int]]
 
 
@@ -236,7 +244,11 @@ class FromFiles:
     """Get things that require reading files."""
 
     def __init__(
-        self, root: Path, bsec: BuilderSection, dirs_exclude: List[str]
+        self,
+        root: Path,
+        bsec: BuilderSection,
+        dirs_exclude: List[str],
+        commit_message: str,
     ) -> None:
         if not os.path.exists(root):
             raise NotADirectoryError(root)
@@ -248,7 +260,7 @@ class FromFiles:
         self.version = self._get_version(pkg_paths)
 
         self.readme_path = self._get_readme_path()
-        self.development_status = self._get_development_status()
+        self.development_status = self._get_development_status(commit_message)
 
     def _get_package_paths(self, dirs_exclude: List[str]) -> List[Path]:
         """Find the package path(s)."""
@@ -330,7 +342,7 @@ class FromFiles:
             )
         return list(pkg_versions.values())[0]
 
-    def _get_development_status(self) -> str:
+    def _get_development_status(self, commit_message: str) -> str:
         """Detect the development status from the package's version.
 
         Known Statuses (**not all are supported**):
@@ -342,14 +354,28 @@ class FromFiles:
             `"Development Status :: 6 - Mature"`
             `"Development Status :: 7 - Inactive"`
         """
-        if self.version.startswith("0.0.0"):
-            return "Development Status :: 2 - Pre-Alpha"
-        elif self.version.startswith("0.0."):
-            return "Development Status :: 3 - Alpha"
+
+        # detect version threshold crossing
+        pending_major_bump = any(k in commit_message for k in SEMANTIC_RELEASE_MAJOR)
+        pending_minor_bump = any(k in commit_message for k in SEMANTIC_RELEASE_MINOR)
+
+        # NOTE - if we weren't patching bumping by default, then we could use PRE-ALPHA
+
+        if self.version.startswith("0.0."):
+            if pending_major_bump:
+                return DEV_STATUS_PROD_X_Y_Z  # MAJOR-BUMPPING STRAIGHT TO PROD
+            if pending_minor_bump:
+                return DEV_STATUS_BETA_0_Y_Z  # MINOR-BUMPPING STRAIGHT TO BETA
+            return DEV_STATUS_ALPHA_0_0_Z
+
         elif self.version.startswith("0."):
-            return "Development Status :: 4 - Beta"
+            if pending_major_bump:
+                return DEV_STATUS_PROD_X_Y_Z  # MAJOR-BUMPPING STRAIGHT TO PROD
+            return DEV_STATUS_BETA_0_Y_Z
+
         elif int(self.version.split(".")[0]) >= 1:
-            return "Development Status :: 5 - Production/Stable"
+            return DEV_STATUS_PROD_X_Y_Z
+
         else:
             raise Exception(
                 f"Could not figure 'Development Status' for version: {self.version}"
@@ -443,13 +469,19 @@ def _build_out_sections(
     dirs_exclude: List[str],
     repo_license: str,
     token: str,
+    commit_message: str,
 ) -> Optional[READMEMarkdownManager]:
     """Build out the `[metadata]`, `[semantic_release]`, and `[options]` sections in `cfg`.
 
     Return a 'READMEMarkdownManager' instance to write out. If, necessary.
     """
     bsec = BuilderSection(**dict(cfg[BUILDER_SECTION_NAME]))  # checks req/extra fields
-    ffile = FromFiles(root_path, bsec, dirs_exclude)  # things requiring reading files
+    ffile = FromFiles(  # things requiring reading files
+        root_path,
+        bsec,
+        dirs_exclude,
+        commit_message,
+    )
     gh_api = GitHubAPI(github_full_repo, oauth_token=token)
 
     # [metadata]
@@ -511,9 +543,9 @@ def _build_out_sections(
         "upload_to_pypi": "True" if bsec.pypi_name else "False",  # >>> str(bool(x))
         "patch_without_tag": "True",
         "commit_parser": "semantic_release.history.emoji_parser",
-        "major_emoji": "[major]",
-        "minor_emoji": "[minor]",
-        "patch_emoji": "[fix], [patch]",
+        "major_emoji": ", ".join(SEMANTIC_RELEASE_MAJOR),
+        "minor_emoji": ", ".join(SEMANTIC_RELEASE_MINOR),
+        "patch_emoji": ", ".join(SEMANTIC_RELEASE_PATCH),
         "branch": gh_api.default_branch,
     }
 
@@ -564,6 +596,7 @@ def write_setup_cfg(
     dirs_exclude: List[str],
     repo_license: str,
     token: str,
+    commit_message: str,
 ) -> Optional[READMEMarkdownManager]:
     """Build/write the `setup.cfg` sections according to `BUILDER_SECTION_NAME`.
 
@@ -584,6 +617,7 @@ def write_setup_cfg(
         dirs_exclude,
         repo_license,
         token,
+        commit_message,
     )
 
     # Re-order some sections to the top
@@ -650,6 +684,7 @@ def main(
     dirs_exclude: List[str],
     repo_license: str,
     token: str,
+    commit_message: str,
 ) -> None:
     """Read and write all necessary files."""
     # build & write the setup.cfg
@@ -660,6 +695,7 @@ def main(
         dirs_exclude,
         repo_license,
         token,
+        commit_message,
     )
 
     # also, write the readme, if necessary
@@ -714,7 +750,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "--token",
         required=True,
-        help="An OAuth2 token, ususally GITHUB_TOKEN",
+        help="An OAuth2 token, usually GITHUB_TOKEN",
+    )
+    parser.add_argument(
+        "--commit-message",
+        required=True,
+        help="the current commit message -- used for extracting versioning info",
     )
     args = parser.parse_args()
     logging_tools.log_argparse_args(args, logger=LOGGER, level="WARNING")
@@ -726,4 +767,5 @@ if __name__ == "__main__":
         args.directory_exclude,
         args.license,
         args.token,
+        args.commit_message,
     )
