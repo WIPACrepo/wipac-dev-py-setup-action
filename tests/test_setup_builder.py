@@ -23,6 +23,8 @@ DIRECTORY_EXCLUDE = ["test", "tests", "doc", "docs", "resource", "resources"]
 LICENSE = "MIT"
 TOKEN = "token"
 
+NONBUMPING_COMMIT_MESSAGE = "foo bar baz"
+
 
 def assert_outputted_setup_cfg(setup_cfg_path: Path, setup_cfg_out: str) -> None:
     with open(setup_cfg_path) as f:
@@ -179,6 +181,7 @@ flake8-ignore = E501 E231 E226
         DIRECTORY_EXCLUDE,
         LICENSE,
         TOKEN,
+        NONBUMPING_COMMIT_MESSAGE,
     )
 
     # assert outputted setup.cfg
@@ -287,6 +290,7 @@ flake8-ignore = E501 E231 E226
         DIRECTORY_EXCLUDE,
         LICENSE,
         TOKEN,
+        NONBUMPING_COMMIT_MESSAGE,
     )
 
     # assert outputted setup.cfg
@@ -392,6 +396,7 @@ flake8-ignore = E501 E231 E226
         DIRECTORY_EXCLUDE,
         LICENSE,
         TOKEN,
+        NONBUMPING_COMMIT_MESSAGE,
     )
 
     # assert outputted setup.cfg
@@ -529,6 +534,7 @@ flake8-ignore = E501 E231 E226
         DIRECTORY_EXCLUDE,
         LICENSE,
         TOKEN,
+        NONBUMPING_COMMIT_MESSAGE,
     )
 
     # assert outputted setup.cfg
@@ -664,6 +670,7 @@ flake8-ignore = E501 E231 E226
         DIRECTORY_EXCLUDE,
         LICENSE,
         TOKEN,
+        NONBUMPING_COMMIT_MESSAGE,
     )
 
     # assert outputted setup.cfg
@@ -807,6 +814,7 @@ flake8-ignore = E501 E231 E226
         DIRECTORY_EXCLUDE,
         LICENSE,
         TOKEN,
+        NONBUMPING_COMMIT_MESSAGE,
     )
 
     # assert outputted setup.cfg
@@ -960,6 +968,7 @@ flake8-ignore = E501 E231 E226
         DIRECTORY_EXCLUDE,
         LICENSE,
         TOKEN,
+        NONBUMPING_COMMIT_MESSAGE,
     )
 
     # assert outputted setup.cfg
@@ -1337,6 +1346,7 @@ flake8-ignore = E501 E231 E226
         DIRECTORY_EXCLUDE,
         LICENSE,
         TOKEN,
+        NONBUMPING_COMMIT_MESSAGE,
     )
 
     # assert outputted setup.cfg

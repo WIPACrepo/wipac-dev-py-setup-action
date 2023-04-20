@@ -359,6 +359,8 @@ class FromFiles:
         pending_major_bump = any(k in commit_message for k in SEMANTIC_RELEASE_MAJOR)
         pending_minor_bump = any(k in commit_message for k in SEMANTIC_RELEASE_MINOR)
 
+        # NOTE - if we weren't patching bumping by default, then we could use PRE-ALPHA
+
         if self.version.startswith("0.0."):
             if pending_major_bump:
                 return DEV_STATUS_PROD_X_Y_Z  # MAJOR-BUMPPING STRAIGHT TO PROD
