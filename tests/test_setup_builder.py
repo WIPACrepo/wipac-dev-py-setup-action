@@ -1,6 +1,6 @@
 """Test setup_builder.py"""
 
-# pylint:disable=redefined-outer-name
+# pylint:disable=redefined-outer-name,invalid-name
 # docfmt: skip-file-ric-evans
 
 import os
@@ -1250,7 +1250,7 @@ project_urls =
         DIRECTORY_EXCLUDE,
         LICENSE,
         TOKEN,
-        "New Feature [major]",
+        "Big Change [major]",
     )
 
     # assert outputted setup.cfg
@@ -1412,7 +1412,7 @@ project_urls =
         DIRECTORY_EXCLUDE,
         LICENSE,
         TOKEN,
-        "New Feature [major]",
+        "Big Change [major]",
     )
 
     # assert outputted setup.cfg
@@ -1493,7 +1493,7 @@ project_urls =
         DIRECTORY_EXCLUDE,
         LICENSE,
         TOKEN,
-        "New Feature [major]",
+        "Big Change [major]",
     )
 
     # assert outputted setup.cfg
