@@ -837,6 +837,7 @@ keywords_spaced = python REST tools utilities OpenTelemetry tracing telemetry
             DIRECTORY_EXCLUDE,
             LICENSE,
             TOKEN,
+            NONBUMPING_COMMIT_MESSAGE,
         )
 
 
@@ -893,6 +894,7 @@ keywords_spaced = python REST tools utilities OpenTelemetry tracing telemetry
             DIRECTORY_EXCLUDE,
             LICENSE,
             TOKEN,
+            NONBUMPING_COMMIT_MESSAGE,
         )
 
 
@@ -948,6 +950,7 @@ keywords_spaced = python REST tools utilities OpenTelemetry tracing telemetry
             DIRECTORY_EXCLUDE,
             LICENSE,
             TOKEN,
+            NONBUMPING_COMMIT_MESSAGE,
         )
 
 
