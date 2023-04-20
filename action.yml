@@ -53,7 +53,8 @@ runs:
           --base-keywords ${{ inputs.base-keywords }} \
           --directory-exclude ${{ inputs.directory-exclude }} \
           --license ${{ inputs.license }} \
-          --token ${{ github.token }}
+          --token ${{ github.token }} \
+          --commit-message ${{ github.event.head_commit.message }}
         cat setup.cfg
         git add setup.cfg
         git commit -m "<bot> update setup.cfg" || true

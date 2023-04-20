@@ -564,6 +564,7 @@ def write_setup_cfg(
     dirs_exclude: List[str],
     repo_license: str,
     token: str,
+    commit_message: str,
 ) -> Optional[READMEMarkdownManager]:
     """Build/write the `setup.cfg` sections according to `BUILDER_SECTION_NAME`.
 
@@ -584,6 +585,7 @@ def write_setup_cfg(
         dirs_exclude,
         repo_license,
         token,
+        commit_message,
     )
 
     # Re-order some sections to the top
@@ -650,6 +652,7 @@ def main(
     dirs_exclude: List[str],
     repo_license: str,
     token: str,
+    commit_message: str,
 ) -> None:
     """Read and write all necessary files."""
     # build & write the setup.cfg
@@ -660,6 +663,7 @@ def main(
         dirs_exclude,
         repo_license,
         token,
+        commit_message,
     )
 
     # also, write the readme, if necessary
@@ -714,7 +718,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "--token",
         required=True,
-        help="An OAuth2 token, ususally GITHUB_TOKEN",
+        help="An OAuth2 token, usually GITHUB_TOKEN",
+    )
+    parser.add_argument(
+        "--commit-message",
+        required=True,
+        help="the current commit message -- used for extracting versioning info",
     )
     args = parser.parse_args()
     logging_tools.log_argparse_args(args, logger=LOGGER, level="WARNING")
@@ -726,4 +735,5 @@ if __name__ == "__main__":
         args.directory_exclude,
         args.license,
         args.token,
+        args.commit_message,
     )
