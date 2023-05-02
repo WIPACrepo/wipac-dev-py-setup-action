@@ -47,7 +47,10 @@ runs:
         pip3 install wipac-dev-tools
         echo $GITHUB_REPOSITORY
         echo "setup.cfg (+ README.md)"
-        HEAD_COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
+        HEAD_COMMIT_MESSAGE=$(cat <<EOF
+        "${{ github.event.head_commit.message }}"
+        EOF
+        )
         python3 ${{ github.action_path }}/setup_builder.py \
           setup.cfg \
           $GITHUB_REPOSITORY \
