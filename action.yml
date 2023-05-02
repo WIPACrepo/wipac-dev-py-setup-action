@@ -47,6 +47,12 @@ runs:
         pip3 install wipac-dev-tools
         echo $GITHUB_REPOSITORY
         echo "setup.cfg (+ README.md)"
+        # since GHA injects raw string, must use EOF to avoid quote-mangling
+        HEAD_COMMIT_MESSAGE=$(cat <<EOF
+        ${{ github.event.head_commit.message }}
+        EOF
+        )
+        # Build!
         python3 ${{ github.action_path }}/setup_builder.py \
           setup.cfg \
           $GITHUB_REPOSITORY \
@@ -54,8 +60,9 @@ runs:
           --directory-exclude ${{ inputs.directory-exclude }} \
           --license ${{ inputs.license }} \
           --token ${{ github.token }} \
-          --commit-message "${{ github.event.head_commit.message }}"
+          --commit-message "$HEAD_COMMIT_MESSAGE"
         cat setup.cfg
+        # Commits
         git add setup.cfg
         git commit -m "<bot> update setup.cfg" || true
         git add README.md || true
