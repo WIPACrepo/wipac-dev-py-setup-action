@@ -48,7 +48,7 @@ runs:
         echo $GITHUB_REPOSITORY
         echo "setup.cfg (+ README.md)"
         HEAD_COMMIT_MESSAGE=$(cat <<EOF
-        "${{ github.event.head_commit.message }}"
+        ${{ github.event.head_commit.message }}
         EOF
         )
         python3 ${{ github.action_path }}/setup_builder.py \
