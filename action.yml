@@ -47,6 +47,7 @@ runs:
         pip3 install wipac-dev-tools
         echo $GITHUB_REPOSITORY
         echo "setup.cfg (+ README.md)"
+        HEAD_COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
         python3 ${{ github.action_path }}/setup_builder.py \
           setup.cfg \
           $GITHUB_REPOSITORY \
@@ -54,7 +55,7 @@ runs:
           --directory-exclude ${{ inputs.directory-exclude }} \
           --license ${{ inputs.license }} \
           --token ${{ github.token }} \
-          --commit-message "${{ github.event.head_commit.message }}"
+          --commit-message "$HEAD_COMMIT_MESSAGE"
         cat setup.cfg
         git add setup.cfg
         git commit -m "<bot> update setup.cfg" || true
