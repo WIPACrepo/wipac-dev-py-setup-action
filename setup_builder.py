@@ -706,7 +706,6 @@ def main(
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(
         description=f"Read/transform 'setup.cfg' and 'README.md' files. "
         f"Builds out 'setup.cfg' sections according to [{BUILDER_SECTION_NAME}].",
