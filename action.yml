@@ -101,16 +101,19 @@ runs:
         pip3 install pip-tools
 
         # do main dependencies.log in subproc
+        git mv requirements.txt dependencies.log || true
         echo "dependencies.log"
         pip-compile --upgrade --output-file="dependencies.log" &
 
         # get all extras
         EXTRAS=$(python3 ${{ github.action_path }}/list_extras.py setup.cfg)
 
-        # generate req*.txt for each extras_require (each in a subproc)
+        # generate dependencies-*.log for each extras_require (each in a subproc)
         for extra in $EXTRAS; do
-          echo "dependencies-${extra}.log"
-          pip-compile --upgrade --extra $extra --output-file="dependencies-${extra}.txt" &
+          extra_dep_log="dependencies-${extra}.log"
+          git mv "dependencies-${extra}.txt" $extra_dep_log || true
+          echo $extra_dep_log
+          pip-compile --upgrade --extra $extra --output-file="$extra_dep_log" &
         done
 
         # wait for all subprocs
