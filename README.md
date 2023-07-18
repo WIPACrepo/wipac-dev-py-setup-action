@@ -9,7 +9,7 @@ This GitHub Action prepares a repository to be GitHub-released and PyPI-publishe
 ### Details
 - `setup.cfg` sections needed for publishing a package to PyPI are auto-generated,
 - hyper-linked badges are added to the `README.md`,
-- the root directory's `dependencies.log` is overwritten/updated (by way of [pip-compile](https://github.com/jazzband/pip-tools)) along with dedicated `requirements-EXTRA.txt` files for each package "extra", and
+- the root directory's `dependencies.log` is overwritten/updated (by way of [pip-compile](https://github.com/jazzband/pip-tools)) along with dedicated `dependencies-EXTRA.txt` files for each package "extra", and
 - `py.typed` files are created as needed.
 Commits are git-pushed by the "github-actions" bot (github-actions@github.com) by default, or your chosen actor configured by inputs (`git_committer_name` & `git_committer_email`).
 
@@ -292,14 +292,14 @@ The `wipac-dev-py-setup-action` GitHub Action pairs well with other GitHub Actio
 2. Use `WIPACrepo/wipac-dev-py-setup-action`
     - This...
         + sets up your Python package metadata in `setup.cfg`,
-        + bumps package requirements' versions in `dependencies.log`, and/or
+        + bumps package dependencies' versions in `dependencies.log`, and/or
         + updates `README.md`.
     - *The bot's git-push will cancel pending steps/jobs and trigger another workflow.*
 3. Use `WIPACrepo/wipac-dev-py-versions-action`
     - This will `pip install` your Python package with each supported Python 3 version.
     - This will catch install errors before any tests run.
 4. Run unit and integration tests
-    - To limit startup costs, include a job-dependency for the previous jobs. This will guarantee tests are running with the most recently bumped package requirements.
+    - To limit startup costs, include a job-dependency for the previous jobs. This will guarantee tests are running with the most recently bumped package dependencies.
 5. Use `relekang/python-semantic-release`
     - This will make a new GitHub Release and a PyPI Release (if not disabled).
     - This should use an `"if"`-constraint for the default branch (main or master).

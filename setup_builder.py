@@ -216,7 +216,7 @@ class OptionsSection(Section):
     packages: str
 
     def __post_init__(self) -> None:
-        # sort requirements if they're dangling
+        # sort dependencies if they're dangling
         if "\n" in self.install_requires.strip():
             as_lines = self.install_requires.strip().split("\n")
             self.install_requires = list_to_dangling(as_lines, sort=True)

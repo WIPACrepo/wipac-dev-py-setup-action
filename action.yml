@@ -110,7 +110,7 @@ runs:
         # generate req*.txt for each extras_require (each in a subproc)
         for extra in $EXTRAS; do
           echo "dependencies-${extra}.log"
-          pip-compile --upgrade --extra $extra --output-file="requirements-${extra}.txt" &
+          pip-compile --upgrade --extra $extra --output-file="dependencies-${extra}.txt" &
         done
 
         # wait for all subprocs
