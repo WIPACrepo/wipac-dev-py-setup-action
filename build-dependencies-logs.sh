@@ -2,9 +2,8 @@
 
 ########################################################################
 #
-# Build dependencies.log,
-# generate dependencies-*.log for each extras_require, and
-# commit changes
+# Build dependencies.log and
+# generate dependencies-*.log for each extras_require
 #
 ########################################################################
 
@@ -17,8 +16,6 @@ echo $file
 git mv requirements.txt $file || true  # don't want requirements.txt
 echo "pip-compile..."
 pip-compile --upgrade --output-file="$file" &
-git add $file
-git commit -m "<bot> update ${file}" || true  # fails if no change
 
 # get all extras
 EXTRAS=$(python3 $GITHUB_ACTION_PATH/list_extras.py setup.cfg)
@@ -31,8 +28,6 @@ for extra in $EXTRAS; do
   git mv "requirements-${extra}.txt" $file || true  # don't want requirements*.txt
   echo "pip-compile..."
   pip-compile --upgrade --extra $extra --output-file="$file" &
-  git add $file
-  git commit -m "<bot> update ${file}" || true  # fails if no change
 done
 echo
 

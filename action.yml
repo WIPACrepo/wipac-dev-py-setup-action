@@ -117,12 +117,19 @@ runs:
         # Build
         if [ -f ./Dockerfile ]; then
           # from docker...
-          ${{ github.action_path }}/build-dependencies-dockerfile-logs.sh
+          ${{ github.action_path }}/build-dependencies-dockerfile-logs.sh ./Dockerfile
         else
           # from setup.cfg...
           export GITHUB_ACTION_PATH=${{ github.action_path }}
           ${{ github.action_path }}/build-dependencies-logs.sh
         fi
+
+        # Commit each changed file individually
+        DELTA_FILES=$(git ls-files --modified --others --exclude-standard --directory)
+        for file in $DELTA_FILES; do
+          git add $file
+          git commit -m "<bot> update ${file}"
+        done
 
       shell: bash
 

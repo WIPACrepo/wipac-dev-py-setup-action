@@ -2,16 +2,25 @@
 
 ########################################################################
 #
-# Generate dependencies-dockerfile*.log for each Dockerfile present and
-# commit changes
+# Generate dependencies-dockerfile*.log for given Dockerfile
 #
 ########################################################################
 
-docker build -t my_image .
+if [ -z "$1" ]; then
+    echo "Usage: build-dependencies-dockerfile-logs.sh DOCKERFILE"
+    exit 1
+fi
+if [ ! -f "$1" ]; then
+    echo "File Not Found: $1"
+    exit 2
+fi
 
-DOCKER_DEPS="dependencies-from-dockerfile.log"
 
-TEMPDIR="dep-build"
+docker build -t my_image $1
+
+DOCKER_DEPS="dependencies-from-$(echo $1).log"
+
+TEMPDIR="dep-build-$(echo $1)"
 
 # make script
 mkdir ./$TEMPDIR
@@ -28,7 +37,3 @@ docker run --rm -i \
 cat ./$TEMPDIR/$DOCKER_DEPS
 mv ./$TEMPDIR/$DOCKER_DEPS $DOCKER_DEPS
 rm -r ./$TEMPDIR/
-
-# commit
-git add $DOCKER_DEPS
-git commit -m "<bot> update ${DOCKER_DEPS}" || true  # fails if no change
