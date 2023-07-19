@@ -104,7 +104,11 @@ runs:
       run: |
         # append permissive line to .gitignore since *.log is commonly present
         line='!dependencies*.log'
-        grep -qxF $line .gitignore || echo $line >> .gitignore
+        if [[ ! $(grep -F "$line" .gitignore) ]]; then
+          echo $line >> .gitignore
+          git add .gitignore
+          git commit -m "<bot> update .gitignore"
+        fi
 
         # Build
         if [ ! -z "${{ inputs.docker_image }}" ]; then
