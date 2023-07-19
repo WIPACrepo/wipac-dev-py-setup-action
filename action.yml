@@ -111,7 +111,7 @@ runs:
             --mount type=bind,source=$(realpath ./dep-build/),target=/local/dep-build \
             ${{ inputs.docker_image }} \
             /local/dep-build/freezer.sh
-          cat dependencies-from-docker.log
+          cat ./dep-build/dependencies-from-docker.log
         else
           export GITHUB_ACTION_PATH=${{ github.action_path }}
           ${{ github.action_path }}/build-dependencies-logs.sh
