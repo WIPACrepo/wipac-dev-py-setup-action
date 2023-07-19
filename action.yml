@@ -102,6 +102,11 @@ runs:
 
     - name: Build dependencies.log (and commit)
       run: |
+        # append permissive line to .gitignore since *.log is commonly present
+        line='!dependencies*.log'
+        grep -qxF $line foo.bar || echo $line >> foo.bar
+
+        # Build
         if [ ! -z "${{ inputs.docker_image }}" ]; then
           # from docker...
           mkdir ./dep-build
