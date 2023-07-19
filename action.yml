@@ -113,6 +113,7 @@ runs:
             /local/dep-build/freezer.sh
           cat ./dep-build/dependencies-from-docker.log
           mv ./dep-build/dependencies-from-docker.log dependencies-from-docker.log
+          rm -r ./dep-build/
         else
           export GITHUB_ACTION_PATH=${{ github.action_path }}
           ${{ github.action_path }}/build-dependencies-logs.sh
