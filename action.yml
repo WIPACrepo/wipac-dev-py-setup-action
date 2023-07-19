@@ -102,29 +102,26 @@ runs:
 
     - name: Build dependencies.log (and commit)
       run: |
-
         if [ ! -z "${{ inputs.docker_image }}" ]; then
+          # from docker...
           mkdir ./dep-build
-          echo "pip3 freeze > /local/dep-build/dependencies-from-docker.log" > ./dep-build/freezer.sh
+          DOCKER_DEPS="dependencies-from-docker.log"
+          echo "pip3 freeze > /local/dep-build/$DOCKER_DEPS" > ./dep-build/freezer.sh
           chmod +x ./dep-build/freezer.sh
           docker run --rm -i \
             --mount type=bind,source=$(realpath ./dep-build/),target=/local/dep-build \
             ${{ inputs.docker_image }} \
             /local/dep-build/freezer.sh
-          cat ./dep-build/dependencies-from-docker.log
-          mv ./dep-build/dependencies-from-docker.log dependencies-from-docker.log
+          cat ./dep-build/$DOCKER_DEPS
+          mv ./dep-build/$DOCKER_DEPS $DOCKER_DEPS
           rm -r ./dep-build/
+          git add $DOCKER_DEPS
+          git commit -m "<bot> update ${DOCKER_DEPS}"
         else
+          # from setup.cfg...
           export GITHUB_ACTION_PATH=${{ github.action_path }}
           ${{ github.action_path }}/build-dependencies-logs.sh
         fi
-
-        # commit each changed file individually
-        DELTA_FILES=$(git ls-files --modified --others --exclude-standard --directory)
-        for file in $DELTA_FILES; do
-          git add $file
-          git commit -m "<bot> update ${file}"
-        done
 
       shell: bash
 

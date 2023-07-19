@@ -2,8 +2,9 @@
 
 ########################################################################
 #
-# Build dependencies.log and
-# generate dependencies-*.log for each extras_require
+# Build dependencies.log,
+# generate dependencies-*.log for each extras_require, and
+# commit changes
 #
 ########################################################################
 
@@ -34,4 +35,11 @@ echo
 wait -n # main dependencies.log
 for extra in $EXTRAS; do
   wait -n
+done
+
+# commit each changed file individually
+DELTA_FILES=$(git ls-files --modified --others --exclude-standard --directory)
+for file in $DELTA_FILES; do
+  git add $file
+  git commit -m "<bot> update ${file}"
 done
