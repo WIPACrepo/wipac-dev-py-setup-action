@@ -117,7 +117,9 @@ runs:
         # Build
         if [ -f ./Dockerfile ]; then
           # from docker...
-          ${{ github.action_path }}/build-dependencies-dockerfile-logs.sh ./Dockerfile
+          for file in ./Dockerfile*; do
+              ${{ github.action_path }}/build-dependencies-dockerfile-logs.sh $file
+          done
         else
           # from setup.cfg...
           export GITHUB_ACTION_PATH=${{ github.action_path }}
