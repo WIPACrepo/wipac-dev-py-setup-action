@@ -102,14 +102,14 @@ runs:
 
     - name: Build dependencies.log (and commit)
       run: |
+        set -x
+
         # append permissive line to .gitignore since *.log is commonly present
         line='!dependencies*.log'
         if [[ ! $(grep -F "$line" .gitignore) ]]; then
           echo $line >> .gitignore
           git add .gitignore
           git commit -m "<bot> update .gitignore" || true  # fails if no change
-          git rm -r --cached .  # clears cache so updated gitignore works
-          git add .
         fi
 
         # Build
