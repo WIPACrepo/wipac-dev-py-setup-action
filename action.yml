@@ -22,6 +22,10 @@ inputs:
     description: 'The email used for "git config user.email"'
     required: false
     default: github-actions@github.com
+  docker_image:
+    description: "a docker image to generate the dependencies.log file(s) within"
+    required: false
+    default: ''
 
 # outputs:
 #   random-number:
@@ -99,9 +103,18 @@ runs:
     - name: Build dependencies.log (and commit)
       run: |
 
-
-        export GITHUB_ACTION_PATH=${{ github.action_path }}
-        ${{ github.action_path }}/build-dependencies-logs.sh
+        if [ ! -z "${{ inputs.docker_image }}" ]; then
+          mkdir ./dep-build
+          echo "pip3 freeze > /local/dep-build/dependencies-from-docker.log" > ./dep-build/freezer.sh
+          docker run --rm -i \
+            --mount type=bind,source=$(realpath ./dep-build/),target=/local/dep-build \
+            ${{ inputs.docker_image }} \
+            /local/dep-build/freezer.sh
+          cat dependencies-from-docker.log
+        else
+          export GITHUB_ACTION_PATH=${{ github.action_path }}
+          ${{ github.action_path }}/build-dependencies-logs.sh
+        fi
 
       shell: bash
 
