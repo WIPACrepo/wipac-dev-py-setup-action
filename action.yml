@@ -107,7 +107,7 @@ runs:
         if [[ ! $(grep -F "$line" .gitignore) ]]; then
           echo $line >> .gitignore
           git add .gitignore
-          git commit -m "<bot> update .gitignore"
+          git commit -m "<bot> update .gitignore" || true  # fails if no change
         fi
 
         # Build
@@ -124,8 +124,9 @@ runs:
           cat ./dep-build/$DOCKER_DEPS
           mv ./dep-build/$DOCKER_DEPS $DOCKER_DEPS
           rm -r ./dep-build/
+          git check-ignore -v $DOCKER_DEPS
           git add $DOCKER_DEPS
-          git commit -m "<bot> update ${DOCKER_DEPS}"
+          git commit -m "<bot> update ${DOCKER_DEPS}" || true  # fails if no change
         else
           # from setup.cfg...
           export GITHUB_ACTION_PATH=${{ github.action_path }}
