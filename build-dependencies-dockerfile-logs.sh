@@ -18,9 +18,9 @@ fi
 
 docker build -t my_image $1
 
-DOCKER_DEPS="dependencies-from-$(echo $1).log"
+DOCKER_DEPS="dependencies-from-$(basename $1).log"
 
-TEMPDIR="dep-build-$(echo $1)"
+TEMPDIR="dep-build-$(basename $1)"
 
 # make script
 mkdir ./$TEMPDIR
