@@ -105,12 +105,12 @@ runs:
         # append permissive line to .gitignore since *.log is commonly present
         line='!dependencies*.log'
         if [[ ! $(grep -F "$line" .gitignore) ]]; then
-          echo $line >> .gitignore
+          echo "" >> .gitignore
+          echo "# wipac-dev-py-setup-action" >> .gitignore
+          echo "$line" >> .gitignore
           git add .gitignore
           git commit -m "<bot> update .gitignore" || true  # fails if no change
-          git push
-          echo "changes pushed (rest of workflow canceled)"
-          exit 1  # prevent dependent job(s) since there's changes to the code
+          tail .gitignore
         fi
 
         # Build
