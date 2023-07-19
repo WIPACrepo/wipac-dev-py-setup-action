@@ -18,7 +18,7 @@ echo "pip-compile..."
 pip-compile --upgrade --output-file="dependencies.log" &
 
 # get all extras
-EXTRAS=$(python3 ${{ github.action_path }}/list_extras.py setup.cfg)
+EXTRAS=$(python3 $GITHUB_ACTION_PATH/list_extras.py setup.cfg)
 
 # generate dependencies-*.log for each extras_require (each in a subproc)
 for extra in $EXTRAS; do
