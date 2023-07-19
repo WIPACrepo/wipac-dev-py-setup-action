@@ -16,7 +16,7 @@ if [ ! -f "$1" ]; then
 fi
 
 
-docker build -t my_image $1
+docker build -t my_image --file $1
 
 DOCKER_DEPS="dependencies-from-$(basename $1).log"
 
