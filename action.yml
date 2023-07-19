@@ -115,6 +115,7 @@ runs:
           pip-compile ./dep-build/dependencies-from-docker.log
         else
           export GITHUB_ACTION_PATH=${{ github.action_path }}
+          pip3 install pip-tools
           ${{ github.action_path }}/build-dependencies-logs.sh
         fi
 
