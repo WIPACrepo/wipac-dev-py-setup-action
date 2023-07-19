@@ -117,20 +117,7 @@ runs:
         # Build
         if [ -f ./Dockerfile ]; then
           # from docker...
-          docker build -t my_image .
-          mkdir ./dep-build
-          DOCKER_DEPS="dependencies-from-dockerfile.log"
-          echo "pip3 freeze > /local/dep-build/$DOCKER_DEPS" > ./dep-build/freezer.sh
-          chmod +x ./dep-build/freezer.sh
-          docker run --rm -i \
-            --mount type=bind,source=$(realpath ./dep-build/),target=/local/dep-build \
-            my_image \
-            /local/dep-build/freezer.sh
-          cat ./dep-build/$DOCKER_DEPS
-          mv ./dep-build/$DOCKER_DEPS $DOCKER_DEPS
-          rm -r ./dep-build/
-          git add $DOCKER_DEPS
-          git commit -m "<bot> update ${DOCKER_DEPS}" || true  # fails if no change
+          ${{ github.action_path }}/build-dependencies-dockerfile-logs.sh
         else
           # from setup.cfg...
           export GITHUB_ACTION_PATH=${{ github.action_path }}
