@@ -112,10 +112,10 @@ runs:
             ${{ inputs.docker_image }} \
             /local/dep-build/freezer.sh
           cat ./dep-build/dependencies-from-docker.log
+          pip3 install pip-tools
           pip-compile ./dep-build/dependencies-from-docker.log
         else
           export GITHUB_ACTION_PATH=${{ github.action_path }}
-          pip3 install pip-tools
           ${{ github.action_path }}/build-dependencies-logs.sh
         fi
 
