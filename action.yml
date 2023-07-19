@@ -96,25 +96,33 @@ runs:
 
       shell: bash
 
-    - name: Build requirements.txt (and commit)
+    - name: Build dependencies.log (and commit)
       run: |
         pip3 install pip-tools
 
-        # do main requirements.txt in subproc
-        echo "requirements.txt"
-        pip-compile --upgrade --output-file="requirements.txt" &
+        # do main dependencies.log in subproc
+        echo
+        echo "dependencies.log"
+        git mv requirements.txt dependencies.log || true
+        echo "pip-compile..."
+        pip-compile --upgrade --output-file="dependencies.log" &
 
         # get all extras
         EXTRAS=$(python3 ${{ github.action_path }}/list_extras.py setup.cfg)
 
-        # generate req*.txt for each extras_require (each in a subproc)
+        # generate dependencies-*.log for each extras_require (each in a subproc)
         for extra in $EXTRAS; do
-          echo "requirements-${extra}.txt"
-          pip-compile --upgrade --extra $extra --output-file="requirements-${extra}.txt" &
+          echo
+          extra_dep_log="dependencies-${extra}.log"
+          echo $extra_dep_log
+          git mv "requirements-${extra}.txt" $extra_dep_log || true
+          echo "pip-compile..."
+          pip-compile --upgrade --extra $extra --output-file="$extra_dep_log" &
         done
+        echo
 
         # wait for all subprocs
-        wait -n # main requirements.txt
+        wait -n # main dependencies.log
         for extra in $EXTRAS; do
           wait -n
         done

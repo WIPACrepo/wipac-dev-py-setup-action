@@ -216,7 +216,7 @@ class OptionsSection(Section):
     packages: str
 
     def __post_init__(self) -> None:
-        # sort requirements if they're dangling
+        # sort dependencies if they're dangling
         if "\n" in self.install_requires.strip():
             as_lines = self.install_requires.strip().split("\n")
             self.install_requires = list_to_dangling(as_lines, sort=True)
@@ -706,7 +706,6 @@ def main(
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(
         description=f"Read/transform 'setup.cfg' and 'README.md' files. "
         f"Builds out 'setup.cfg' sections according to [{BUILDER_SECTION_NAME}].",
