@@ -12,10 +12,13 @@ pip3 install pip-tools
 
 # do main dependencies.log in subproc
 echo
-echo "dependencies.log"
-git mv requirements.txt dependencies.log || true
+file="dependencies.log"
+echo $file
+git mv requirements.txt $file || true  # don't want requirements.txt
 echo "pip-compile..."
-pip-compile --upgrade --output-file="dependencies.log" &
+pip-compile --upgrade --output-file="$file" &
+git add $file
+git commit -m "<bot> update ${file}" || true  # fails if no change
 
 # get all extras
 EXTRAS=$(python3 $GITHUB_ACTION_PATH/list_extras.py setup.cfg)
@@ -23,11 +26,13 @@ EXTRAS=$(python3 $GITHUB_ACTION_PATH/list_extras.py setup.cfg)
 # generate dependencies-*.log for each extras_require (each in a subproc)
 for extra in $EXTRAS; do
   echo
-  extra_dep_log="dependencies-${extra}.log"
-  echo $extra_dep_log
-  git mv "requirements-${extra}.txt" $extra_dep_log || true
+  file="dependencies-${extra}.log"
+  echo $file
+  git mv "requirements-${extra}.txt" $file || true  # don't want requirements*.txt
   echo "pip-compile..."
-  pip-compile --upgrade --extra $extra --output-file="$extra_dep_log" &
+  pip-compile --upgrade --extra $extra --output-file="$file" &
+  git add $file
+  git commit -m "<bot> update ${file}" || true  # fails if no change
 done
 echo
 
@@ -35,11 +40,4 @@ echo
 wait -n # main dependencies.log
 for extra in $EXTRAS; do
   wait -n
-done
-
-# commit each changed file individually
-DELTA_FILES=$(git ls-files --modified --others --exclude-standard --directory)
-for file in $DELTA_FILES; do
-  git add $file
-  git commit -m "<bot> update ${file}"
 done
