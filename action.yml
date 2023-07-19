@@ -112,6 +112,7 @@ runs:
             ${{ inputs.docker_image }} \
             /local/dep-build/freezer.sh
           cat ./dep-build/dependencies-from-docker.log
+          pip-compile ./dep-build/dependencies-from-docker.log
         else
           export GITHUB_ACTION_PATH=${{ github.action_path }}
           ${{ github.action_path }}/build-dependencies-logs.sh
