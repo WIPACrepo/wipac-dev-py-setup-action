@@ -105,7 +105,7 @@ runs:
 
         if [ ! -z "${{ inputs.docker_image }}" ]; then
           mkdir ./dep-build
-          echo "pip3 freeze > /local/dep-build/dependencies-from-docker.log && cat /local/dep-build/dependencies-from-docker.log && sed -ri '/^.*@.*$/d' /local/dep-build/dependencies-from-docker.log && cat /local/dep-build/dependencies-from-docker.log && virtualenv --python python3 env && . env/bin/activate && pip3 install -r /local/dep-build/dependencies-from-docker.log" > ./dep-build/freezer.sh
+          echo "pip3 freeze > /local/dep-build/dependencies-from-docker.log && cat /local/dep-build/dependencies-from-docker.log && sed -ri '/^.*@.*$/d' /local/dep-build/dependencies-from-docker.log && cat /local/dep-build/dependencies-from-docker.log && pip3 install virtualenv && virtualenv --python python3 env && . env/bin/activate && pip3 install -r /local/dep-build/dependencies-from-docker.log" > ./dep-build/freezer.sh
           chmod +x ./dep-build/freezer.sh
           docker run --rm -i \
             --mount type=bind,source=$(realpath ./dep-build/),target=/local/dep-build \
