@@ -105,7 +105,7 @@ runs:
 
         if [ ! -z "${{ inputs.docker_image }}" ]; then
           mkdir ./dep-build
-          echo "pip3 freeze > /local/dep-build/dependencies-from-docker.log && pip3 install pip-tools && pip compile /local/dep-build/dependencies-from-docker.log " > ./dep-build/freezer.sh
+          echo "pip3 freeze > /local/dep-build/dependencies-from-docker.log && pip3 install pip-tools && pip-compile /local/dep-build/dependencies-from-docker.log " > ./dep-build/freezer.sh
           chmod +x ./dep-build/freezer.sh
           docker run --rm -i \
             --mount type=bind,source=$(realpath ./dep-build/),target=/local/dep-build \
