@@ -115,15 +115,16 @@ runs:
         fi
 
         # Build
-        if [ ! -z "${{ inputs.docker_image }}" ]; then
+        if [ -f ./Dockerfile ]; then
           # from docker...
+          docker build -t my_image .
           mkdir ./dep-build
-          DOCKER_DEPS="dependencies-from-docker-$(echo "${{ inputs.docker_image }}" | sed -r 's#/#-#g').log"
+          DOCKER_DEPS="dependencies-from-dockerfile.log"
           echo "pip3 freeze > /local/dep-build/$DOCKER_DEPS" > ./dep-build/freezer.sh
           chmod +x ./dep-build/freezer.sh
           docker run --rm -i \
             --mount type=bind,source=$(realpath ./dep-build/),target=/local/dep-build \
-            ${{ inputs.docker_image }} \
+            my_image \
             /local/dep-build/freezer.sh
           cat ./dep-build/$DOCKER_DEPS
           mv ./dep-build/$DOCKER_DEPS $DOCKER_DEPS
