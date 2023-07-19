@@ -106,6 +106,7 @@ runs:
         line='!dependencies*.log'
         if [[ ! $(grep -F "$line" .gitignore) ]]; then
           echo "" >> .gitignore
+          echo "" >> .gitignore
           echo "# wipac-dev-py-setup-action" >> .gitignore
           echo "$line" >> .gitignore
           git add .gitignore
@@ -117,7 +118,7 @@ runs:
         if [ ! -z "${{ inputs.docker_image }}" ]; then
           # from docker...
           mkdir ./dep-build
-          DOCKER_DEPS="dependencies-from-docker.log"
+          DOCKER_DEPS="dependencies-from-docker-$(echo "${{ inputs.docker_image }}" | sed -r 's#/#-#g').log"
           echo "pip3 freeze > /local/dep-build/$DOCKER_DEPS" > ./dep-build/freezer.sh
           chmod +x ./dep-build/freezer.sh
           docker run --rm -i \
@@ -127,7 +128,6 @@ runs:
           cat ./dep-build/$DOCKER_DEPS
           mv ./dep-build/$DOCKER_DEPS $DOCKER_DEPS
           rm -r ./dep-build/
-          git check-ignore -v $DOCKER_DEPS
           git add $DOCKER_DEPS
           git commit -m "<bot> update ${DOCKER_DEPS}" || true  # fails if no change
         else
