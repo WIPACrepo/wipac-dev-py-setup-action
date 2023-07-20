@@ -126,12 +126,9 @@ runs:
           ${{ github.action_path }}/build-dependencies-logs.sh
         fi
 
-        # Commit each changed file individually
-        DELTA_FILES=$(git ls-files --modified --others --exclude-standard --directory)
-        for file in $DELTA_FILES; do
-          git add $file
-          git commit -m "<bot> update ${file}"
-        done
+        # Commit
+        git add .
+        git commit -m "<bot> update dependencies*.log files(s)"
 
       shell: bash
 
