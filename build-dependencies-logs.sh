@@ -25,7 +25,7 @@ for extra in $EXTRAS; do
   echo
   file="dependencies-${extra}.log"
   echo $file
-  git mv "requirements-${extra}.txt" $file || true  # don't want requirements*.txt
+  git mv "requirements-${extra}.txt" $file 2> /dev/null || true  # don't want requirements*.txt
   echo "pip-compile..."
   pip-compile --upgrade --extra $extra --output-file="$file" &
 done
