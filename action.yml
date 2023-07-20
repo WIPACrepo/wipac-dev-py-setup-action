@@ -98,41 +98,37 @@ runs:
 
     - name: Build dependencies.log (and commit)
       run: |
-        pip3 install pip-tools
+        # append permissive line to .gitignore since *.log is commonly present
+        line='!dependencies*.log'
+        if [[ ! $(grep -F "$line" .gitignore) ]]; then
+          echo "" >> .gitignore
+          echo "" >> .gitignore
+          echo "# wipac-dev-py-setup-action" >> .gitignore
+          echo "$line" >> .gitignore
+          git add .gitignore
+          git commit -m "<bot> update .gitignore" || true  # fails if no change
+          tail .gitignore
+        fi
 
-        # do main dependencies.log in subproc
-        echo
-        echo "dependencies.log"
-        git mv requirements.txt dependencies.log || true
-        echo "pip-compile..."
-        pip-compile --upgrade --output-file="dependencies.log" &
+        # remove any old ones, then regenerate only what's needed
+        rm dependencies*.log
 
-        # get all extras
-        EXTRAS=$(python3 ${{ github.action_path }}/list_extras.py setup.cfg)
+        # Build
+        if [ -f ./Dockerfile ]; then
+          # from docker...
+          for f in ./Dockerfile*; do
+              echo $f
+              ${{ github.action_path }}/build-dependencies-dockerfile-logs.sh $f
+          done
+        else
+          # from setup.cfg...
+          export GITHUB_ACTION_PATH=${{ github.action_path }}
+          ${{ github.action_path }}/build-dependencies-logs.sh
+        fi
 
-        # generate dependencies-*.log for each extras_require (each in a subproc)
-        for extra in $EXTRAS; do
-          echo
-          extra_dep_log="dependencies-${extra}.log"
-          echo $extra_dep_log
-          git mv "requirements-${extra}.txt" $extra_dep_log || true
-          echo "pip-compile..."
-          pip-compile --upgrade --extra $extra --output-file="$extra_dep_log" &
-        done
-        echo
-
-        # wait for all subprocs
-        wait -n # main dependencies.log
-        for extra in $EXTRAS; do
-          wait -n
-        done
-
-        # commit each changed file individually
-        DELTA_FILES=$(git ls-files --modified --others --exclude-standard --directory)
-        for file in $DELTA_FILES; do
-          git add $file
-          git commit -m "<bot> update ${file}"
-        done
+        # Commit
+        git add .
+        git commit -m "<bot> update dependencies*.log files(s)"
 
       shell: bash
 
