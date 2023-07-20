@@ -110,6 +110,9 @@ runs:
           tail .gitignore
         fi
 
+        # remove any old ones, then regenerate only what's needed
+        git rm dependencies*.log
+
         # Build
         if [ -f ./Dockerfile ]; then
           # from docker...
