@@ -112,6 +112,7 @@ runs:
 
         # remove any old ones, then regenerate only what's needed
         git rm dependencies*.log
+        git commit -m "<bot> rm old files"
 
         # Build
         if [ -f ./Dockerfile ]; then
