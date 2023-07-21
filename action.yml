@@ -31,6 +31,11 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Dump GitHub Context
+      run: |
+        echo "${{ toJson(github) }}"
+      shell: bash
+
     - uses: actions/setup-python@v4
       with:
         python-version: '3.10'  # NOTE: update, someday. Also tests.yml
