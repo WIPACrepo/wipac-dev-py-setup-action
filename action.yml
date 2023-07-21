@@ -113,6 +113,8 @@ runs:
         # remove any old ones, then regenerate only what's needed
         rm dependencies*.log
 
+        export PACKAGE_NAME=$(python3 ${{ github.action_path }}/get_package_name.py setup.cfg)
+
         # Build
         if [ -f ./Dockerfile ]; then
           # from docker...

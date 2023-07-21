@@ -35,6 +35,12 @@ docker run --rm -i \
     /local/$TEMPDIR/freezer.sh
 
 # grab deps file
+# - remove main package since this can cause an infinite loop when a new release is made
+if [ ! -z "$PACKAGE_NAME" ]; then
+    sed -i "/^$PACKAGE_NAME==/d" ./$TEMPDIR/$DOCKER_DEPS
+    sed -i "/^$PACKAGE_NAME /d" ./$TEMPDIR/$DOCKER_DEPS
+fi
 cat ./$TEMPDIR/$DOCKER_DEPS
+# - rename & remove temp dir
 mv ./$TEMPDIR/$DOCKER_DEPS $DOCKER_DEPS
 rm -r ./$TEMPDIR/
