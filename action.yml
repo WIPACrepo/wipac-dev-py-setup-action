@@ -32,8 +32,10 @@ runs:
   using: "composite"
   steps:
     - name: Dump GitHub Context
+      env:
+        GITHUB_CONTEXT: ${{ toJson(github) }}
       run: |
-        echo "${{ toJson(github) }}"
+        echo "$GITHUB_CONTEXT"
       shell: bash
 
     - uses: actions/setup-python@v4
