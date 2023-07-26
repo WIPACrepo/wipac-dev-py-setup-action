@@ -47,10 +47,12 @@ runs:
         git fetch
         if [[ $(git status -sb | grep behind) ]]; then
           echo "IS_GIT_BEHIND=true" >> $GITHUB_ENV
+          echo "this commit is not the most recent on this branch -- rest of action will be skipped"
         fi
       shell: bash
 
     - name: Git config
+      if: env.IS_GIT_BEHIND != 'true'
       run: |
         git config user.name ${{ inputs.git_committer_name }}
         git config user.email ${{ inputs.git_committer_email }}
