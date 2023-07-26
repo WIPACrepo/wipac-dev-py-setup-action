@@ -44,7 +44,7 @@ runs:
 
     - name: Is this the most recent commit? It won't be if the action was reran
       run: |
-        git fetch > /dev/null
+        git fetch &> /dev/null
         if [[ $(git status -sb | grep behind) ]]; then
           echo "IS_GIT_BEHIND=true" >> $GITHUB_ENV
           echo "this commit is not the most recent on this branch -- rest of action will be skipped"
