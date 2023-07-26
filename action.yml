@@ -165,5 +165,4 @@ runs:
         fi
         git push
         echo "changes pushed"
-        sleep 10  # allow any git-aware actions (that are pending) to see they're behind & act (exit) accordingly
       shell: bash
