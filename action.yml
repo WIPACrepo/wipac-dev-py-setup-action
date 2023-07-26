@@ -42,13 +42,24 @@ runs:
       with:
         python-version: '3.11'  # NOTE: update, someday. Also tests.yml
 
+    - name: Is this the most recent commit? It won't be if the action was reran
+      run: |
+        git fetch &> /dev/null
+        if [[ $(git status -sb | grep behind) ]]; then
+          echo "IS_GIT_BEHIND=true" >> $GITHUB_ENV
+          echo "this commit is not the most recent on this branch -- rest of action will be skipped"
+        fi
+      shell: bash
+
     - name: Git config
+      if: env.IS_GIT_BEHIND != 'true'
       run: |
         git config user.name ${{ inputs.git_committer_name }}
         git config user.email ${{ inputs.git_committer_email }}
       shell: bash
 
     - name: Build setup.cfg + README.md (and commit)
+      if: env.IS_GIT_BEHIND != 'true'
       run: |
         pip3 install -r ${{ github.action_path }}/requirements.txt
         pip3 install wipac-dev-tools
@@ -77,6 +88,7 @@ runs:
       shell: bash
 
     - name: Add py.typed file(s) (and commit)
+      if: env.IS_GIT_BEHIND != 'true'
       run: |
         python -c '
         import os
@@ -104,6 +116,7 @@ runs:
       shell: bash
 
     - name: Build dependencies.log (and commit)
+      if: env.IS_GIT_BEHIND != 'true'
       run: |
         # append permissive line to .gitignore since *.log is commonly present
         line='!dependencies*.log'
@@ -142,6 +155,7 @@ runs:
       shell: bash
 
     - name: Push changes
+      if: env.IS_GIT_BEHIND != 'true'
       run: |
         status=`git status 2>&1 | tee`
         ahead=`echo -n "${status}" 2> /dev/null | grep "Your branch is ahead of" &> /dev/null; echo "$?"`
@@ -151,5 +165,4 @@ runs:
         fi
         git push
         echo "changes pushed"
-        sleep 10  # allow any git-aware actions (that are pending) to see they're behind & act (exit) accordingly
       shell: bash
