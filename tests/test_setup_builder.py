@@ -1175,6 +1175,7 @@ pypi_name = wipac-mock-package
 python_min = 3.6
 author = {AUTHOR}
 author_email = {AUTHOR_EMAIL}
+{"patch_without_tag = False" if not patch_without_tag else ""}
 """
 
     setup_cfg_in = f"""{cicd_setup_builder}
@@ -1208,7 +1209,7 @@ project_urls =
     Tracker = https://github.com/foobarbaz-org/foobarbaz-repo/issues
     Source = https://github.com/foobarbaz-org/foobarbaz-repo
 
-{VANILLA_SEMANTIC_RELEASE_SECTION}
+{VANILLA_SEMANTIC_RELEASE_SECTION if patch_without_tag else SEMANTIC_RELEASE_SECTION_NO_PATCH}
 
 {VANILLA_CFGOUT_OPTIONS_SECTION}
 
