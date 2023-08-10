@@ -30,6 +30,7 @@ SEMANTIC_RELEASE_MAJOR = ["[major]"]
 SEMANTIC_RELEASE_MINOR = ["[minor]"]
 SEMANTIC_RELEASE_PATCH = ["[fix]", "[patch]"]
 
+DEV_STATUS_PREALPHA_0_0_0 = "Development Status :: 2 - Pre-Alpha"
 DEV_STATUS_ALPHA_0_0_Z = "Development Status :: 3 - Alpha"
 DEV_STATUS_BETA_0_Y_Z = "Development Status :: 4 - Beta"
 DEV_STATUS_PROD_X_Y_Z = "Development Status :: 5 - Production/Stable"
