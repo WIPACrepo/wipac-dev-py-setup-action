@@ -31,7 +31,7 @@ TEMPDIR="dep-build-$(basename $1)"
 mkdir ./$TEMPDIR
 echo "#!/bin/bash" >> ./$TEMPDIR/freezer.sh
 echo "whoami" >> ./$TEMPDIR/freezer.sh
-echo "chmod +w /local/$TEMPDIR" >> ./$TEMPDIR/freezer.sh
+echo "sudo chown -R 1000:1000 /local/$TEMPDIR" >> ./$TEMPDIR/freezer.sh
 echo "ls -al /local/$TEMPDIR" >> ./$TEMPDIR/freezer.sh
 echo "ls -al /local/$TEMPDIR" >> ./$TEMPDIR/freezer.sh
 echo "touch /local/$TEMPDIR/$DOCKER_DEPS" >> ./$TEMPDIR/freezer.sh
