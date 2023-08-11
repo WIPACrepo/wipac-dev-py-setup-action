@@ -39,7 +39,7 @@ chmod +x ./$TEMPDIR/freezer.sh
 
 # generate
 podman run --rm -i \
-    --mount type=bind,source=$(realpath ./$TEMPDIR/),target=/local/$TEMPDIR:rw \
+    --mount type=bind,source=$(realpath ./$TEMPDIR/),target=/local/$TEMPDIR \
     --userns=keep-id \
     my_image \
     /local/$TEMPDIR/freezer.sh
