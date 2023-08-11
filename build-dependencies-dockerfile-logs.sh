@@ -21,7 +21,7 @@ fi
 $GITHUB_ACTION_PATH/install-podman.sh
 podman --version
 
-podman build -t my_image --file $1 .
+sudo podman build -t my_image --file $1 .
 
 DOCKER_DEPS="dependencies-from-$(basename $1).log"
 
