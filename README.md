@@ -160,7 +160,7 @@ This will generate `setup.cfg` sections needed for making a GitHub release for y
         ```
 
 #### Note: Python's Classifier "Development Status"
-This is determined by auto-detecting the package's current version. If the git commit message is intending to trigger Semantic Release's version bumping action and the new version will qualify for a new "Development Status", then that Status is used ahead of time.
+This is determined by auto-detecting the package's current version. If the git commit message is intending to trigger Semantic Release's version bumping action, the `patch_without_tag` is not `False`, and the new version will qualify for a new "Development Status", then that Status is used ahead of time.
 
 
 ### Minimal Mode: No PyPI Metadata
@@ -266,6 +266,10 @@ Use this to explicitly define directories for packaging. This is a space-separat
 Using this list is generally encouraged for PyPI-published packages as it helps with SEO. However, technically, `[wipac:cicd_setup_builder].keywords_spaced` is optional. Any "base keywords" are automatically added regardless, see [*Input Arguments in GitHub Action*](#input-arguments-in-github-action).
 - Default: None
 
+#### `patch_without_tag`
+Whether to make a patch release even if the commit message does not warrant one explicitly -- corresponds to the `python-semantic-release/python-semantic-release` option of the same name
+- Default: 'True'
+
 
 ### Input Arguments in GitHub Action
 #### `base-keywords`
@@ -300,8 +304,8 @@ The `wipac-dev-py-setup-action` GitHub Action pairs well with other GitHub Actio
     - This will catch install errors before any tests run.
 4. Run unit and integration tests
     - To limit startup costs, include a job-dependency for the previous jobs. This will guarantee tests are running with the most recently bumped package dependencies.
-5. Use `relekang/python-semantic-release`
-    - This will make a new GitHub Release and a PyPI Release (if not disabled).
+5. Use `python-semantic-release/python-semantic-release@v7.34.6`
+    - This will make a new GitHub Release and a PyPI Release (if not disabled with `patch_without_tag = False`).
     - This should use an `"if"`-constraint for the default branch (main or master).
 
 #### Example YAML
