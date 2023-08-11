@@ -18,7 +18,7 @@ if [ ! -f "$1" ]; then
 fi
 
 # use podman to get around user permission issues
-./install-podman.sh
+$GITHUB_ACTION_PATH/install-podman.sh
 podman --version
 
 podman build -t my_image --file $1 .

@@ -136,6 +136,7 @@ runs:
         rm dependencies*.log || true
 
         export PACKAGE_NAME=$(python3 ${{ github.action_path }}/get_package_name.py setup.cfg)
+        export GITHUB_ACTION_PATH=${{ github.action_path }}
 
         # Build
         if [ -f ./Dockerfile ]; then
@@ -146,7 +147,6 @@ runs:
           done
         else
           # from setup.cfg...
-          export GITHUB_ACTION_PATH=${{ github.action_path }}
           ${{ github.action_path }}/build-dependencies-logs.sh
         fi
 
