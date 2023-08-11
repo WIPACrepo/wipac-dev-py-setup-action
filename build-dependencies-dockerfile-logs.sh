@@ -31,7 +31,9 @@ TEMPDIR="dep-build-$(basename $1)"
 mkdir ./$TEMPDIR
 echo "#!/bin/bash" >> ./$TEMPDIR/freezer.sh
 echo "ls -al /local/$TEMPDIR" >> ./$TEMPDIR/freezer.sh
+echo "ls -al /local/$TEMPDIR" >> ./$TEMPDIR/freezer.sh
 echo "pip3 freeze > /local/$TEMPDIR/$DOCKER_DEPS" >> ./$TEMPDIR/freezer.sh
+chmod +w ./$TEMPDIR
 chmod +x ./$TEMPDIR/freezer.sh
 
 # generate
