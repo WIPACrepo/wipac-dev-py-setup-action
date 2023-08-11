@@ -20,6 +20,7 @@ fi
 # use podman to get around user permission issues
 sudo apt update
 sudo apt-get -y install podman
+podman --version
 
 podman build -t my_image --file $1 .
 
