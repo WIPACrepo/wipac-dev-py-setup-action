@@ -563,7 +563,7 @@ def _build_out_sections(
             f"{p}/__init__.py:__version__" for p in ffile.packages
         ),
         "upload_to_pypi": "True" if bsec.pypi_name else "False",  # >>> str(bool(x))
-        "patch_without_tag": "True",
+        "patch_without_tag": bsec.patch_without_tag,
         "commit_parser": "semantic_release.history.emoji_parser",
         "major_emoji": ", ".join(SEMANTIC_RELEASE_MAJOR),
         "minor_emoji": ", ".join(SEMANTIC_RELEASE_MINOR),
