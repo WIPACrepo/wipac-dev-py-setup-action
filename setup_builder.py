@@ -367,7 +367,9 @@ class FromFiles:
         # detect version threshold crossing
         pending_major_bump = any(k in commit_message for k in SEMANTIC_RELEASE_MAJOR)
         pending_minor_bump = any(k in commit_message for k in SEMANTIC_RELEASE_MINOR)
-        pending_patch_bump = self._bsec.get_patch_without_tag()
+        pending_patch_bump = self._bsec.get_patch_without_tag() or any(
+            k in commit_message for k in SEMANTIC_RELEASE_PATCH
+        )
 
         # NOTE - if someday we abandon python-semantic-release, this is a starting place to detect the next version -- in this case, we'd change the version number before merging to main
 
