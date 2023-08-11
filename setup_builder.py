@@ -26,6 +26,8 @@ _PYTHON_MINOR_RELEASE_MAX = 50
 
 LOGGER = logging.getLogger("setup-builder")
 
+PATCH_WITHOUT_TAG_DEFAULT = True  # this is 'True'
+
 SEMANTIC_RELEASE_MAJOR = ["[major]"]
 SEMANTIC_RELEASE_MINOR = ["[minor]"]
 SEMANTIC_RELEASE_PATCH = ["[fix]", "[patch]"]
@@ -92,7 +94,9 @@ class BuilderSection(Section):
     python_max: str = ""  # python_requires
     package_dirs: str = ""
     keywords_spaced: str = ""  # comes as "A B C"
-    patch_without_tag: str = "False"  # use `get_patch_without_tag()` to get bool
+    patch_without_tag: str = str(
+        PATCH_WITHOUT_TAG_DEFAULT  # use `get_patch_without_tag()` to get bool
+    )
 
     def __post_init__(self) -> None:
         if self.pypi_name:
