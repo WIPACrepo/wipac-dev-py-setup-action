@@ -395,7 +395,7 @@ class FromFiles:
             if pending_major_bump:
                 return DEV_STATUS_PROD_X_Y_Z  # MAJOR-BUMPPING STRAIGHT TO PROD
             else:
-                return DEV_STATUS_ALPHA_0_0_Z  # staying at beta
+                return DEV_STATUS_BETA_0_Y_Z  # staying at beta
 
         elif int(self.version.split(".")[0]) >= 1:
             return DEV_STATUS_PROD_X_Y_Z
