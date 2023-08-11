@@ -18,33 +18,7 @@ if [ ! -f "$1" ]; then
 fi
 
 # use podman to get around user permission issues
-# https://podman.io/docs/installation#build-and-run-dependencies
-# https://github.com/containers/podman/issues/14065
-sudo apt-get install libsubid4
-sudo apt-get install \
-  btrfs-progs \
-  crun \
-  git \
-  golang-go \
-  go-md2man \
-  iptables \
-  libassuan-dev \
-  libbtrfs-dev \
-  libc6-dev \
-  libdevmapper-dev \
-  libglib2.0-dev \
-  libgpgme-dev \
-  libgpg-error-dev \
-  libprotobuf-dev \
-  libprotobuf-c-dev \
-  libseccomp-dev \
-  libselinux1-dev \
-  libsystemd-dev \
-  pkg-config \
-  uidmap
-podman_deb="podman_4.3.1+ds1-8+b2_amd64.deb"
-wget "http://ftp.us.debian.org/debian/pool/main/libp/libpod/$podman_deb"
-sudo dpkg -i $podman_deb
+./install-podman.sh
 podman --version
 
 podman build -t my_image --file $1 .
