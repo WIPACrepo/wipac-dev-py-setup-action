@@ -92,8 +92,7 @@ class BuilderSection(Section):
     python_max: str = ""  # python_requires
     package_dirs: str = ""
     keywords_spaced: str = ""  # comes as "A B C"
-    patch_without_tag: str = "False"
-    patch_without_tag_bool: bool = False
+    patch_without_tag: str = "False"  # use `get_patch_without_tag()` to get bool
 
     def __post_init__(self) -> None:
         if self.pypi_name:
@@ -103,8 +102,9 @@ class BuilderSection(Section):
                     "setup.cfg ([wipac:cicd_setup_builder]) when "
                     "'pypi_name' is given (PyPI-metadata mode)"
                 )
-        self.patch_without_tag_bool = strtobool(self.patch_without_tag)
-        del self.patch_without_tag
+
+    def get_patch_without_tag(self) -> bool:
+        return strtobool(self.patch_without_tag)
 
     def _python3_min_max(self) -> PythonMinMax:
         """Get the `PythonMinMax` version of `self.python_min`."""
@@ -363,7 +363,7 @@ class FromFiles:
         # detect version threshold crossing
         pending_major_bump = any(k in commit_message for k in SEMANTIC_RELEASE_MAJOR)
         pending_minor_bump = any(k in commit_message for k in SEMANTIC_RELEASE_MINOR)
-        pending_patch_bump = self._bsec.patch_without_tag
+        pending_patch_bump = self._bsec.get_patch_without_tag()
 
         # NOTE - if someday we abandon python-semantic-release, this is a starting place to detect the next version -- in this case, we'd change the version number before merging to main
 
