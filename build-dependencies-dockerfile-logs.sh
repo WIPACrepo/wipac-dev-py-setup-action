@@ -30,6 +30,7 @@ TEMPDIR="dep-build-$(basename $1)"
 # make script
 mkdir ./$TEMPDIR
 echo "#!/bin/bash" >> ./$TEMPDIR/freezer.sh
+echo "apt-get update && apt-get -y install sudo" >> ./$TEMPDIR/freezer.sh
 echo "whoami" >> ./$TEMPDIR/freezer.sh
 echo "sudo chown -R 1000:1000 /local/$TEMPDIR" >> ./$TEMPDIR/freezer.sh
 echo "ls -al /local/$TEMPDIR" >> ./$TEMPDIR/freezer.sh
