@@ -27,12 +27,15 @@ TEMPDIR="dep-build-$(basename $1)"
 # make script
 mkdir ./$TEMPDIR
 echo "#!/bin/bash" >> ./$TEMPDIR/freezer.sh
-echo "sudo pip3 freeze > /local/$TEMPDIR/$DOCKER_DEPS" >> ./$TEMPDIR/freezer.sh
+echo "pip3 freeze > /local/$TEMPDIR/$DOCKER_DEPS" >> ./$TEMPDIR/freezer.sh
 chmod +x ./$TEMPDIR/freezer.sh
 
 # generate
-docker run --rm -i \
+sudo apt update
+sudo apt-get -y install podman
+podman run --rm -i \
     --mount type=bind,source=$(realpath ./$TEMPDIR/),target=/local/$TEMPDIR \
+    --userns=keep-id \
     my_image \
     /local/$TEMPDIR/freezer.sh
 

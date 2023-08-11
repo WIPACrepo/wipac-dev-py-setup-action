@@ -61,8 +61,10 @@ runs:
     - name: Build setup.cfg + README.md (and commit)
       if: env.IS_GIT_BEHIND != 'true'
       run: |
+        sudo apt update
         pip3 install -r ${{ github.action_path }}/requirements.txt
         pip3 install wipac-dev-tools
+
         echo $GITHUB_REPOSITORY
         echo "setup.cfg (+ README.md)"
         # since GHA injects raw string, must use EOF to avoid quote-mangling
