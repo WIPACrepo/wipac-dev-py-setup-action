@@ -21,7 +21,7 @@ fi
 $GITHUB_ACTION_PATH/install-podman.sh
 podman --version
 
-sudo podman build -t my_image --file $1 .
+podman build -t my_image --file $1 .
 
 DOCKER_DEPS="dependencies-from-$(basename $1).log"
 
@@ -39,8 +39,10 @@ echo "touch /local/$TEMPDIR/$DOCKER_DEPS" >> ./$TEMPDIR/freezer.sh
 echo "pip3 freeze > /local/$TEMPDIR/$DOCKER_DEPS" >> ./$TEMPDIR/freezer.sh
 chmod +x ./$TEMPDIR/freezer.sh
 
+uname -a
+
 # generate
-sudo podman run --rm -i \
+podman run --rm -i \
     --mount type=bind,source=$(realpath ./$TEMPDIR/),target=/local/$TEMPDIR \
     --userns=keep-id \
     my_image \
