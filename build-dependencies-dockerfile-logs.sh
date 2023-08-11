@@ -18,8 +18,9 @@ if [ ! -f "$1" ]; then
 fi
 
 # use podman to get around user permission issues
-sudo apt-get update
-sudo apt-get -y install podman
+podman_deb="podman_4.3.1+ds1-8+b2_amd64.deb"
+wget "http://ftp.us.debian.org/debian/pool/main/libp/libpod/$podman_deb"
+sudo dpkg -i $podman_deb
 podman --version
 
 podman build -t my_image --file $1 .
