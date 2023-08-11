@@ -20,6 +20,7 @@ fi
 # use podman to get around user permission issues
 # https://podman.io/docs/installation#build-and-run-dependencies
 # https://github.com/containers/podman/issues/14065
+sudo apt-get install libsubid4
 sudo apt-get install \
   btrfs-progs \
   crun \
