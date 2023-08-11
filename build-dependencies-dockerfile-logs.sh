@@ -34,7 +34,7 @@ echo "whoami" >> ./$TEMPDIR/freezer.sh
 echo "chmod +w /local/$TEMPDIR" >> ./$TEMPDIR/freezer.sh
 echo "ls -al /local/$TEMPDIR" >> ./$TEMPDIR/freezer.sh
 echo "ls -al /local/$TEMPDIR" >> ./$TEMPDIR/freezer.sh
-echo "sudo -s" >> ./$TEMPDIR/freezer.sh
+echo "apt install sudo && sudo -s" >> ./$TEMPDIR/freezer.sh
 echo "pip3 freeze > /local/$TEMPDIR/$DOCKER_DEPS" >> ./$TEMPDIR/freezer.sh
 chmod +x ./$TEMPDIR/freezer.sh
 
