@@ -92,6 +92,7 @@ class BuilderSection(Section):
     python_max: str = ""  # python_requires
     package_dirs: str = ""
     keywords_spaced: str = ""  # comes as "A B C"
+    patch_without_tag: bool = True
 
     def __post_init__(self) -> None:
         if self.pypi_name:
@@ -359,20 +360,33 @@ class FromFiles:
         # detect version threshold crossing
         pending_major_bump = any(k in commit_message for k in SEMANTIC_RELEASE_MAJOR)
         pending_minor_bump = any(k in commit_message for k in SEMANTIC_RELEASE_MINOR)
+        pending_patch_bump = self._bsec.patch_without_tag
 
-        # NOTE - if we weren't patching bumping by default, then we could use PRE-ALPHA
+        # NOTE - if someday we abandon python-semantic-release, this is a starting place to detect the next version -- in this case, we'd change the version number before merging to main
 
-        if self.version.startswith("0.0."):
+        if self.version == "0.0.0":
             if pending_major_bump:
                 return DEV_STATUS_PROD_X_Y_Z  # MAJOR-BUMPPING STRAIGHT TO PROD
-            if pending_minor_bump:
+            elif pending_minor_bump:
                 return DEV_STATUS_BETA_0_Y_Z  # MINOR-BUMPPING STRAIGHT TO BETA
-            return DEV_STATUS_ALPHA_0_0_Z
+            elif pending_patch_bump:
+                return DEV_STATUS_ALPHA_0_0_Z  # PATCH-BUMPPING STRAIGHT TO ALPHA
+            else:
+                return DEV_STATUS_PREALPHA_0_0_0  # staying at pre-alpha
+
+        elif self.version.startswith("0.0."):
+            if pending_major_bump:
+                return DEV_STATUS_PROD_X_Y_Z  # MAJOR-BUMPPING STRAIGHT TO PROD
+            elif pending_minor_bump:
+                return DEV_STATUS_BETA_0_Y_Z  # MINOR-BUMPPING STRAIGHT TO BETA
+            else:
+                return DEV_STATUS_ALPHA_0_0_Z  # staying at alpha
 
         elif self.version.startswith("0."):
             if pending_major_bump:
                 return DEV_STATUS_PROD_X_Y_Z  # MAJOR-BUMPPING STRAIGHT TO PROD
-            return DEV_STATUS_BETA_0_Y_Z
+            else:
+                return DEV_STATUS_ALPHA_0_0_Z  # staying at beta
 
         elif int(self.version.split(".")[0]) >= 1:
             return DEV_STATUS_PROD_X_Y_Z
