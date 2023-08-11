@@ -1175,7 +1175,7 @@ def test_50_bumping(
 pypi_name = wipac-mock-package
 python_min = 3.6
 author = {AUTHOR}
-author_email = {AUTHOR_EMAIL}{"patch_without_tag = False" if not patch_without_tag else ""}
+author_email = {AUTHOR_EMAIL}{"\npatch_without_tag = False" if not patch_without_tag else ""}
 """
 
     setup_cfg_in = f"""{cicd_setup_builder}
