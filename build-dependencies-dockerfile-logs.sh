@@ -18,7 +18,7 @@ if [ ! -f "$1" ]; then
 fi
 
 # use podman to get around user permission issues
-sudo apt update
+sudo apt-get update
 sudo apt-get -y install podman
 podman --version
 

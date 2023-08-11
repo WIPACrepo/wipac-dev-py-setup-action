@@ -61,7 +61,7 @@ runs:
     - name: Build setup.cfg + README.md (and commit)
       if: env.IS_GIT_BEHIND != 'true'
       run: |
-        sudo apt update
+        sudo apt-get update
         pip3 install -r ${{ github.action_path }}/requirements.txt
         pip3 install wipac-dev-tools
 
