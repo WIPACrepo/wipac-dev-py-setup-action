@@ -44,7 +44,7 @@ uname -a
 # generate
 podman run --rm -i \
     --mount type=bind,source=$(realpath ./$TEMPDIR/),target=/local/$TEMPDIR \
-    --userns=keep-id \
+    --userns=keep-id:uid=1000,gid=1000 \
     my_image \
     /local/$TEMPDIR/freezer.sh
 
