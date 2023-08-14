@@ -17,29 +17,19 @@ if [ ! -f "$1" ]; then
     exit 2
 fi
 
-# use podman to get around user permission issues
-$GITHUB_ACTION_PATH/install-podman.sh
-podman --version
-
-podman build -t my_image --file $1 .
-
 DOCKER_DEPS="dependencies-from-$(basename $1).log"
 
-TEMPDIR="dep-build-$(basename $1)"
+# use podman to get around user permission issues (with --userns=keep-id:uid=1000,gid=1000)
+$GITHUB_ACTION_PATH/install-podman.sh
+podman --version
+podman build -t my_image --file $1 .
 
 # make script
+TEMPDIR="dep-build-$(basename $1)"
 mkdir ./$TEMPDIR
 echo "#!/bin/bash" >> ./$TEMPDIR/freezer.sh
-# echo "apt-get update && apt-get -y install sudo" >> ./$TEMPDIR/freezer.sh
-# echo "whoami" >> ./$TEMPDIR/freezer.sh
-# echo "sudo chown -R 1000:1000 /local/$TEMPDIR" >> ./$TEMPDIR/freezer.sh
-# echo "ls -al /local/$TEMPDIR" >> ./$TEMPDIR/freezer.sh
-# echo "ls -al /local/$TEMPDIR" >> ./$TEMPDIR/freezer.sh
-# echo "touch /local/$TEMPDIR/$DOCKER_DEPS" >> ./$TEMPDIR/freezer.sh
 echo "pip3 freeze > /local/$TEMPDIR/$DOCKER_DEPS" >> ./$TEMPDIR/freezer.sh
 chmod +x ./$TEMPDIR/freezer.sh
-
-uname -a
 
 # generate
 podman run --rm -i \
