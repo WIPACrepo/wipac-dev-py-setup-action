@@ -31,11 +31,11 @@ TEMPDIR="dep-build-$(basename $1)"
 mkdir ./$TEMPDIR
 echo "#!/bin/bash" >> ./$TEMPDIR/freezer.sh
 # echo "apt-get update && apt-get -y install sudo" >> ./$TEMPDIR/freezer.sh
-echo "whoami" >> ./$TEMPDIR/freezer.sh
+# echo "whoami" >> ./$TEMPDIR/freezer.sh
 # echo "sudo chown -R 1000:1000 /local/$TEMPDIR" >> ./$TEMPDIR/freezer.sh
-echo "ls -al /local/$TEMPDIR" >> ./$TEMPDIR/freezer.sh
-echo "ls -al /local/$TEMPDIR" >> ./$TEMPDIR/freezer.sh
-echo "touch /local/$TEMPDIR/$DOCKER_DEPS" >> ./$TEMPDIR/freezer.sh
+# echo "ls -al /local/$TEMPDIR" >> ./$TEMPDIR/freezer.sh
+# echo "ls -al /local/$TEMPDIR" >> ./$TEMPDIR/freezer.sh
+# echo "touch /local/$TEMPDIR/$DOCKER_DEPS" >> ./$TEMPDIR/freezer.sh
 echo "pip3 freeze > /local/$TEMPDIR/$DOCKER_DEPS" >> ./$TEMPDIR/freezer.sh
 chmod +x ./$TEMPDIR/freezer.sh
 
