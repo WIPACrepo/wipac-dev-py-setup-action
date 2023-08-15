@@ -31,13 +31,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Dump GitHub Context
-      env:
-        GITHUB_CONTEXT: ${{ toJson(github) }}
-      run: |
-        echo "$GITHUB_CONTEXT"
-      shell: bash
-
     - uses: actions/setup-python@v4
       with:
         python-version: '3.11'  # NOTE: update, someday. Also tests.yml
@@ -61,8 +54,10 @@ runs:
     - name: Build setup.cfg + README.md (and commit)
       if: env.IS_GIT_BEHIND != 'true'
       run: |
+        sudo apt-get update
         pip3 install -r ${{ github.action_path }}/requirements.txt
         pip3 install wipac-dev-tools
+
         echo $GITHUB_REPOSITORY
         echo "setup.cfg (+ README.md)"
         # since GHA injects raw string, must use EOF to avoid quote-mangling
@@ -134,6 +129,7 @@ runs:
         rm dependencies*.log || true
 
         export PACKAGE_NAME=$(python3 ${{ github.action_path }}/get_package_name.py setup.cfg)
+        export GITHUB_ACTION_PATH=${{ github.action_path }}
 
         # Build
         if [ -f ./Dockerfile ]; then
@@ -144,7 +140,6 @@ runs:
           done
         else
           # from setup.cfg...
-          export GITHUB_ACTION_PATH=${{ github.action_path }}
           ${{ github.action_path }}/build-dependencies-logs.sh
         fi
 
