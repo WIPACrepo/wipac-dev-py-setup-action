@@ -163,6 +163,15 @@ def directory_0_Y_Z() -> str:
     return _directory("0.45.6")
 
 
+def mock_python_version_request(requests_mock: Any) -> None:
+    requests_mock.get(
+        f"https://api.github.com/repos/{GITHUB_FULL_REPO}",
+        json={"default_branch": "main", "description": "Ceci n’est pas une pipe"},
+    )
+    requests_mock.get("https://docs.python.org/release/3.10.0/")
+    requests_mock.get("https://docs.python.org/release/3.11.0/", status_code=404)
+
+
 #
 # TESTS
 #
@@ -227,12 +236,7 @@ project_urls =
         f.write(setup_cfg_in)
 
     # mock the outgoing requests
-    requests_mock.get(
-        f"https://api.github.com/repos/{GITHUB_FULL_REPO}",
-        json={"default_branch": "main", "description": "Ceci n’est pas une pipe"},
-    )
-    requests_mock.get("https://docs.python.org/release/3.10.0/")
-    requests_mock.get("https://docs.python.org/release/3.11.0/", status_code=404)
+    mock_python_version_request(requests_mock)
 
     # run setup_builder
     setup_builder.main(
@@ -298,12 +302,7 @@ branch = main
         f.write(setup_cfg_in)
 
     # mock the outgoing requests
-    requests_mock.get(
-        f"https://api.github.com/repos/{GITHUB_FULL_REPO}",
-        json={"default_branch": "main", "description": "Ceci n’est pas une pipe"},
-    )
-    requests_mock.get("https://docs.python.org/release/3.10.0/")
-    requests_mock.get("https://docs.python.org/release/3.11.0/", status_code=404)
+    mock_python_version_request(requests_mock)
 
     # run setup_builder
     setup_builder.main(
@@ -366,12 +365,7 @@ branch = main
         f.write(setup_cfg_in)
 
     # mock the outgoing requests
-    requests_mock.get(
-        f"https://api.github.com/repos/{GITHUB_FULL_REPO}",
-        json={"default_branch": "main", "description": "Ceci n’est pas une pipe"},
-    )
-    requests_mock.get("https://docs.python.org/release/3.10.0/")
-    requests_mock.get("https://docs.python.org/release/3.11.0/", status_code=404)
+    mock_python_version_request(requests_mock)
 
     # run setup_builder
     setup_builder.main(
@@ -457,12 +451,7 @@ project_urls =
         f.write(setup_cfg_in)
 
     # mock the outgoing requests
-    requests_mock.get(
-        f"https://api.github.com/repos/{GITHUB_FULL_REPO}",
-        json={"default_branch": "main", "description": "Ceci n’est pas une pipe"},
-    )
-    requests_mock.get("https://docs.python.org/release/3.10.0/")
-    requests_mock.get("https://docs.python.org/release/3.11.0/", status_code=404)
+    mock_python_version_request(requests_mock)
 
     # run setup_builder
     setup_builder.main(
@@ -558,12 +547,7 @@ telemetry =
         f.write(setup_cfg_in)
 
     # mock the outgoing requests
-    requests_mock.get(
-        f"https://api.github.com/repos/{GITHUB_FULL_REPO}",
-        json={"default_branch": "main", "description": "Ceci n’est pas une pipe"},
-    )
-    requests_mock.get("https://docs.python.org/release/3.10.0/")
-    requests_mock.get("https://docs.python.org/release/3.11.0/", status_code=404)
+    mock_python_version_request(requests_mock)
 
     # run setup_builder
     setup_builder.main(
@@ -655,12 +639,7 @@ include =
         f.write(setup_cfg_in)
 
     # mock the outgoing requests
-    requests_mock.get(
-        f"https://api.github.com/repos/{GITHUB_FULL_REPO}",
-        json={"default_branch": "main", "description": "Ceci n’est pas une pipe"},
-    )
-    requests_mock.get("https://docs.python.org/release/3.10.0/")
-    requests_mock.get("https://docs.python.org/release/3.11.0/", status_code=404)
+    mock_python_version_request(requests_mock)
 
     # run setup_builder
     setup_builder.main(
@@ -677,7 +656,7 @@ include =
     assert_outputted_setup_cfg(setup_cfg_path, setup_cfg_out)
 
 
-def test_34_package_dirs__multi_autoname(directory: str) -> None:
+def test_34_package_dirs__multi_autoname(directory: str, requests_mock: Any) -> None:
     """Test using [wipac:cicd_setup_builder] with `package_dirs` & multiple desired packages."""
     setup_cfg_path = Path(f"{directory}/setup.cfg")
 
@@ -750,6 +729,9 @@ include =
     # write the original setup.cfg
     with open(setup_cfg_path, "w") as f:
         f.write(setup_cfg_in)
+
+    # mock the outgoing requests
+    mock_python_version_request(requests_mock)
 
     # run setup_builder
     setup_builder.main(
@@ -859,12 +841,7 @@ include =
         f.write(setup_cfg_in)
 
     # mock the outgoing requests
-    requests_mock.get(
-        f"https://api.github.com/repos/{GITHUB_FULL_REPO}",
-        json={"default_branch": "main", "description": "Ceci n’est pas une pipe"},
-    )
-    requests_mock.get("https://docs.python.org/release/3.10.0/")
-    requests_mock.get("https://docs.python.org/release/3.11.0/", status_code=404)
+    mock_python_version_request(requests_mock)
 
     # run setup_builder
     setup_builder.main(
@@ -914,12 +891,7 @@ keywords_spaced = python REST tools utilities OpenTelemetry tracing telemetry
         f.write(setup_cfg_in)
 
     # mock the outgoing requests
-    requests_mock.get(
-        f"https://api.github.com/repos/{GITHUB_FULL_REPO}",
-        json={"default_branch": "main", "description": "Ceci n’est pas une pipe"},
-    )
-    requests_mock.get("https://docs.python.org/release/3.10.0/")
-    requests_mock.get("https://docs.python.org/release/3.11.0/", status_code=404)
+    mock_python_version_request(requests_mock)
 
     # run setup_builder
     with pytest.raises(
@@ -971,12 +943,7 @@ keywords_spaced = python REST tools utilities OpenTelemetry tracing telemetry
         f.write(setup_cfg_in)
 
     # mock the outgoing requests
-    requests_mock.get(
-        f"https://api.github.com/repos/{GITHUB_FULL_REPO}",
-        json={"default_branch": "main", "description": "Ceci n’est pas une pipe"},
-    )
-    requests_mock.get("https://docs.python.org/release/3.10.0/")
-    requests_mock.get("https://docs.python.org/release/3.11.0/", status_code=404)
+    mock_python_version_request(requests_mock)
 
     # run setup_builder
     with pytest.raises(
@@ -1030,12 +997,7 @@ keywords_spaced = python REST tools utilities OpenTelemetry tracing telemetry
         f.write(setup_cfg_in)
 
     # mock the outgoing requests
-    requests_mock.get(
-        f"https://api.github.com/repos/{GITHUB_FULL_REPO}",
-        json={"default_branch": "main", "description": "Ceci n’est pas une pipe"},
-    )
-    requests_mock.get("https://docs.python.org/release/3.10.0/")
-    requests_mock.get("https://docs.python.org/release/3.11.0/", status_code=404)
+    mock_python_version_request(requests_mock)
 
     # run setup_builder
     with pytest.raises(Exception, match=r"Version mismatch between packages*"):
@@ -1169,12 +1131,7 @@ telemetry =
         f.write(setup_cfg_in)
 
     # mock the outgoing requests
-    requests_mock.get(
-        f"https://api.github.com/repos/{GITHUB_FULL_REPO}",
-        json={"default_branch": "main", "description": "Ceci n’est pas une pipe"},
-    )
-    requests_mock.get("https://docs.python.org/release/3.10.0/")
-    requests_mock.get("https://docs.python.org/release/3.11.0/", status_code=404)
+    mock_python_version_request(requests_mock)
 
     # run setup_builder
     setup_builder.main(
@@ -1319,12 +1276,7 @@ project_urls =
         f.write(setup_cfg_in)
 
     # mock the outgoing requests
-    requests_mock.get(
-        f"https://api.github.com/repos/{GITHUB_FULL_REPO}",
-        json={"default_branch": "main", "description": "Ceci n’est pas une pipe"},
-    )
-    requests_mock.get("https://docs.python.org/release/3.10.0/")
-    requests_mock.get("https://docs.python.org/release/3.11.0/", status_code=404)
+    mock_python_version_request(requests_mock)
 
     # run setup_builder
     setup_builder.main(
