@@ -516,7 +516,7 @@ def _build_out_sections(
     )
     # if we DON'T want PyPI stuff:
     if not bsec.pypi_name:
-        cfg["metadata"]["name"] = "_".join(ffile.packages)
+        cfg["metadata"]["name"] = "_".join(ffile.packages).replace("_", "-")
         cfg["metadata"]["version"] = meta_version_single
         if bsec.author:
             cfg["metadata"]["author"] = bsec.author
