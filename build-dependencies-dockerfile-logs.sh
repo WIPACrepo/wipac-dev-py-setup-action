@@ -20,7 +20,6 @@ fi
 DOCKER_DEPS="dependencies-from-$(basename $1).log"
 
 # use podman to get around user permission issues (with --userns=keep-id:uid=1000,gid=1000)
-podman --version || ($GITHUB_ACTION_PATH/install-podman.sh && podman --version) # install if missing
 podman build -t my_image --file $1 .
 
 # make script
