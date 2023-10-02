@@ -45,6 +45,7 @@ if [ ! -z "$PACKAGE_NAME" ]; then
     # now if using pip's editable-install (-e), pip converts dashes to underscores
     package_name_dashes_to_underscores=$(echo "$PACKAGE_NAME" | sed -r 's/-/_/g')
     sed -i "/#egg=$package_name_dashes_to_underscores$/d" ./$TEMPDIR/$DOCKER_DEPS
+    sed -i "/^#/d" ./$TEMPDIR/$DOCKER_DEPS  # remove all commented lines  # see comments in https://github.com/pypa/pip/issues/6199
 fi
 cat ./$TEMPDIR/$DOCKER_DEPS
 # - rename & remove temp dir
