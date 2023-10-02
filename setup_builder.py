@@ -41,17 +41,19 @@ PythonMinMax = Tuple[Tuple[int, int], Tuple[int, int]]
 
 
 def get_latest_py3_release() -> Tuple[int, int]:
-    """Return the latest python3 release version as tuple."""
-    minor = 10  # start with 3.10
-    while True:
-        url = f"https://docs.python.org/release/3.{minor}.0/"
-        if requests.get(url).status_code >= 300:  # not a success (404 likely)
-            return (3, minor - 1)
-        if minor == _PYTHON_MINOR_RELEASE_MAX:
-            raise Exception(
-                "Latest python-release detection failed (unless python 3.50 is real?)"
-            )
-        minor += 1
+    """Return the latest python3 release version (supported by GitHub) as tuple."""
+    url = "https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json"
+    manifest = requests.get(url).json()
+    manifest = [d for d in manifest if d["stable"]]  # only stable releases
+
+    manifest = sorted(  # sort by version
+        manifest,
+        key=lambda d: [int(y) for y in d["version"].split(".")],
+        reverse=True,
+    )
+
+    version = manifest[0]["version"]
+    return int(version.split(".")[0]), int(version.split(".")[1])
 
 
 class GitHubAPI:
