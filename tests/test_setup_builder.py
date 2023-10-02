@@ -63,7 +63,7 @@ install_requires =
     requests-futures
     tornado
     wipac-dev-tools
-python_requires = >=3.6, <3.11
+python_requires = >=3.6, <3.12
 packages = find:
 
 [options.extras_require]
@@ -163,13 +163,74 @@ def directory_0_Y_Z() -> str:
     return _directory("0.45.6")
 
 
-def mock_python_version_request(requests_mock: Any) -> None:
+def mock_many_requests(requests_mock: Any) -> None:
     requests_mock.get(
         f"https://api.github.com/repos/{GITHUB_FULL_REPO}",
         json={"default_branch": "main", "description": "Ceci n’est pas une pipe"},
     )
-    requests_mock.get("https://docs.python.org/release/3.10.0/")
-    requests_mock.get("https://docs.python.org/release/3.11.0/", status_code=404)
+    requests_mock.get(
+        "https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json",
+        json=[
+            {
+                "version": "3.12.0-rc.3",
+                "stable": False,
+                "release_url": "https://github.com/actions/python-versions/releases/tag/3.12.0-rc.3-6237742040",
+                "files": [
+                    {
+                        "filename": "python-3.12.0-rc.3-darwin-arm64.tar.gz",
+                        "arch": "arm64",
+                        "platform": "darwin",
+                        "download_url": "https://github.com/actions/python-versions/releases/download/3.12.0-rc.3-6237742040/python-3.12.0-rc.3-darwin-arm64.tar.gz",
+                    },
+                    {
+                        "filename": "python-3.12.0-rc.3-darwin-x64.tar.gz",
+                        "arch": "x64",
+                        "platform": "darwin",
+                        "download_url": "https://github.com/actions/python-versions/releases/download/3.12.0-rc.3-6237742040/python-3.12.0-rc.3-darwin-x64.tar.gz",
+                    },
+                ],
+            },
+            {
+                "version": "3.11.5",
+                "stable": True,
+                "release_url": "https://github.com/actions/python-versions/releases/tag/3.11.5-5999813088",
+                "files": [
+                    {
+                        "filename": "python-3.11.5-darwin-arm64.tar.gz",
+                        "arch": "arm64",
+                        "platform": "darwin",
+                        "download_url": "https://github.com/actions/python-versions/releases/download/3.11.5-5999813088/python-3.11.5-darwin-arm64.tar.gz",
+                    },
+                    {
+                        "filename": "python-3.11.5-darwin-x64.tar.gz",
+                        "arch": "x64",
+                        "platform": "darwin",
+                        "download_url": "https://github.com/actions/python-versions/releases/download/3.11.5-5999813088/python-3.11.5-darwin-x64.tar.gz",
+                    },
+                ],
+            },
+            {
+                "version": "3.10.13",
+                "stable": True,
+                "release_url": "https://github.com/actions/python-versions/releases/tag/3.10.13-5997403688",
+                "files": [
+                    {
+                        "filename": "python-3.10.13-darwin-x64.tar.gz",
+                        "arch": "x64",
+                        "platform": "darwin",
+                        "download_url": "https://github.com/actions/python-versions/releases/download/3.10.13-5997403688/python-3.10.13-darwin-x64.tar.gz",
+                    },
+                    {
+                        "filename": "python-3.10.13-linux-20.04-x64.tar.gz",
+                        "arch": "x64",
+                        "platform": "linux",
+                        "platform_version": "20.04",
+                        "download_url": "https://github.com/actions/python-versions/releases/download/3.10.13-5997403688/python-3.10.13-linux-20.04-x64.tar.gz",
+                    },
+                ],
+            },
+        ],
+    )
 
 
 #
@@ -214,6 +275,7 @@ classifiers =
     Programming Language :: Python :: 3.8
     Programming Language :: Python :: 3.9
     Programming Language :: Python :: 3.10
+    Programming Language :: Python :: 3.11
 download_url = https://pypi.org/project/wipac-mock-package/
 project_urls =
     Tracker = https://github.com/foobarbaz-org/foobarbaz-repo/issues
@@ -236,7 +298,7 @@ project_urls =
         f.write(setup_cfg_in)
 
     # mock the outgoing requests
-    mock_python_version_request(requests_mock)
+    mock_many_requests(requests_mock)
 
     # run setup_builder
     setup_builder.main(
@@ -302,7 +364,7 @@ branch = main
         f.write(setup_cfg_in)
 
     # mock the outgoing requests
-    mock_python_version_request(requests_mock)
+    mock_many_requests(requests_mock)
 
     # run setup_builder
     setup_builder.main(
@@ -365,7 +427,7 @@ branch = main
         f.write(setup_cfg_in)
 
     # mock the outgoing requests
-    mock_python_version_request(requests_mock)
+    mock_many_requests(requests_mock)
 
     # run setup_builder
     setup_builder.main(
@@ -429,6 +491,7 @@ classifiers =
     Programming Language :: Python :: 3.8
     Programming Language :: Python :: 3.9
     Programming Language :: Python :: 3.10
+    Programming Language :: Python :: 3.11
 download_url = https://pypi.org/project/wipac-mock-package/
 project_urls =
     Tracker = https://github.com/foobarbaz-org/foobarbaz-repo/issues
@@ -451,7 +514,7 @@ project_urls =
         f.write(setup_cfg_in)
 
     # mock the outgoing requests
-    mock_python_version_request(requests_mock)
+    mock_many_requests(requests_mock)
 
     # run setup_builder
     setup_builder.main(
@@ -547,7 +610,7 @@ telemetry =
         f.write(setup_cfg_in)
 
     # mock the outgoing requests
-    mock_python_version_request(requests_mock)
+    mock_many_requests(requests_mock)
 
     # run setup_builder
     setup_builder.main(
@@ -610,6 +673,7 @@ classifiers =
     Programming Language :: Python :: 3.8
     Programming Language :: Python :: 3.9
     Programming Language :: Python :: 3.10
+    Programming Language :: Python :: 3.11
 download_url = https://pypi.org/project/wipac-mock-package/
 project_urls =
     Tracker = https://github.com/foobarbaz-org/foobarbaz-repo/issues
@@ -639,7 +703,7 @@ include =
         f.write(setup_cfg_in)
 
     # mock the outgoing requests
-    mock_python_version_request(requests_mock)
+    mock_many_requests(requests_mock)
 
     # run setup_builder
     setup_builder.main(
@@ -731,7 +795,7 @@ include =
         f.write(setup_cfg_in)
 
     # mock the outgoing requests
-    mock_python_version_request(requests_mock)
+    mock_many_requests(requests_mock)
 
     # run setup_builder
     setup_builder.main(
@@ -796,6 +860,7 @@ classifiers =
     Programming Language :: Python :: 3.8
     Programming Language :: Python :: 3.9
     Programming Language :: Python :: 3.10
+    Programming Language :: Python :: 3.11
 download_url = https://pypi.org/project/wipac-mock-package/
 project_urls =
     Tracker = https://github.com/foobarbaz-org/foobarbaz-repo/issues
@@ -841,7 +906,7 @@ include =
         f.write(setup_cfg_in)
 
     # mock the outgoing requests
-    mock_python_version_request(requests_mock)
+    mock_many_requests(requests_mock)
 
     # run setup_builder
     setup_builder.main(
@@ -891,7 +956,7 @@ keywords_spaced = python REST tools utilities OpenTelemetry tracing telemetry
         f.write(setup_cfg_in)
 
     # mock the outgoing requests
-    mock_python_version_request(requests_mock)
+    mock_many_requests(requests_mock)
 
     # run setup_builder
     with pytest.raises(
@@ -943,7 +1008,7 @@ keywords_spaced = python REST tools utilities OpenTelemetry tracing telemetry
         f.write(setup_cfg_in)
 
     # mock the outgoing requests
-    mock_python_version_request(requests_mock)
+    mock_many_requests(requests_mock)
 
     # run setup_builder
     with pytest.raises(
@@ -997,7 +1062,7 @@ keywords_spaced = python REST tools utilities OpenTelemetry tracing telemetry
         f.write(setup_cfg_in)
 
     # mock the outgoing requests
-    mock_python_version_request(requests_mock)
+    mock_many_requests(requests_mock)
 
     # run setup_builder
     with pytest.raises(Exception, match=r"Version mismatch between packages*"):
@@ -1092,6 +1157,7 @@ classifiers =
     Programming Language :: Python :: 3.8
     Programming Language :: Python :: 3.9
     Programming Language :: Python :: 3.10
+    Programming Language :: Python :: 3.11
 download_url = https://pypi.org/project/wipac-mock-package/
 project_urls =
     Tracker = https://github.com/foobarbaz-org/foobarbaz-repo/issues
@@ -1111,7 +1177,7 @@ foo_bar_baz_foo_bar_baz_foo_bar_baz =
     foo!
     bar!
     baz!
-python_requires = >=3.6, <3.11
+python_requires = >=3.6, <3.12
 packages = find:
 
 [options.extras_require]
@@ -1131,7 +1197,7 @@ telemetry =
         f.write(setup_cfg_in)
 
     # mock the outgoing requests
-    mock_python_version_request(requests_mock)
+    mock_many_requests(requests_mock)
 
     # run setup_builder
     setup_builder.main(
@@ -1254,6 +1320,7 @@ classifiers =
     Programming Language :: Python :: 3.8
     Programming Language :: Python :: 3.9
     Programming Language :: Python :: 3.10
+    Programming Language :: Python :: 3.11
 download_url = https://pypi.org/project/wipac-mock-package/
 project_urls =
     Tracker = https://github.com/foobarbaz-org/foobarbaz-repo/issues
@@ -1276,7 +1343,7 @@ project_urls =
         f.write(setup_cfg_in)
 
     # mock the outgoing requests
-    mock_python_version_request(requests_mock)
+    mock_many_requests(requests_mock)
 
     # run setup_builder
     setup_builder.main(
