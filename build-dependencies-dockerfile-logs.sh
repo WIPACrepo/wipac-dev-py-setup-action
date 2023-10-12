@@ -25,16 +25,17 @@ podman build -t my_image --file $1 .
 # make script
 TEMPDIR="dep-build-$(basename $1)"
 mkdir ./$TEMPDIR
-echo "#!/bin/bash" >> ./$TEMPDIR/freezer.sh
-echo "pip3 freeze > /local/$TEMPDIR/$DOCKER_DEPS" >> ./$TEMPDIR/freezer.sh
-chmod +x ./$TEMPDIR/freezer.sh
+echo "#!/bin/bash" >> ./$TEMPDIR/make_pipdeptree.sh
+echo "pip3 install pipdeptree" >> ./$TEMPDIR/make_pipdeptree.sh
+echo "pipdeptree > /local/$TEMPDIR/$DOCKER_DEPS" >> ./$TEMPDIR/make_pipdeptree.sh
+chmod +x ./$TEMPDIR/make_pipdeptree.sh
 
 # generate
 podman run --rm -i \
     --mount type=bind,source=$(realpath ./$TEMPDIR/),target=/local/$TEMPDIR \
     --userns=keep-id:uid=1000,gid=1000 \
     my_image \
-    /local/$TEMPDIR/freezer.sh
+    /local/$TEMPDIR/make_pipdeptree.sh
 
 # grab deps file
 # - remove main package since this can cause an infinite loop when a new release is made
