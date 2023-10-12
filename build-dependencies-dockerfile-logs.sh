@@ -54,6 +54,7 @@ fi
 # grab deps file
 # - remove main package since this can cause an infinite loop when a new release is made
 if [ ! -z "$PACKAGE_NAME" ]; then
+    cat ./$TEMPDIR/$DOCKER_DEPS  # so we can see the before picture
     sed -i "/^$PACKAGE_NAME==/d" ./$TEMPDIR/$DOCKER_DEPS
     sed -i "/^$PACKAGE_NAME /d" ./$TEMPDIR/$DOCKER_DEPS
     sed -i "/#egg=$PACKAGE_NAME$/d" ./$TEMPDIR/$DOCKER_DEPS
