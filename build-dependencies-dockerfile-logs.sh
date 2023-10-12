@@ -31,7 +31,7 @@ fi
 TEMPDIR="dep-build-$(basename $1)"
 mkdir ./$TEMPDIR
 echo "#!/bin/bash" >> ./$TEMPDIR/make_pipdeptree.sh
-echo "apt-get install python3-pipdeptree" >> ./$TEMPDIR/make_pipdeptree.sh
+echo "sudo apt-get install python3-pipdeptree" >> ./$TEMPDIR/make_pipdeptree.sh
 echo "pipdeptree > /local/$TEMPDIR/$DOCKER_DEPS" >> ./$TEMPDIR/make_pipdeptree.sh
 chmod +x ./$TEMPDIR/make_pipdeptree.sh
 
