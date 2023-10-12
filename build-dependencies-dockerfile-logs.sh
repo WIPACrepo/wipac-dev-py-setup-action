@@ -19,8 +19,13 @@ fi
 
 DOCKER_DEPS="dependencies-from-$(basename $1).log"
 
-# use podman to get around user permission issues (with --userns=keep-id:uid=1000,gid=1000)
-podman build -t my_image --file $1 .
+# build
+if [ "$2" == "--podman" ]; then
+    # use podman to get around user permission issues (with --userns=keep-id:uid=1000,gid=1000)
+    podman build -t my_image --file $1 .
+else
+    docker build -t my_image --file $1 .
+fi
 
 # make script
 TEMPDIR="dep-build-$(basename $1)"
@@ -31,11 +36,19 @@ echo "pipdeptree > /local/$TEMPDIR/$DOCKER_DEPS" >> ./$TEMPDIR/make_pipdeptree.s
 chmod +x ./$TEMPDIR/make_pipdeptree.sh
 
 # generate
-podman run --rm -i \
-    --mount type=bind,source=$(realpath ./$TEMPDIR/),target=/local/$TEMPDIR \
-    --userns=keep-id:uid=1000,gid=1000 \
-    my_image \
-    /local/$TEMPDIR/make_pipdeptree.sh
+if [ "$2" == "--podman" ]; then
+    podman run --rm -i \
+        --mount type=bind,source=$(realpath ./$TEMPDIR/),target=/local/$TEMPDIR \
+        --userns=keep-id:uid=1000,gid=1000 \
+        my_image \
+        /local/$TEMPDIR/make_pipdeptree.sh
+else
+    docker run --rm -i \
+        --mount type=bind,source=$(realpath ./$TEMPDIR/),target=/local/$TEMPDIR \
+        my_image \
+        /local/$TEMPDIR/make_pipdeptree.sh
+fi
+
 
 # grab deps file
 # - remove main package since this can cause an infinite loop when a new release is made

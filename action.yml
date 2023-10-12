@@ -133,12 +133,16 @@ runs:
 
         # Build
         if [ -f ./Dockerfile ]; then
-          # from docker...
-          $GITHUB_ACTION_PATH/install-podman.sh
-          podman --version
+          # install podman...
+          if [ grep -q "USER" ./Dockerfile ]; then
+            $GITHUB_ACTION_PATH/install-podman.sh
+            podman --version
+            USE_PODMAN='--podman'
+          fi
+          # from dockerfile...
           for f in ./Dockerfile*; do
               echo $f
-              ${{ github.action_path }}/build-dependencies-dockerfile-logs.sh $f
+              ${{ github.action_path }}/build-dependencies-dockerfile-logs.sh $f $USE_PODMAN
           done
         else
           # from setup.cfg...
