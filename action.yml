@@ -113,6 +113,8 @@ runs:
     - name: Build dependencies.log (and commit)
       if: env.IS_GIT_BEHIND != 'true'
       run: |
+        set -x  # turn on debugging
+
         # append permissive line to .gitignore since *.log is commonly present
         line='!dependencies*.log'
         if [[ ! $(grep -F "$line" .gitignore) ]]; then
