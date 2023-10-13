@@ -27,12 +27,16 @@ else
 fi
 
 
+PIP_FREEZE='pip_freeze.txt'
+PIP_DEP_TREE='pip_dep_tree.txt'
+
+
 # make script
 TEMPDIR="dep-build-$(basename $1)"
 mkdir ./$TEMPDIR
 echo "#!/bin/bash" >> ./$TEMPDIR/make_dep_files.sh
 # PIP_FREEZE
-echo "pip3 freeze > /local/$TEMPDIR/$PIP_FREEZE" >> ./$TEMPDIR/freezer.sh
+echo "pip3 freeze > /local/$TEMPDIR/$PIP_FREEZE" >> ./$TEMPDIR/make_dep_files.sh
 # PIP_DEP_TREE
 echo "pip3 install --target=. pipdeptree" >> ./$TEMPDIR/make_dep_files.sh
 echo "./bin/pipdeptree > /local/$TEMPDIR/$PIP_DEP_TREE" >> ./$TEMPDIR/make_dep_files.sh
@@ -76,4 +80,5 @@ DOCKER_DEPS="dependencies-from-$(basename $1).log"
 cat ./$TEMPDIR/$PIP_FREEZE >> $DOCKER_DEPS
 echo "------------------------------------------------------------------------" >> $DOCKER_DEPS
 cat ./$TEMPDIR/$PIP_DEP_TREE >> $DOCKER_DEPS
+cat $DOCKER_DEPS
 rm -r ./$TEMPDIR/
