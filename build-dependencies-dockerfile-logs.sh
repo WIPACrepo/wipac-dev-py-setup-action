@@ -33,7 +33,7 @@ mkdir ./$TEMPDIR
 echo "#!/bin/bash" >> ./$TEMPDIR/make_pipdeptree.sh
 # https://stackoverflow.com/a/62151306/13156561
 echo "pip3 install --target=. pipdeptree" >> ./$TEMPDIR/make_pipdeptree.sh
-echo "pipdeptree > /local/$TEMPDIR/$DOCKER_DEPS" >> ./$TEMPDIR/make_pipdeptree.sh
+echo "./bin/pipdeptree > /local/$TEMPDIR/$DOCKER_DEPS" >> ./$TEMPDIR/make_pipdeptree.sh
 # echo "\`python3 -m site --user-base\`/bin/pipdeptree > /local/$TEMPDIR/$DOCKER_DEPS" >> ./$TEMPDIR/make_pipdeptree.sh
 chmod +x ./$TEMPDIR/make_pipdeptree.sh
 
