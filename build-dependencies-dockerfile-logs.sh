@@ -32,9 +32,9 @@ mkdir ./$TEMPDIR
 echo "#!/bin/bash" >> ./$TEMPDIR/make_dep_files.sh
 # PIP_FREEZE
 echo "pip3 freeze > /local/$TEMPDIR/$PIP_FREEZE" >> ./$TEMPDIR/freezer.sh
-# PIPDEPTREE
+# PIP_DEP_TREE
 echo "pip3 install --target=. pipdeptree" >> ./$TEMPDIR/make_dep_files.sh
-echo "./bin/pipdeptree > /local/$TEMPDIR/$PIPDEPTREE" >> ./$TEMPDIR/make_dep_files.sh
+echo "./bin/pipdeptree > /local/$TEMPDIR/$PIP_DEP_TREE" >> ./$TEMPDIR/make_dep_files.sh
 chmod +x ./$TEMPDIR/make_dep_files.sh
 
 # generate
@@ -64,8 +64,8 @@ if [ ! -z "$PACKAGE_NAME" ]; then
     sed -i "/#egg=$package_name_dashes_to_underscores$/d" ./$TEMPDIR/$PIP_FREEZE
     sed -i "/^#/d" ./$TEMPDIR/$PIP_FREEZE  # remove all commented lines  # see comments in https://github.com/pypa/pip/issues/6199
 
-    # PIPDEPTREE
-    sed -i "s/^$PACKAGE_NAME==.*/$PACKAGE_NAME/g" ./$TEMPDIR/$PIPDEPTREE
+    # PIP_DEP_TREE
+    sed -i "s/^$PACKAGE_NAME==.*/$PACKAGE_NAME/g" ./$TEMPDIR/$PIP_DEP_TREE
 fi
 
 
@@ -73,5 +73,5 @@ fi
 DOCKER_DEPS="dependencies-from-$(basename $1).log"
 cat ./$TEMPDIR/$PIP_FREEZE >> $DOCKER_DEPS
 echo "------------------------------------------------------------------------" >> $DOCKER_DEPS
-cat ./$TEMPDIR/$PIPDEPTREE >> $DOCKER_DEPS
+cat ./$TEMPDIR/$PIP_DEP_TREE >> $DOCKER_DEPS
 rm -r ./$TEMPDIR/
