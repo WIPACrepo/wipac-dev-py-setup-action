@@ -17,7 +17,6 @@ if [ ! -f "$1" ]; then
     exit 2
 fi
 
-DOCKER_DEPS="dependencies-from-$(basename $1).log"
 
 # build
 if [ "$2" == "--podman" ]; then
@@ -30,12 +29,13 @@ fi
 # make script
 TEMPDIR="dep-build-$(basename $1)"
 mkdir ./$TEMPDIR
-echo "#!/bin/bash" >> ./$TEMPDIR/make_pipdeptree.sh
-# https://stackoverflow.com/a/62151306/13156561
-echo "pip3 install --target=. pipdeptree" >> ./$TEMPDIR/make_pipdeptree.sh
-echo "./bin/pipdeptree > /local/$TEMPDIR/$DOCKER_DEPS" >> ./$TEMPDIR/make_pipdeptree.sh
-# echo "\`python3 -m site --user-base\`/bin/pipdeptree > /local/$TEMPDIR/$DOCKER_DEPS" >> ./$TEMPDIR/make_pipdeptree.sh
-chmod +x ./$TEMPDIR/make_pipdeptree.sh
+echo "#!/bin/bash" >> ./$TEMPDIR/make_dep_files.sh
+# PIP_FREEZE
+echo "pip3 freeze > /local/$TEMPDIR/$PIP_FREEZE" >> ./$TEMPDIR/freezer.sh
+# PIPDEPTREE
+echo "pip3 install --target=. pipdeptree" >> ./$TEMPDIR/make_dep_files.sh
+echo "./bin/pipdeptree > /local/$TEMPDIR/$PIPDEPTREE" >> ./$TEMPDIR/make_dep_files.sh
+chmod +x ./$TEMPDIR/make_dep_files.sh
 
 # generate
 if [ "$2" == "--podman" ]; then
@@ -43,29 +43,35 @@ if [ "$2" == "--podman" ]; then
         --mount type=bind,source=$(realpath ./$TEMPDIR/),target=/local/$TEMPDIR \
         --userns=keep-id:uid=1000,gid=1000 \
         my_image \
-        /local/$TEMPDIR/make_pipdeptree.sh
+        /local/$TEMPDIR/make_dep_files.sh
 else
     docker run --rm -i \
         --mount type=bind,source=$(realpath ./$TEMPDIR/),target=/local/$TEMPDIR \
         my_image \
-        /local/$TEMPDIR/make_pipdeptree.sh
+        /local/$TEMPDIR/make_dep_files.sh
 fi
 
 
-# grab deps file
+# grab dep files
 # - remove main package since this can cause an infinite loop when a new release is made
 if [ ! -z "$PACKAGE_NAME" ]; then
-    cat ./$TEMPDIR/$DOCKER_DEPS  # so we can see the before picture
-    sed -i "s/^$PACKAGE_NAME==.*/$PACKAGE_NAME/g" ./$TEMPDIR/$DOCKER_DEPS
-    # sed -i "/^$PACKAGE_NAME==/d" ./$TEMPDIR/$DOCKER_DEPS
-    # sed -i "/^$PACKAGE_NAME /d" ./$TEMPDIR/$DOCKER_DEPS
-    # sed -i "/#egg=$PACKAGE_NAME$/d" ./$TEMPDIR/$DOCKER_DEPS
-    # # now if using pip's editable-install (-e), pip converts dashes to underscores
-    # package_name_dashes_to_underscores=$(echo "$PACKAGE_NAME" | sed -r 's/-/_/g')
-    # sed -i "/#egg=$package_name_dashes_to_underscores$/d" ./$TEMPDIR/$DOCKER_DEPS
-    # sed -i "/^#/d" ./$TEMPDIR/$DOCKER_DEPS  # remove all commented lines  # see comments in https://github.com/pypa/pip/issues/6199
+    # PIP_FREEZE
+    sed -i "/^$PACKAGE_NAME==/d" ./$TEMPDIR/$PIP_FREEZE
+    sed -i "/^$PACKAGE_NAME /d" ./$TEMPDIR/$PIP_FREEZE
+    sed -i "/#egg=$PACKAGE_NAME$/d" ./$TEMPDIR/$PIP_FREEZE
+    # now if using pip's editable-install (-e), pip converts dashes to underscores
+    package_name_dashes_to_underscores=$(echo "$PACKAGE_NAME" | sed -r 's/-/_/g')
+    sed -i "/#egg=$package_name_dashes_to_underscores$/d" ./$TEMPDIR/$PIP_FREEZE
+    sed -i "/^#/d" ./$TEMPDIR/$PIP_FREEZE  # remove all commented lines  # see comments in https://github.com/pypa/pip/issues/6199
+
+    # PIPDEPTREE
+    sed -i "s/^$PACKAGE_NAME==.*/$PACKAGE_NAME/g" ./$TEMPDIR/$PIPDEPTREE
 fi
-cat ./$TEMPDIR/$DOCKER_DEPS
-# - rename & remove temp dir
-mv ./$TEMPDIR/$DOCKER_DEPS $DOCKER_DEPS
+
+
+# combine & cleanup
+DOCKER_DEPS="dependencies-from-$(basename $1).log"
+cat ./$TEMPDIR/$PIP_FREEZE >> $DOCKER_DEPS
+echo "------------------------------------------------------------------------" >> $DOCKER_DEPS
+cat ./$TEMPDIR/$PIPDEPTREE >> $DOCKER_DEPS
 rm -r ./$TEMPDIR/
