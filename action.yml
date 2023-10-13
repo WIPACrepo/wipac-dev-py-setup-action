@@ -135,7 +135,7 @@ runs:
 
         # Build
         if [ -f ./Dockerfile ]; then
-          # install podman... (grep -> 0 if found)
+          # install podman... (grep -o -> 1 if found)
           if [[ $(grep -o "USER" ./Dockerfile) ]]; then
             $GITHUB_ACTION_PATH/install-podman.sh
             podman --version
