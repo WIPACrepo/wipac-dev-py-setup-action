@@ -77,7 +77,12 @@ fi
 
 # combine & cleanup
 DOCKER_DEPS="dependencies-from-$(basename $1).log"
+echo "------------------------------------------------------------------------" >> $DOCKER_DEPS
+echo "pip freeze" >> $DOCKER_DEPS
+echo "------------------------------------------------------------------------" >> $DOCKER_DEPS
 cat ./$TEMPDIR/$PIP_FREEZE >> $DOCKER_DEPS
+echo "------------------------------------------------------------------------" >> $DOCKER_DEPS
+echo "pipdeptree" >> $DOCKER_DEPS
 echo "------------------------------------------------------------------------" >> $DOCKER_DEPS
 cat ./$TEMPDIR/$PIP_DEP_TREE >> $DOCKER_DEPS
 cat $DOCKER_DEPS
