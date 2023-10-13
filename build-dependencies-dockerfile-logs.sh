@@ -26,6 +26,7 @@ else
     docker build -t my_image --file $1 .
 fi
 
+
 # make script
 TEMPDIR="dep-build-$(basename $1)"
 mkdir ./$TEMPDIR
@@ -36,6 +37,7 @@ echo "pip3 freeze > /local/$TEMPDIR/$PIP_FREEZE" >> ./$TEMPDIR/freezer.sh
 echo "pip3 install --target=. pipdeptree" >> ./$TEMPDIR/make_dep_files.sh
 echo "./bin/pipdeptree > /local/$TEMPDIR/$PIP_DEP_TREE" >> ./$TEMPDIR/make_dep_files.sh
 chmod +x ./$TEMPDIR/make_dep_files.sh
+
 
 # generate
 if [ "$2" == "--podman" ]; then
