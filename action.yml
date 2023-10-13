@@ -113,6 +113,8 @@ runs:
     - name: Build dependencies.log (and commit)
       if: env.IS_GIT_BEHIND != 'true'
       run: |
+        set -x  # turn on debugging
+
         # append permissive line to .gitignore since *.log is commonly present
         line='!dependencies*.log'
         if [[ ! $(grep -F "$line" .gitignore) ]]; then
@@ -133,12 +135,16 @@ runs:
 
         # Build
         if [ -f ./Dockerfile ]; then
-          # from docker...
-          $GITHUB_ACTION_PATH/install-podman.sh
-          podman --version
+          # install podman... (grep -o -> 1 if found)
+          if [[ $(grep -o "USER" ./Dockerfile) ]]; then
+            $GITHUB_ACTION_PATH/install-podman.sh
+            podman --version
+            USE_PODMAN='--podman'
+          fi
+          # from dockerfile...
           for f in ./Dockerfile*; do
               echo $f
-              ${{ github.action_path }}/build-dependencies-dockerfile-logs.sh $f
+              ${{ github.action_path }}/build-dependencies-dockerfile-logs.sh $f $USE_PODMAN
           done
         else
           # from setup.cfg...
