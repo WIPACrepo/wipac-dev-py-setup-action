@@ -55,13 +55,14 @@ fi
 # - remove main package since this can cause an infinite loop when a new release is made
 if [ ! -z "$PACKAGE_NAME" ]; then
     cat ./$TEMPDIR/$DOCKER_DEPS  # so we can see the before picture
-    sed -i "/^$PACKAGE_NAME==/d" ./$TEMPDIR/$DOCKER_DEPS
-    sed -i "/^$PACKAGE_NAME /d" ./$TEMPDIR/$DOCKER_DEPS
-    sed -i "/#egg=$PACKAGE_NAME$/d" ./$TEMPDIR/$DOCKER_DEPS
-    # now if using pip's editable-install (-e), pip converts dashes to underscores
-    package_name_dashes_to_underscores=$(echo "$PACKAGE_NAME" | sed -r 's/-/_/g')
-    sed -i "/#egg=$package_name_dashes_to_underscores$/d" ./$TEMPDIR/$DOCKER_DEPS
-    sed -i "/^#/d" ./$TEMPDIR/$DOCKER_DEPS  # remove all commented lines  # see comments in https://github.com/pypa/pip/issues/6199
+    sed -i "s/^$PACKAGE_NAME==/$PACKAGE_NAME/g" ./$TEMPDIR/$DOCKER_DEPS
+    # sed -i "/^$PACKAGE_NAME==/d" ./$TEMPDIR/$DOCKER_DEPS
+    # sed -i "/^$PACKAGE_NAME /d" ./$TEMPDIR/$DOCKER_DEPS
+    # sed -i "/#egg=$PACKAGE_NAME$/d" ./$TEMPDIR/$DOCKER_DEPS
+    # # now if using pip's editable-install (-e), pip converts dashes to underscores
+    # package_name_dashes_to_underscores=$(echo "$PACKAGE_NAME" | sed -r 's/-/_/g')
+    # sed -i "/#egg=$package_name_dashes_to_underscores$/d" ./$TEMPDIR/$DOCKER_DEPS
+    # sed -i "/^#/d" ./$TEMPDIR/$DOCKER_DEPS  # remove all commented lines  # see comments in https://github.com/pypa/pip/issues/6199
 fi
 cat ./$TEMPDIR/$DOCKER_DEPS
 # - rename & remove temp dir
