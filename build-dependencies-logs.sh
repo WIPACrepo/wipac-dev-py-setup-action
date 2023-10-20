@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x  # turn on debugging
 set -e
 
 ########################################################################
@@ -8,6 +9,7 @@ set -e
 #
 ########################################################################
 
+pip3 install --upgrade pip
 pip3 install pip-tools
 
 # do main dependencies.log in subproc
