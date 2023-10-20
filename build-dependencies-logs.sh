@@ -12,13 +12,17 @@ set -e
 pip3 install --upgrade pip
 pip3 install pip-tools
 
+PIPTOOLSCACHE=./pip-tools-cache
+mkdir -p $PIPTOOLSCACHE
+trap 'rm -rf "$PIPTOOLSCACHE"' EXIT
+
 # do main dependencies.log in subproc
 echo
 file="dependencies.log"
 echo $file
 git mv requirements.txt $file 2> /dev/null || true  # don't want requirements.txt
 echo "pip-compile..."
-pip-compile --upgrade --output-file="$file" --cache-dir="$file"-pip-tools-cache"$file" &
+pip-compile --upgrade --output-file="$file" --cache-dir="$PIPTOOLSCACHE/$file" &
 
 # get all extras
 EXTRAS=$(python3 $GITHUB_ACTION_PATH/list_extras.py setup.cfg)
@@ -30,7 +34,7 @@ for extra in $EXTRAS; do
   echo $file
   git mv "requirements-${extra}.txt" $file 2> /dev/null || true  # don't want requirements*.txt
   echo "pip-compile..."
-  pip-compile --upgrade --extra $extra --output-file="$file" --cache-dir="$file"-pip-tools-cache"$file" &
+  pip-compile --upgrade --extra $extra --output-file="$file" --cache-dir="$PIPTOOLSCACHE/$file" &
 done
 echo
 
