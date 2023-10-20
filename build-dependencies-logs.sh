@@ -16,7 +16,7 @@ pip3 install pip-tools
 echo
 file="dependencies.log"
 echo $file
-git mv requirements.txt $file || true  # don't want requirements.txt
+git mv requirements.txt $file 2> /dev/null || true  # don't want requirements.txt
 echo "pip-compile..."
 pip-compile --upgrade --output-file="$file" &
 
