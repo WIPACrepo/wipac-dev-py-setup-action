@@ -30,6 +30,7 @@ for extra in $EXTRAS; do
   echo $file
   git mv "requirements-${extra}.txt" $file 2> /dev/null || true  # don't want requirements*.txt
   echo "pip-compile..."
+  sleep 5
   pip-compile --upgrade --extra $extra --output-file="$file" &
 done
 echo
