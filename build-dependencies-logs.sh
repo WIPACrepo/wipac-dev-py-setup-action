@@ -18,7 +18,7 @@ file="dependencies.log"
 echo $file
 git mv requirements.txt $file 2> /dev/null || true  # don't want requirements.txt
 echo "pip-compile..."
-pip-compile --upgrade --output-file="$file" &
+pip-compile --upgrade --output-file="$file" --cache-dir="$file"-pip-tools-cache"$file" &
 
 # get all extras
 EXTRAS=$(python3 $GITHUB_ACTION_PATH/list_extras.py setup.cfg)
@@ -30,8 +30,7 @@ for extra in $EXTRAS; do
   echo $file
   git mv "requirements-${extra}.txt" $file 2> /dev/null || true  # don't want requirements*.txt
   echo "pip-compile..."
-  pip-compile --upgrade --extra $extra --output-file="$file" &
-  sleep 5
+  pip-compile --upgrade --extra $extra --output-file="$file" --cache-dir="$file"-pip-tools-cache"$file" &
 done
 echo
 
