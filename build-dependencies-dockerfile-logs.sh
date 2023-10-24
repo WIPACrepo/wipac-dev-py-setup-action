@@ -35,7 +35,7 @@ subtitle="within the container built from $(basename $1)"
 TEMPDIR="dep-build-$(basename $1)"
 mkdir ./$TEMPDIR
 trap 'rm -rf "./$TEMPDIR"' EXIT
-cp ./make-dependencies-logs.sh $TEMPDIR
+cp $GITHUB_ACTION_PATH/make-dependencies-logs.sh $TEMPDIR
 chmod +x ./$TEMPDIR/make-dependencies-logs.sh
 
 
