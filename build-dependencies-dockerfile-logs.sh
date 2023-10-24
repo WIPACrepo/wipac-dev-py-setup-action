@@ -36,6 +36,7 @@ SUBTITLE=${SUBTITLE:-"within the container built from $(basename $1)"}
 TEMPDIR="dep-build-$(basename $1)"
 mkdir ./$TEMPDIR
 trap 'rm -rf "./$TEMPDIR"' EXIT
+ls -a $GITHUB_ACTION_PATH
 cp $GITHUB_ACTION_PATH/make-dependencies-logs.sh $TEMPDIR
 chmod +x ./$TEMPDIR/make-dependencies-logs.sh
 
