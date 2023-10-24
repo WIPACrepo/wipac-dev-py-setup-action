@@ -33,7 +33,7 @@ SUBTITLE=${SUBTITLE:-"within the container built from $(basename $1)"}
 
 
 # move script
-TEMPDIR="dep-build-$(basename $1)"
+TEMPDIR="tempdir"
 mkdir ./$TEMPDIR
 trap 'rm -rf "./$TEMPDIR"' EXIT
 cp $GITHUB_ACTION_PATH/pip-freeze-tree.sh $TEMPDIR
@@ -46,12 +46,12 @@ if [ "$2" == "--podman" ]; then
         --mount type=bind,source=$(realpath ./$TEMPDIR/),target=/local/$TEMPDIR \
         --userns=keep-id:uid=1000,gid=1000 \
         my_image \
-        /local/$TEMPDIR/pip-freeze-tree.sh ./$TEMPDIR/$DEPS_LOG_FILE $SUBTITLE
+        /local/$TEMPDIR/pip-freeze-tree.sh $(realpath./$TEMPDIR/$DEPS_LOG_FILE) $SUBTITLE
 else
     docker run --rm -i \
         --mount type=bind,source=$(realpath ./$TEMPDIR/),target=/local/$TEMPDIR \
         my_image \
-        /local/$TEMPDIR/pip-freeze-tree.sh ./$TEMPDIR/$DEPS_LOG_FILE $SUBTITLE
+        /local/$TEMPDIR/pip-freeze-tree.sh $(realpath./$TEMPDIR/$DEPS_LOG_FILE) $SUBTITLE
 fi
 
 ls ./$TEMPDIR
