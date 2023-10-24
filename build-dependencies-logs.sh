@@ -25,13 +25,13 @@ for variant in $VARIANTS_LIST; do
   if [[ $variant == "-" ]]; then  # regular package (not an extra)
     pip_install_pkg="."
     dockerfile="$TEMPDIR/Dockerfile"
-    export DEPS_LOG_FILE="dependencies.log"
-    export SUBTITLE=""
+    DEPS_LOG_FILE="dependencies.log"
+    SUBTITLE=""
   else
     pip_install_pkg=".[$variant]"
     dockerfile="$TEMPDIR/Dockerfile_$variant"
-    export DEPS_LOG_FILE="dependencies-${variant}.log"
-    export SUBTITLE="with the '$variant' extra"
+    DEPS_LOG_FILE="dependencies-${variant}.log"
+    SUBTITLE="with the '$variant' extra"
   fi
 
 
@@ -42,7 +42,10 @@ RUN pip install --no-cache-dir $pip_install_pkg
 CMD []
 EOF
 
-  $GITHUB_ACTION_PATH/build-dependencies-dockerfile-logs.sh $(realpath $dockerfile)
+  $GITHUB_ACTION_PATH/build-dependencies-dockerfile-logs.sh \
+    $(realpath $dockerfile) \
+    $DEPS_LOG_FILE \
+    $SUBTITLE
 
 done
 echo

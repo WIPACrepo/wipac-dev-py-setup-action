@@ -144,8 +144,11 @@ runs:
           # from dockerfile...
           for f in ./Dockerfile*; do
               echo $f
-              export SUBTITLE="within the container built from $(basename $f)"
-              ${{ github.action_path }}/build-dependencies-dockerfile-logs.sh $f $USE_PODMAN
+              ${{ github.action_path }}/build-dependencies-dockerfile-logs.sh \
+                $f \
+                "dependencies-from-$(basename $1).log" \
+                "within the container built from $(basename $f)" \
+                $USE_PODMAN
           done
         else
           # from setup.cfg...

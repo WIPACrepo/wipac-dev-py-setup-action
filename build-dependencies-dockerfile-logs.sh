@@ -8,14 +8,16 @@ set -e
 #
 ########################################################################
 
-if [ -z "$1" ]; then
-    echo "Usage: build-dependencies-dockerfile-logs.sh DOCKERFILE"
+if [ -z "$1" || -z "$2" || -z "$3" ]; then
+    echo "Usage: build-dependencies-dockerfile-logs.sh DOCKERFILE DEPS_LOG_FILE SUBTITLE"
     exit 1
 fi
 if [ ! -f "$1" ]; then
     echo "File Not Found: $1"
     exit 2
 fi
+DEPS_LOG_FILE=$2
+SUBTITLE=$3
 
 
 # build
@@ -27,10 +29,6 @@ else
 fi
 
 
-
-DEPS_LOG_FILE=${DEPS_LOG_FILE:-"dependencies-from-$(basename $1).log"}
-
-
 # move script
 TEMPDIR=$(mktemp -d)
 trap 'rm -rf "$TEMPDIR"' EXIT
@@ -39,7 +37,7 @@ chmod +x $TEMPDIR/pip-freeze-tree.sh
 
 
 # generate
-if [ "$2" == "--podman" ]; then
+if if [[ $* == *--podman* ]]; then
     podman run --rm -i \
         --env PACKAGE_NAME=$PACKAGE_NAME \
         --env GITHUB_ACTION_REPOSITORY=$GITHUB_ACTION_REPOSITORY \
