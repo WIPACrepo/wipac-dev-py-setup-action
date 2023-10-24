@@ -8,7 +8,7 @@ set -e
 #
 ########################################################################
 
-if [ -z "$1" || -z "$2" || -z "$3" ]; then
+if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
     echo "Usage: build-dependencies-dockerfile-logs.sh DOCKERFILE DEPS_LOG_FILE SUBTITLE"
     exit 1
 fi
