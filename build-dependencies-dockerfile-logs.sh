@@ -27,8 +27,9 @@ else
 fi
 
 
-DOCKER_DEPS="dependencies-from-$(basename $1).log"
-subtitle="within the container built from $(basename $1)"
+
+DEPS_LOG_FILE=${DEPS_LOG_FILE:-"dependencies-from-$(basename $1).log"}
+SUBTITLE=${SUBTITLE:-"within the container built from $(basename $1)"}
 
 
 # move script
@@ -45,13 +46,13 @@ if [ "$2" == "--podman" ]; then
         --mount type=bind,source=$(realpath ./$TEMPDIR/),target=/local/$TEMPDIR \
         --userns=keep-id:uid=1000,gid=1000 \
         my_image \
-        /local/$TEMPDIR/make-dependencies-logs.sh $DOCKER_DEPS $subtitle
+        /local/$TEMPDIR/make-dependencies-logs.sh $DEPS_LOG_FILE $SUBTITLE
 else
     docker run --rm -i \
         --mount type=bind,source=$(realpath ./$TEMPDIR/),target=/local/$TEMPDIR \
         my_image \
-        /local/$TEMPDIR/make-dependencies-logs.sh $DOCKER_DEPS $subtitle
+        /local/$TEMPDIR/make-dependencies-logs.sh $DEPS_LOG_FILE $SUBTITLE
 fi
 
 
-mv ./$TEMPDIR/$DOCKER_DEPS $DOCKER_DEPS
+mv ./$TEMPDIR/$DEPS_LOG_FILE $DEPS_LOG_FILE
