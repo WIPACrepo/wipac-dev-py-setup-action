@@ -12,14 +12,14 @@ set -e
 
 # get all extras
 VARIANTS_LIST=$(python3 $GITHUB_ACTION_PATH/list_extras.py setup.cfg)
-VARIANTS_LIST="$(echo $VARIANTS_LIST) -"
+VARIANTS_LIST="- $(echo $VARIANTS_LIST)" # "-" signifies regular package
 echo $VARIANTS_LIST
 
 # generate dependencies-*.log for each extras_require (each in a subproc)
 for variant in $VARIANTS_LIST; do
   echo
 
-  if [[ $variant == "-" ]]; then  # not an extra
+  if [[ $variant == "-" ]]; then  # regular package (not an extra)
     pip_install_pkg="."
     dockerfile="./Dockerfile"
     export DEPS_LOG_FILE="dependencies.log"
@@ -30,7 +30,7 @@ for variant in $VARIANTS_LIST; do
     export DEPS_LOG_FILE="dependencies-${variant}.log"
     export SUBTITLE="with the '$variant' extra"
   fi
-  trap 'rm "$dockerfile"' EXIT
+  trap 'rm $dockerfile' EXIT  # don't quote var, so it deletes each 'version'
 
   cat << EOF >> $dockerfile
 FROM python:3.11
