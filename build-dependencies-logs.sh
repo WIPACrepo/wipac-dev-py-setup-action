@@ -16,6 +16,7 @@ VARIANTS_LIST="- $(echo $VARIANTS_LIST)" # "-" signifies regular package
 echo $VARIANTS_LIST
 
 TEMPDIR="./temp-dockerfiles"
+mkdir $TEMPDIR
 trap 'rm -rf "$TEMPDIR"' EXIT
 
 # generate dependencies-*.log for each extras_require (each in a subproc)
