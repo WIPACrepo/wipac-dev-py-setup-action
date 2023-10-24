@@ -27,9 +27,6 @@ pip_dep_tree='pip_dep_tree.txt'
 trap 'rm "$pip_dep_tree"' EXIT
 
 
-pip install .
-
-
 # pip_freeze
 pip3 freeze > $pip_freeze
 # pip_dep_tree
