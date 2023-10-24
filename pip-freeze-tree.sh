@@ -17,7 +17,7 @@ deps_file=$1
 if [ -z "$2" ]; then
     subtitle=""
 else
-    subtitle=" $2"
+    subtitle="$2"
 fi
 
 
