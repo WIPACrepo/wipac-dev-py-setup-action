@@ -19,7 +19,7 @@ echo $VARIANTS_LIST
 for variant in $VARIANTS_LIST; do
   echo
 
-  if [[ $variant != "-" ]]; then  # not an extra
+  if [[ $variant == "-" ]]; then  # not an extra
     pip_install_pkg="."
     dockerfile="./Dockerfile"
     export DEPS_LOG_FILE="dependencies.log"
