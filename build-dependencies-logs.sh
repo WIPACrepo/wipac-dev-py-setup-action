@@ -42,13 +42,13 @@ EOF
   $GITHUB_ACTION_PATH/build-dependencies-dockerfile-logs.sh \
     $(realpath $dockerfile) \
     $DEPS_LOG_FILE \
-    "from \`pip install $pip_install_pkg\`"
+    "from \`pip install $pip_install_pkg\`" \
+    &
 
 done
 echo
 
-# # wait for all subprocs
-# wait -n # main dependencies.log
-# for extra in $VARIANTS_LIST; do
-#   wait -n
-# done
+# wait for all subprocs
+for _ in $VARIANTS_LIST; do
+  wait -n
+done
