@@ -11,24 +11,33 @@ set -e
 
 
 # get all extras
-EXTRAS=$(python3 $GITHUB_ACTION_PATH/list_extras.py setup.cfg)
+VARIANTS_LIST=$(python3 $GITHUB_ACTION_PATH/list_extras.py setup.cfg)
+VARIANTS_LIST+=("-")  # signify not an extra
 
 # generate dependencies-*.log for each extras_require (each in a subproc)
-for extra in $EXTRAS; do
+for variant in $VARIANTS_LIST; do
   echo
 
-  dockerfile="./Dockerfile_$extra"
+  if [[ $variant != "-" ]]; then  # not an extra
+    pip_install_pkg="."
+    dockerfile="./Dockerfile"
+    export DEPS_LOG_FILE="dependencies.log"
+    export SUBTITLE=""
+  else
+    pip_install_pkg=".[$variant]"
+    dockerfile="./Dockerfile_$variant"
+    export DEPS_LOG_FILE="dependencies-${variant}.log"
+    export SUBTITLE="with the '$variant' extra"
+  fi
   trap 'rm "$dockerfile"' EXIT
 
   cat << EOF >> $dockerfile
 FROM python:3.11
 COPY . .
-RUN pip install --no-cache-dir .
+RUN pip install --no-cache-dir $pip_install_pkg
 CMD []
 EOF
 
-  export DEPS_LOG_FILE="dependencies-${extra}.log"
-  export SUBTITLE="with the '$extra' extra"
   $GITHUB_ACTION_PATH/build-dependencies-dockerfile-logs.sh $(realpath $dockerfile)
 
 done
@@ -36,6 +45,6 @@ echo
 
 # # wait for all subprocs
 # wait -n # main dependencies.log
-# for extra in $EXTRAS; do
+# for extra in $VARIANTS_LIST; do
 #   wait -n
 # done
