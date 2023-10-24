@@ -36,8 +36,8 @@ SUBTITLE=${SUBTITLE:-"within the container built from $(basename $1)"}
 TEMPDIR="dep-build-$(basename $1)"
 mkdir ./$TEMPDIR
 trap 'rm -rf "./$TEMPDIR"' EXIT
-cp $GITHUB_ACTION_PATH/make-dependencies-log.sh $TEMPDIR
-chmod +x ./$TEMPDIR/make-dependencies-log.sh
+cp $GITHUB_ACTION_PATH/pip-freeze-tree.sh $TEMPDIR
+chmod +x ./$TEMPDIR/pip-freeze-tree.sh
 
 
 # generate
@@ -46,12 +46,12 @@ if [ "$2" == "--podman" ]; then
         --mount type=bind,source=$(realpath ./$TEMPDIR/),target=/local/$TEMPDIR \
         --userns=keep-id:uid=1000,gid=1000 \
         my_image \
-        /local/$TEMPDIR/make-dependencies-log.sh $DEPS_LOG_FILE $SUBTITLE
+        /local/$TEMPDIR/pip-freeze-tree.sh $DEPS_LOG_FILE $SUBTITLE
 else
     docker run --rm -i \
         --mount type=bind,source=$(realpath ./$TEMPDIR/),target=/local/$TEMPDIR \
         my_image \
-        /local/$TEMPDIR/make-dependencies-log.sh $DEPS_LOG_FILE $SUBTITLE
+        /local/$TEMPDIR/pip-freeze-tree.sh $DEPS_LOG_FILE $SUBTITLE
 fi
 
 

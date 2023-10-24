@@ -9,7 +9,7 @@ set -e
 ########################################################################
 
 if [ -z "$1" ]; then
-    echo "Usage: make-dependencies-log.sh DEPS_FILE [SUBTITLE]"
+    echo "Usage: pip-freeze-tree.sh DEPS_FILE [SUBTITLE]"
     exit 1
 fi
 deps_file=$1
