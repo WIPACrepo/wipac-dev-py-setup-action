@@ -40,7 +40,7 @@ chmod +x $TEMPDIR/pip-freeze-tree.sh
 if [[ $* == *--podman* ]]; then
     podman run --rm -i \
         --env PACKAGE_NAME=$PACKAGE_NAME \
-        --env GITHUB_ACTION_REPOSITORY=$GITHUB_ACTION_REPOSITORY \
+        --env ACTION_REPOSITORY=$ACTION_REPOSITORY \
         --mount type=bind,source=$(realpath $TEMPDIR/),target=/local/$TEMPDIR \
         --userns=keep-id:uid=1000,gid=1000 \
         my_image \
@@ -48,7 +48,7 @@ if [[ $* == *--podman* ]]; then
 else
     docker run --rm -i \
         --env PACKAGE_NAME=$PACKAGE_NAME \
-        --env GITHUB_ACTION_REPOSITORY=$GITHUB_ACTION_REPOSITORY \
+        --env ACTION_REPOSITORY=$ACTION_REPOSITORY \
         --mount type=bind,source=$(realpath $TEMPDIR/),target=/local/$TEMPDIR \
         my_image \
         /local/$TEMPDIR/pip-freeze-tree.sh /local/$TEMPDIR/$DEPS_LOG_FILE "$SUBTITLE"
