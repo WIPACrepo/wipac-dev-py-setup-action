@@ -19,13 +19,15 @@ fi
 DEPS_LOG_FILE=$2
 SUBTITLE=$3
 
+image="for-deps-$(basename ${DEPS_LOG_FILE%.*})"  # basename without extension
+
 
 # build
 if [ "$2" == "--podman" ]; then
     # use podman to get around user permission issues (with --userns=keep-id:uid=1000,gid=1000)
-    podman build -t my_image --file $1 .
+    podman build -t $image --file $1 .
 else
-    docker build -t my_image --file $1 .
+    docker build -t $image --file $1 .
 fi
 
 
@@ -43,14 +45,14 @@ if [[ $* == *--podman* ]]; then
         --env GITHUB_ACTION_REPOSITORY=$GITHUB_ACTION_REPOSITORY \
         --mount type=bind,source=$(realpath $TEMPDIR/),target=/local/$TEMPDIR \
         --userns=keep-id:uid=1000,gid=1000 \
-        my_image \
+        $image \
         /local/$TEMPDIR/pip-freeze-tree.sh /local/$TEMPDIR/$DEPS_LOG_FILE "$SUBTITLE"
 else
     docker run --rm -i \
         --env PACKAGE_NAME=$PACKAGE_NAME \
         --env GITHUB_ACTION_REPOSITORY=$GITHUB_ACTION_REPOSITORY \
         --mount type=bind,source=$(realpath $TEMPDIR/),target=/local/$TEMPDIR \
-        my_image \
+        $image \
         /local/$TEMPDIR/pip-freeze-tree.sh /local/$TEMPDIR/$DEPS_LOG_FILE "$SUBTITLE"
 fi
 
