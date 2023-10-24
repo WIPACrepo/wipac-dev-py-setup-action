@@ -15,22 +15,25 @@ VARIANTS_LIST=$(python3 $GITHUB_ACTION_PATH/list_extras.py setup.cfg)
 VARIANTS_LIST="- $(echo $VARIANTS_LIST)" # "-" signifies regular package
 echo $VARIANTS_LIST
 
+TEMPDIR="./temp-dockerfiles"
+trap 'rm -rf "$TEMPDIR"' EXIT
+
 # generate dependencies-*.log for each extras_require (each in a subproc)
 for variant in $VARIANTS_LIST; do
   echo
 
   if [[ $variant == "-" ]]; then  # regular package (not an extra)
     pip_install_pkg="."
-    dockerfile="./Dockerfile"
+    dockerfile="$TEMPDIR/Dockerfile"
     export DEPS_LOG_FILE="dependencies.log"
     export SUBTITLE=""
   else
     pip_install_pkg=".[$variant]"
-    dockerfile="./Dockerfile_$variant"
+    dockerfile="$TEMPDIR/Dockerfile_$variant"
     export DEPS_LOG_FILE="dependencies-${variant}.log"
     export SUBTITLE="with the '$variant' extra"
   fi
-  trap 'rm $dockerfile' EXIT  # don't quote var, so it deletes each 'version'
+
 
   cat << EOF >> $dockerfile
 FROM python:3.11
