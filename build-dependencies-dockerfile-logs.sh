@@ -29,7 +29,6 @@ fi
 
 
 DEPS_LOG_FILE=${DEPS_LOG_FILE:-"dependencies-from-$(basename $1).log"}
-SUBTITLE=${SUBTITLE:-"within the container built from $(basename $1)"}
 
 
 # move script
