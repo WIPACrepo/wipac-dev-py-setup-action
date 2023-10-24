@@ -17,7 +17,7 @@ EXTRAS=$(python3 $GITHUB_ACTION_PATH/list_extras.py setup.cfg)
 for extra in $EXTRAS; do
   echo
 
-  ./Dockerfile << EOF
+  cat << EOF >> ./Dockerfile
 FROM python:3.11
 COPY . .
 RUN pip install --no-cache-dir .
