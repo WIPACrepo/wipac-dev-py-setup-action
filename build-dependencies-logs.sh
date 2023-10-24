@@ -17,7 +17,10 @@ EXTRAS=$(python3 $GITHUB_ACTION_PATH/list_extras.py setup.cfg)
 for extra in $EXTRAS; do
   echo
 
-  cat << EOF >> ./Dockerfile
+  dockerfile="./Dockerfile_$extra"
+  trap 'rm "$dockerfile"' EXIT
+
+  cat << EOF >> $dockerfile
 FROM python:3.11
 COPY . .
 RUN pip install --no-cache-dir .
@@ -26,7 +29,7 @@ EOF
 
   export DEPS_LOG_FILE="dependencies-${extra}.log"
   export SUBTITLE="with the '$extra' extra"
-  $GITHUB_ACTION_PATH/build-dependencies-dockerfile-logs.sh $(realpath ./Dockerfile)
+  $GITHUB_ACTION_PATH/build-dependencies-dockerfile-logs.sh $(realpath $dockerfile)
 
 done
 echo
