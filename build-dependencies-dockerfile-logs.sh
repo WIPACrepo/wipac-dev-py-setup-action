@@ -46,13 +46,13 @@ if [ "$2" == "--podman" ]; then
         --mount type=bind,source=$(realpath ./$TEMPDIR/),target=/local/$TEMPDIR \
         --userns=keep-id:uid=1000,gid=1000 \
         my_image \
-        /local/$TEMPDIR/pip-freeze-tree.sh $DEPS_LOG_FILE $SUBTITLE
+        /local/$TEMPDIR/pip-freeze-tree.sh ./$TEMPDIR/$DEPS_LOG_FILE $SUBTITLE
 else
     docker run --rm -i \
         --mount type=bind,source=$(realpath ./$TEMPDIR/),target=/local/$TEMPDIR \
         my_image \
-        /local/$TEMPDIR/pip-freeze-tree.sh $DEPS_LOG_FILE $SUBTITLE
+        /local/$TEMPDIR/pip-freeze-tree.sh ./$TEMPDIR/$DEPS_LOG_FILE $SUBTITLE
 fi
 
-
+ls ./$TEMPDIR
 mv ./$TEMPDIR/$DEPS_LOG_FILE $DEPS_LOG_FILE
