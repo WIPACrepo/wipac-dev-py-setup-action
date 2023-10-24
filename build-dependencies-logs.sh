@@ -15,8 +15,7 @@ VARIANTS_LIST=$(python3 $GITHUB_ACTION_PATH/list_extras.py setup.cfg)
 VARIANTS_LIST="- $(echo $VARIANTS_LIST)" # "-" signifies regular package
 echo $VARIANTS_LIST
 
-TEMPDIR="./temp-dockerfiles"
-mkdir $TEMPDIR
+TEMPDIR=$(mktemp -d)
 trap 'rm -rf "$TEMPDIR"' EXIT
 
 # generate dependencies-*.log for each extras_require (each in a subproc)

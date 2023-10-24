@@ -32,28 +32,27 @@ DEPS_LOG_FILE=${DEPS_LOG_FILE:-"dependencies-from-$(basename $1).log"}
 
 
 # move script
-TEMPDIR="tempdir"
-mkdir ./$TEMPDIR
-trap 'rm -rf "./$TEMPDIR"' EXIT
+TEMPDIR=$(mktemp -d)
+trap 'rm -rf "$TEMPDIR"' EXIT
 cp $GITHUB_ACTION_PATH/pip-freeze-tree.sh $TEMPDIR
-chmod +x ./$TEMPDIR/pip-freeze-tree.sh
+chmod +x $TEMPDIR/pip-freeze-tree.sh
 
 
 # generate
 if [ "$2" == "--podman" ]; then
     podman run --rm -i \
         --env PACKAGE_NAME=$PACKAGE_NAME \
-        --mount type=bind,source=$(realpath ./$TEMPDIR/),target=/local/$TEMPDIR \
+        --mount type=bind,source=$(realpath $TEMPDIR/),target=/local/$TEMPDIR \
         --userns=keep-id:uid=1000,gid=1000 \
         my_image \
         /local/$TEMPDIR/pip-freeze-tree.sh /local/$TEMPDIR/$DEPS_LOG_FILE "$SUBTITLE"
 else
     docker run --rm -i \
         --env PACKAGE_NAME=$PACKAGE_NAME \
-        --mount type=bind,source=$(realpath ./$TEMPDIR/),target=/local/$TEMPDIR \
+        --mount type=bind,source=$(realpath $TEMPDIR/),target=/local/$TEMPDIR \
         my_image \
         /local/$TEMPDIR/pip-freeze-tree.sh /local/$TEMPDIR/$DEPS_LOG_FILE "$SUBTITLE"
 fi
 
-ls ./$TEMPDIR
-mv ./$TEMPDIR/$DEPS_LOG_FILE $DEPS_LOG_FILE
+ls $TEMPDIR
+mv $TEMPDIR/$DEPS_LOG_FILE $DEPS_LOG_FILE
