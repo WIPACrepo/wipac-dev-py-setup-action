@@ -26,14 +26,11 @@ for variant in $VARIANTS_LIST; do
     pip_install_pkg="."
     dockerfile="$TEMPDIR/Dockerfile"
     DEPS_LOG_FILE="dependencies.log"
-    SUBTITLE=""
   else
     pip_install_pkg=".[$variant]"
     dockerfile="$TEMPDIR/Dockerfile_$variant"
     DEPS_LOG_FILE="dependencies-${variant}.log"
-    SUBTITLE="with the '$variant' extra"
   fi
-
 
   cat << EOF >> $dockerfile
 FROM python:3.11
@@ -45,7 +42,7 @@ EOF
   $GITHUB_ACTION_PATH/build-dependencies-dockerfile-logs.sh \
     $(realpath $dockerfile) \
     $DEPS_LOG_FILE \
-    $SUBTITLE
+    "from \`pip install $pip_install_pkg\`"
 
 done
 echo
