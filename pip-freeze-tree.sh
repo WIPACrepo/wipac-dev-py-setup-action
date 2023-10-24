@@ -30,7 +30,7 @@ trap 'rm "$pip_dep_tree"' EXIT
 # pip_freeze
 pip3 freeze > $pip_freeze
 # pip_dep_tree
-pip3 install --target=. pipdeptree
+pip3 install --target=. --upgrade pipdeptree
 ./bin/pipdeptree > $pip_dep_tree
 
 
