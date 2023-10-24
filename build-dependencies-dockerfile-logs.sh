@@ -37,7 +37,7 @@ chmod +x $TEMPDIR/pip-freeze-tree.sh
 
 
 # generate
-if if [[ $* == *--podman* ]]; then
+if [[ $* == *--podman* ]]; then
     podman run --rm -i \
         --env PACKAGE_NAME=$PACKAGE_NAME \
         --env GITHUB_ACTION_REPOSITORY=$GITHUB_ACTION_REPOSITORY \
