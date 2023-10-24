@@ -33,7 +33,7 @@ for variant in $VARIANTS_LIST; do
   fi
 
   cat << EOF >> $dockerfile
-FROM python:3.11
+FROM python:$(python -V 2>&1 | awk '{print $2}' | cut -d'.' -f1,2)
 COPY . .
 RUN pip install --no-cache-dir $pip_install_pkg
 CMD []
