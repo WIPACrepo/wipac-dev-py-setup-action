@@ -145,7 +145,7 @@ runs:
           # from dockerfile...
           for f in ./Dockerfile*; do
               echo $f
-              ${{ github.action_path }}/build-dependencies-dockerfile-logs.sh \
+              ${{ github.action_path }}/dep-log-from-dockerfile.sh \
                 $f \
                 "dependencies-from-$(basename $f).log" \
                 "within the container built from $(basename $f)" \
@@ -153,7 +153,7 @@ runs:
           done
         else
           # from setup.cfg...
-          ${{ github.action_path }}/build-dependencies-logs.sh
+          ${{ github.action_path }}/all-dep-logs-from-setup-cfg.sh
         fi
 
         # Commit
