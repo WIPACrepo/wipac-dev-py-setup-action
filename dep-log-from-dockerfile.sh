@@ -22,14 +22,6 @@ SUBTITLE=$3
 # lower basename without extension
 image="for-deps-$(echo $(basename ${DEPS_LOG_FILE%.*}) | awk '{print tolower($0)}')"
 
-# build
-if [[ $* == *--podman* ]]; then
-    # use podman to get around user permission issues (with --userns=keep-id:uid=1000,gid=1000)
-    podman build -t $image --file $1 .
-else
-    docker build -t $image --file $1 .
-fi
-
 
 # move script
 TEMPDIR=$(mktemp -d)
@@ -38,8 +30,9 @@ cp $GITHUB_ACTION_PATH/pip-freeze-tree.sh $TEMPDIR
 chmod +x $TEMPDIR/pip-freeze-tree.sh
 
 
-# generate
+# build & generate
 if [[ $* == *--podman* ]]; then
+    podman build -t $image --file $1 .
     podman run --rm -i \
         --env PACKAGE_NAME=$PACKAGE_NAME \
         --env ACTION_REPOSITORY=$ACTION_REPOSITORY \
@@ -48,6 +41,7 @@ if [[ $* == *--podman* ]]; then
         $image \
         /local/$TEMPDIR/pip-freeze-tree.sh /local/$TEMPDIR/$DEPS_LOG_FILE "$SUBTITLE"
 else
+    docker build -t $image --file $1 .
     docker run --rm -i \
         --env PACKAGE_NAME=$PACKAGE_NAME \
         --env ACTION_REPOSITORY=$ACTION_REPOSITORY \
