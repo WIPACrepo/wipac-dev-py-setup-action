@@ -19,11 +19,11 @@ fi
 DEPS_LOG_FILE=$2
 SUBTITLE=$3
 
-image="for-deps-$(basename ${DEPS_LOG_FILE%.*})"  # basename without extension
+image="for-$(basename ${DEPS_LOG_FILE%.*})"  # basename without extension
 
 
 # build
-if [ "$2" == "--podman" ]; then
+if [[ $* == *--podman* ]]; then
     # use podman to get around user permission issues (with --userns=keep-id:uid=1000,gid=1000)
     podman build -t $image --file $1 .
 else
