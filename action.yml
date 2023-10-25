@@ -148,7 +148,7 @@ runs:
               ${{ github.action_path }}/dep-log-from-dockerfile.sh \
                 $f \
                 "dependencies-from-$(basename $f).log" \
-                "within the container built from $(basename $f)" \
+                "within the container built from '$f'" \
                 $USE_PODMAN
           done
         else
