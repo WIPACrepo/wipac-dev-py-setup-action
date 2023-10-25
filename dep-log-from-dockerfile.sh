@@ -19,8 +19,8 @@ fi
 DEPS_LOG_FILE=$2
 SUBTITLE=$3
 
-image="for-$(basename ${DEPS_LOG_FILE%.*})"  # basename without extension
-
+# lower basename without extension
+image="for-deps-$(echo $(basename ${DEPS_LOG_FILE%.*}) | awk '{print tolower($0)}')"
 
 # build
 if [[ $* == *--podman* ]]; then
