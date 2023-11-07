@@ -9,18 +9,21 @@ set -e
 ########################################################################
 
 if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
-    echo "Usage: dep-log-from-dockerfile.sh DOCKERFILE DEPS_LOG_FILE SUBTITLE"
+    echo "Usage: dep-log-from-dockerfile.sh DOCKERFILE DEPS_LOG_FILE SUBTITLE [IMAGE_NAMETAG]"
     exit 1
 fi
 if [ ! -f "$1" ]; then
     echo "File Not Found: $1"
     exit 2
 fi
-DEPS_LOG_FILE=$2
-SUBTITLE=$3
-
-# lower basename without extension
-image="for-deps-$(echo $(basename ${DEPS_LOG_FILE%.*}) | awk '{print tolower($0)}')"
+DEPS_LOG_FILE="$2"
+SUBTITLE="$3"
+if [ -z "$4" ]; then  # optional -> get default
+    # lower basename without extension
+    image="for-deps-$(echo $(basename ${DEPS_LOG_FILE%.*}) | awk '{print tolower($0)}')"
+else
+    image="$4"
+fi
 
 
 # move script
@@ -31,7 +34,7 @@ chmod +x $TEMPDIR/pip-freeze-tree.sh
 
 
 # build & generate
-if [[ $* == *--podman* ]]; then
+if [[ $* == *--podman* ]]; then  # look for flag anywhere in args
     podman build -t $image --file $1 .
     podman run --rm -i \
         --env PACKAGE_NAME=$PACKAGE_NAME \

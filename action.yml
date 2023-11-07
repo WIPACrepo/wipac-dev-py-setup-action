@@ -22,6 +22,10 @@ inputs:
     description: 'The email used for "git config user.email"'
     required: false
     default: github-actions@github.com
+  dockerfile_nametags:
+    description: 'A space-separated list of image names and tags to apply to each Dockerfile for locally dependent builds, ex: Dockerfile:icecube/skymap_scanner:latest Dockerfile_pulsar:icecube/skymap_scanner:latest_pulsar'
+    required: false
+    default: ''
 
 # outputs:
 #   random-number:
@@ -137,6 +141,7 @@ runs:
         # Build
         if [ -f ./Dockerfile ]; then
           # from Dockerfile(s)...
+          export DOCKERFILE_NAMETAGS=${{ inputs.dockerfile_nametags }}
           ${{ github.action_path }}/all-dep-logs-from-dockerfiles.sh
         else
           # from setup.cfg...
