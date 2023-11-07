@@ -40,6 +40,6 @@ for fname in ./Dockerfile*; do
     $GITHUB_ACTION_PATH/dep-log-from-dockerfile.sh \
         $fname \
         "dependencies-from-$(basename $fname).log" \
-        "within the container built from \`$fname\`" \
+        "within the container built from '$fname'" \
         $USE_PODMAN
 done
