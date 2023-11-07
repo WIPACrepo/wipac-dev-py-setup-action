@@ -39,18 +39,20 @@ if [[ $* == *--podman* ]]; then  # look for flag anywhere in args
     podman run --rm -i \
         --env PACKAGE_NAME=$PACKAGE_NAME \
         --env ACTION_REPOSITORY=$ACTION_REPOSITORY \
+        --env SUBTITLE="$SUBTITLE" \
         --mount type=bind,source=$(realpath $TEMPDIR/),target=/local/$TEMPDIR \
         --userns=keep-id:uid=1000,gid=1000 \
         $image \
-        /local/$TEMPDIR/pip-freeze-tree.sh /local/$TEMPDIR/$DEPS_LOG_FILE "$SUBTITLE"
+        /local/$TEMPDIR/pip-freeze-tree.sh /local/$TEMPDIR/$DEPS_LOG_FILE
 else
-    docker build -t $image --file $1 .
+    docker build -t $image --file $1
     docker run --rm -i \
         --env PACKAGE_NAME=$PACKAGE_NAME \
         --env ACTION_REPOSITORY=$ACTION_REPOSITORY \
+        --env SUBTITLE="$SUBTITLE" \
         --mount type=bind,source=$(realpath $TEMPDIR/),target=/local/$TEMPDIR \
         $image \
-        /local/$TEMPDIR/pip-freeze-tree.sh /local/$TEMPDIR/$DEPS_LOG_FILE "$SUBTITLE"
+        /local/$TEMPDIR/pip-freeze-tree.sh /local/$TEMPDIR/$DEPS_LOG_FILE
 fi
 
 ls $TEMPDIR
