@@ -17,14 +17,27 @@ if [[ $(grep -o "USER" ./Dockerfile) ]]; then
 fi
 
 
-# from each dockerfile...
-for f in ./Dockerfile*; do
-    echo $f
-    nametag=$(echo $DOCKERFILE_NAMETAGS | grep -o "\b$(basename $f)\:[^[:space:]]*\b" | cut -d ':' -f2-)
+# 1st - the dockerfiles in $DOCKERFILE_NAMETAGS
+for fname_nametag in $DOCKERFILE_NAMETAGS; do
+    echo $fname_nametag
+    fname=$(echo $fname_nametag | cut -d ':' -f1)
+    nametag=$(echo $fname_nametag | cut -d ':' -f2-)
     $GITHUB_ACTION_PATH/dep-log-from-dockerfile.sh \
-        $f \
-        "dependencies-from-$(basename $f).log" \
-        "within the container built from '$f'" \
+        $fname \
+        "dependencies-from-$(basename $fname).log" \
+        "within the container built from '$fname'" \
         $nametag \
+        $USE_PODMAN
+done
+# 2nd - the rest of the dockerfiles
+for fname in ./Dockerfile*; do
+    if [[ $DOCKERFILE_NAMETAGS == *$(basename $fname):* ]]; then
+        continue
+    fi
+    echo $fname
+    $GITHUB_ACTION_PATH/dep-log-from-dockerfile.sh \
+        $fname \
+        "dependencies-from-$(basename $fname).log" \
+        "within the container built from '$fname'" \
         $USE_PODMAN
 done

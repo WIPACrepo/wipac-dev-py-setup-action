@@ -23,7 +23,7 @@ inputs:
     required: false
     default: github-actions@github.com
   dockerfile_nametags:
-    description: 'A space-separated list of image names and tags to apply to each Dockerfile for locally dependent builds, ex: Dockerfile:icecube/skymap_scanner:latest Dockerfile_pulsar:icecube/skymap_scanner:latest_pulsar'
+    description: 'A space-separated list of image names and tags to apply to each Dockerfile for locally dependent builds (these images are built first), ex: Dockerfile:icecube/skymap_scanner:latest Dockerfile_pulsar:icecube/skymap_scanner:latest_pulsar'
     required: false
     default: ''
 
