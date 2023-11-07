@@ -45,7 +45,7 @@ if [[ $* == *--podman* ]]; then  # look for flag anywhere in args
         $image \
         /local/$TEMPDIR/pip-freeze-tree.sh /local/$TEMPDIR/$DEPS_LOG_FILE
 else
-    docker build -t $image --file $1
+    docker build -t $image --file $1 .
     docker run --rm -i \
         --env PACKAGE_NAME=$PACKAGE_NAME \
         --env ACTION_REPOSITORY=$ACTION_REPOSITORY \
