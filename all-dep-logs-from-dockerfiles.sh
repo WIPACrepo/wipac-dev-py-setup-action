@@ -20,6 +20,7 @@ fi
 # 1st - the dockerfiles in $DOCKERFILE_NAMETAGS
 for fname_nametag in $DOCKERFILE_NAMETAGS; do
     echo $fname_nametag
+    docker images
     fname=$(echo $fname_nametag | cut -d ':' -f1)
     nametag=$(echo $fname_nametag | cut -d ':' -f2-)
     $GITHUB_ACTION_PATH/dep-log-from-dockerfile.sh \
@@ -35,6 +36,7 @@ for fname in ./Dockerfile*; do
         continue
     fi
     echo $fname
+    docker images
     $GITHUB_ACTION_PATH/dep-log-from-dockerfile.sh \
         $fname \
         "dependencies-from-$(basename $fname).log" \
