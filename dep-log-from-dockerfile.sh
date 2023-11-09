@@ -18,7 +18,7 @@ if [ ! -f "$1" ]; then
 fi
 DEPS_LOG_FILE="$2"
 SUBTITLE="$3"
-if [ -z "$4" ] && [[ "$4" != --* ]]; then  # optional -> get default (& not a flag)
+if [ -z "$4" ] || [[ "$4" == --* ]]; then  # optional -> get default (& not a flag)
     # lower basename without extension
     image="for-deps-$(echo $(basename ${DEPS_LOG_FILE%.*}) | awk '{print tolower($0)}')"
 else
