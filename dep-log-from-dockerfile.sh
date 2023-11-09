@@ -9,7 +9,7 @@ set -e
 ########################################################################
 
 if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
-    echo "Usage: dep-log-from-dockerfile.sh DOCKERFILE DEPS_LOG_FILE SUBTITLE [IMAGE_NAMETAG]"
+    echo "Usage: dep-log-from-dockerfile.sh DOCKERFILE DEPS_LOG_FILE SUBTITLE [IMAGE_NAMETAG] [--podman]"
     exit 1
 fi
 if [ ! -f "$1" ]; then
@@ -18,7 +18,7 @@ if [ ! -f "$1" ]; then
 fi
 DEPS_LOG_FILE="$2"
 SUBTITLE="$3"
-if [ -z "$4" ]; then  # optional -> get default
+if [ -z "$4" ] || [[ "$4" == --* ]]; then  # optional -> get default (& not a flag)
     # lower basename without extension
     image="for-deps-$(echo $(basename ${DEPS_LOG_FILE%.*}) | awk '{print tolower($0)}')"
 else
