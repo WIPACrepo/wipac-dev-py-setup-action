@@ -20,17 +20,47 @@ sudo mkdir -p /etc/apt/keyrings
 #     https://download.opensuse.org/repositories/devel:kubic:libcontainers:unstable/Debian_Testing/ /" \
 #   | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list > /dev/null
 
+podman  --version
+podman  info
 
-# https://computingforgeeks.com/how-to-install-podman-on-ubuntu/?expand_article=1
-. /etc/os-release
-echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
-curl -L "https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key" | sudo apt-key add -
+
+# Building from Source
+sudo apt-get install \
+  btrfs-progs \
+  crun \
+  git \
+  golang-go \
+  go-md2man \
+  iptables \
+  libassuan-dev \
+  libbtrfs-dev \
+  libc6-dev \
+  libdevmapper-dev \
+  libglib2.0-dev \
+  libgpgme-dev \
+  libgpg-error-dev \
+  libprotobuf-dev \
+  libprotobuf-c-dev \
+  libseccomp-dev \
+  libselinux1-dev \
+  libsystemd-dev \
+  netavark \
+  pkg-config \
+  uidmap
+
+go version
+echo $PATH
+
+git clone https://github.com/containers/podman/
+cd podman
+make BUILDTAGS="selinux seccomp" PREFIX=/usr
+sudo make install PREFIX=/usr
 
 
 # Install Podman
-sudo apt-get update
-sudo apt-get -y upgrade
-sudo apt-get -y install podman
+# sudo apt-get update
+# sudo apt-get -y upgrade
+# sudo apt-get -y install podman
 
 
 podman  --version
