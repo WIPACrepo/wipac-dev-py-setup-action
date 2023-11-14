@@ -20,6 +20,8 @@ sudo mkdir -p /etc/apt/keyrings
 #     https://download.opensuse.org/repositories/devel:kubic:libcontainers:unstable/Debian_Testing/ /" \
 #   | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list > /dev/null
 
+lsb_release -a
+
 OS_RELEASE='Debian_Unstable'
 
 # Debian Unstable/Sid
