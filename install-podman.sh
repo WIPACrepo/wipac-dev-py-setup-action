@@ -1,5 +1,5 @@
 #!/bin/bash
-# set -x  # turn on debugging
+set -x  # turn on debugging
 set -e
 
 ########################################################################
