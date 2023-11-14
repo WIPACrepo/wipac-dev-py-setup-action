@@ -44,7 +44,7 @@ sudo apt-get install \
   libseccomp-dev \
   libselinux1-dev \
   libsystemd-dev \
-  netavark \
+  containernetworking-plugins \
   pkg-config \
   uidmap
 
