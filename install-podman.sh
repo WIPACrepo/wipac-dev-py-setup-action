@@ -22,7 +22,7 @@ sudo mkdir -p /etc/apt/keyrings
 
 
 # https://computingforgeeks.com/how-to-install-podman-on-ubuntu/?expand_article=1
-
+. /etc/os-release
 echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
 curl -L "https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key" | sudo apt-key add -
 
