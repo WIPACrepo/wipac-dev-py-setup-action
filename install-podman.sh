@@ -20,18 +20,22 @@ sudo mkdir -p /etc/apt/keyrings
 #     https://download.opensuse.org/repositories/devel:kubic:libcontainers:unstable/Debian_Testing/ /" \
 #   | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list > /dev/null
 
-lsb_release -a
 
-OS_RELEASE='xUbuntu_22.04'
+# https://forum.linuxfoundation.org/discussion/863091/e-xubuntu-20-04-release-does-not-have-a-release-file
 
-# Debian Unstable/Sid
-curl -fsSL https://download.opensuse.org/repositories/devel:kubic:libcontainers:unstable/$OS_RELEASE/Release.key \
+lsb_release -rs
+
+curl -fsSL \
+  https://download.opensuse.org/repositories/devel:kubic:libcontainers:unstable/xUbuntu_$(lsb_release -rs)/Release.key \
   | gpg --dearmor \
   | sudo tee /etc/apt/keyrings/devel_kubic_libcontainers_unstable.gpg > /dev/null
+
+
 echo \
   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/devel_kubic_libcontainers_unstable.gpg]\
-    https://download.opensuse.org/repositories/devel:kubic:libcontainers:unstable/$OS_RELEASE/ /" \
+    https://download.opensuse.org/repositories/devel:kubic:libcontainers:unstable/xUbuntu_$(lsb_release -rs)/ /" \
   | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list > /dev/null
+
 
 # Install Podman
 sudo apt-get update
