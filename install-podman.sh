@@ -22,7 +22,7 @@ sudo mkdir -p /etc/apt/keyrings
 
 lsb_release -a
 
-OS_RELEASE='Debian_Unstable'
+OS_RELEASE='xUbuntu_22.04'
 
 # Debian Unstable/Sid
 curl -fsSL https://download.opensuse.org/repositories/devel:kubic:libcontainers:unstable/$OS_RELEASE/Release.key \
