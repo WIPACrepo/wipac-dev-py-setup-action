@@ -21,23 +21,17 @@ sudo mkdir -p /etc/apt/keyrings
 #   | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list > /dev/null
 
 
-# https://forum.linuxfoundation.org/discussion/863091/e-xubuntu-20-04-release-does-not-have-a-release-file
+# https://computingforgeeks.com/how-to-install-podman-on-ubuntu/?expand_article=1
 
-lsb_release -rs
-
-curl -fsSL \
-  https://download.opensuse.org/repositories/devel:kubic:libcontainers:unstable/xUbuntu_$(lsb_release -rs)/Release.key \
-  | gpg --dearmor \
-  | sudo tee /etc/apt/keyrings/devel_kubic_libcontainers_unstable.gpg > /dev/null
-
-
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/devel_kubic_libcontainers_unstable.gpg]\
-    https://download.opensuse.org/repositories/devel:kubic:libcontainers:unstable/xUbuntu_$(lsb_release -rs)/ /" \
-  | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list > /dev/null
+echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+curl -L "https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key" | sudo apt-key add -
 
 
 # Install Podman
 sudo apt-get update
 sudo apt-get -y upgrade
 sudo apt-get -y install podman
+
+
+podman  --version
+podman  info
