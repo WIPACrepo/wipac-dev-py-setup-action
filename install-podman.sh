@@ -1,5 +1,5 @@
 #!/bin/bash
-# set -x  # turn on debugging
+set -x  # turn on debugging
 set -e
 
 ########################################################################
@@ -24,6 +24,7 @@ sudo mkdir -p /etc/apt/keyrings
 curl -fsSL https://download.opensuse.org/repositories/devel:kubic:libcontainers:unstable/Debian_Unstable/Release.key \
   | gpg --dearmor \
   | sudo tee /etc/apt/keyrings/devel_kubic_libcontainers_unstable.gpg > /dev/null
+# -> see https://github.com/openSUSE/MirrorCache/issues/428#issuecomment-1814992424
 echo \
   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/devel_kubic_libcontainers_unstable.gpg]\
     https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/Debian_Unstable/ /" \
