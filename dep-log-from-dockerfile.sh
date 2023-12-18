@@ -36,6 +36,7 @@ chmod +x $TEMPDIR/pip-freeze-tree.sh
 # build & generate
 if [[ $* == *--podman* ]]; then  # look for flag anywhere in args
     podman build -t $image --file $1 .
+    # 'uid' & 'gid' were added in https://github.com/containers/podman/releases/tag/v4.3.0
     podman run --rm -i \
         --env PACKAGE_NAME=$PACKAGE_NAME \
         --env ACTION_REPOSITORY=$ACTION_REPOSITORY \
