@@ -33,7 +33,12 @@ echo \
     https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/$OS/ /" \
   | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list > /dev/null
 
-# Install Podman
+# install deps
 sudo apt-get update
 sudo apt-get -y upgrade
+# https://github.com/containers/podman/issues/21024#issuecomment-1859449360
+wget https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_22.04/amd64/conmon_2.1.2~0_amd64.deb -O /tmp/conmon_2.1.2.deb
+sudo apt install /tmp/conmon_2.1.2.deb
+
+# Install Podman
 sudo apt-get -y install podman
