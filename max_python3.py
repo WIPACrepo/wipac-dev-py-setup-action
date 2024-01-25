@@ -35,7 +35,7 @@ if __name__ == "__main__":
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
-        "semvar-range",
+        "semvar_range",
         help="the semantic version range",
     )
     args = parser.parse_args()
