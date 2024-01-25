@@ -139,11 +139,11 @@ runs:
         export ACTION_REPOSITORY="WIPACrepo/wipac-dev-py-setup-action"
 
         # get python3 version (max)
-        SEMVAR_RANGE=$(grep "python_requires =" -h setup.cfg | awk -F 'python_requires =' '{print $2}')
+        export SEMVAR_RANGE=$(grep "python_requires =" -h setup.cfg | awk -F 'python_requires =' '{print $2}')
         pip3 install semantic-version
         export PACKAGE_MAX_PYTHON_VERSION=$(python -c '
-        import semantic_version
-        spec = semantic_version.SimpleSpec("$SEMVAR_RANGE".replace(" ",""))
+        import semantic_version, os
+        spec = semantic_version.SimpleSpec(os.getenv("SEMVAR_RANGE").replace(" ",""))
         maxo = max(spec.filter(semantic_version.Version(f"3.{i}.0") for i in range(99)))
         print(f"{maxo.major}.{maxo.minor}")
         ')
