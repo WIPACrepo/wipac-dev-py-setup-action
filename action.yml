@@ -142,9 +142,10 @@ runs:
         export SEMVAR_RANGE=$(grep "python_requires =" -h setup.cfg | awk -F 'python_requires =' '{print $2}')
         pip3 install semantic-version
         export PACKAGE_MAX_PYTHON_VERSION=$(python -c '
-        import semantic_version, os
+        import semantic_version, os, latest_python3
         spec = semantic_version.SimpleSpec(os.getenv("SEMVAR_RANGE").replace(" ",""))
-        maxo = max(spec.filter(semantic_version.Version(f"3.{i}.0") for i in range(99)))
+        latest_minor = latest_python3.get_latest_py3_release()[1]
+        maxo = max(spec.filter(semantic_version.Version(f"3.{i}.0") for i in range(latest_minor)))
         print(f"{maxo.major}.{maxo.minor}")
         ')
 
