@@ -139,16 +139,8 @@ runs:
         export ACTION_REPOSITORY="WIPACrepo/wipac-dev-py-setup-action"
 
         # get python3 version (max)
-        export SEMVAR_RANGE=$(grep "python_requires =" -h setup.cfg | awk -F 'python_requires =' '{print $2}')
-        export LATEST_PYTHON3=$(python3 ${{ github.action_path }}/latest_python3.py)
-        pip3 install semantic-version
-        export PACKAGE_MAX_PYTHON_VERSION=$(python -c '
-        import semantic_version, os
-        spec = semantic_version.SimpleSpec(os.getenv("SEMVAR_RANGE").replace(" ",""))
-        latest_py3_minor = int(os.getenv("LATEST_PYTHON3").split(".")[1])
-        maxo = max(spec.filter(semantic_version.Version(f"3.{i}.0") for i in range(latest_py3_minor + 1)))
-        print(f"{maxo.major}.{maxo.minor}")
-        ')
+        SEMVAR_RANGE=$(grep "python_requires =" -h setup.cfg | awk -F 'python_requires =' '{print $2}')
+        export PACKAGE_MAX_PYTHON_VERSION=$(python3 ${{ github.action_path }}/max_python3.py $SEMVAR_RANGE)
 
         # Build
         if [ -f ./Dockerfile ]; then

@@ -1,4 +1,4 @@
-"""Print/return the latest python3 version."""
+"""Get the latest python3 release."""
 
 
 import logging
@@ -29,6 +29,3 @@ def get_latest_py3_release() -> Tuple[int, int]:
 
     return int(version.split(".")[0]), int(version.split(".")[1])
 
-
-if __name__ == "__main__":
-    print(f"{'.'.join(str(v) for v in get_latest_py3_release())}")
