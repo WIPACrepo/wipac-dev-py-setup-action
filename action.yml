@@ -145,7 +145,7 @@ runs:
         export PACKAGE_MAX_PYTHON_VERSION=$(python -c '
         import semantic_version, os
         spec = semantic_version.SimpleSpec(os.getenv("SEMVAR_RANGE").replace(" ",""))
-        latest_py3_minor = os.getenv("LATEST_PYTHON3").split(".")[1]
+        latest_py3_minor = int(os.getenv("LATEST_PYTHON3").split(".")[1])
         maxo = max(spec.filter(semantic_version.Version(f"3.{i}.0") for i in range(latest_py3_minor)))
         print(f"{maxo.major}.{maxo.minor}")
         ')
