@@ -28,4 +28,3 @@ def get_latest_py3_release() -> Tuple[int, int]:
     LOGGER.info(f"latest is {version}")
 
     return int(version.split(".")[0]), int(version.split(".")[1])
-
