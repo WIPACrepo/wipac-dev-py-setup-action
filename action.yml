@@ -143,8 +143,8 @@ runs:
         pip3 install semantic-version
         export PACKAGE_MAX_PYTHON_VERSION=$(python -c '
         import semantic_version
-        spec = semantic_version.SimpleSpec('$SEMVAR_RANGE'.replace(' ',''))
-        maxo = max(spec.filter(semantic_version.Version(f'3.{i}.0') for i in range(99)))
+        spec = semantic_version.SimpleSpec('$SEMVAR_RANGE'.replace(" ",""))
+        maxo = max(spec.filter(semantic_version.Version(f"3.{i}.0") for i in range(99)))
         print(f"{maxo.major}.{maxo.minor}")
         ')
 
