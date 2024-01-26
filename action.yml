@@ -22,10 +22,6 @@ inputs:
     description: 'The email used for "git config user.email"'
     required: false
     default: github-actions@github.com
-  dockerfile_nametags:
-    description: 'A space-separated list of image names and tags to apply to each Dockerfile for locally dependent builds (these images are built first), ex: Dockerfile:icecube/skymap_scanner:latest Dockerfile_pulsar:icecube/skymap_scanner:latest_pulsar'
-    required: false
-    default: ''
 
 # outputs:
 #   random-number:
@@ -111,51 +107,6 @@ runs:
         '
         git add .  # won't error if nothing to add
         git commit -m "<bot> add py.typed file(s)" || true
-
-      shell: bash
-
-    - name: Build dependencies.log (and commit)
-      if: env.IS_GIT_BEHIND != 'true'
-      run: |
-        set -x  # turn on debugging
-
-        # append permissive line to .gitignore since *.log is commonly present
-        line='!dependencies*.log'
-        if [[ ! $(grep -F "$line" .gitignore) ]]; then
-          echo "" >> .gitignore
-          echo "" >> .gitignore
-          echo "# wipac-dev-py-setup-action" >> .gitignore
-          echo "$line" >> .gitignore
-          git add .gitignore
-          git commit -m "<bot> update .gitignore" || true  # okay if no change
-          tail .gitignore
-        fi
-
-        # remove any old ones, then regenerate only what's needed
-        rm dependencies*.log || true
-
-        export PACKAGE_NAME=$(python3 ${{ github.action_path }}/get_package_name.py setup.cfg)
-        export GITHUB_ACTION_PATH=${{ github.action_path }}
-        export ACTION_REPOSITORY="WIPACrepo/wipac-dev-py-setup-action"
-
-        # get python3 version (max)
-        SEMVAR_RANGE=$(grep "python_requires =" -h setup.cfg | awk -F 'python_requires =' '{print $2}')
-        export PACKAGE_MAX_PYTHON_VERSION=$(python3 ${{ github.action_path }}/max_python3.py "$SEMVAR_RANGE")
-
-        # Build
-        if [ -f ./Dockerfile ]; then
-          # from Dockerfile(s)...
-          export DOCKERFILE_NAMETAGS=${{ inputs.dockerfile_nametags }}
-          ${{ github.action_path }}/all-dep-logs-from-dockerfiles.sh
-        else
-          # from setup.cfg...
-          ${{ github.action_path }}/all-dep-logs-from-setup-cfg.sh
-        fi
-
-        # Commit
-        git add .
-        git commit -m "<bot> update dependencies*.log files(s)" || true  # okay if no change
-
       shell: bash
 
     - name: Push changes
