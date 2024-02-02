@@ -56,7 +56,6 @@ runs:
       run: |
         sudo apt-get update
         pip3 install -r ${{ github.action_path }}/requirements.txt
-        pip3 install wipac-dev-tools
 
         echo $GITHUB_REPOSITORY
         echo "setup.cfg (+ README.md)"
