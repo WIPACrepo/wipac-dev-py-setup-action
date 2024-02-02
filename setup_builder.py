@@ -124,7 +124,7 @@ class BuilderSection(Section):
         if not self.python_max:
             versions = (
                 (3, min_minor),
-                semvar_parser_tools.latest_python3.get_latest_py3_release(),
+                semvar_parser_tools.get_latest_py3_release(),
             )
         else:
             max_minor = get_py3_minor(self.python_max, "python_max")
