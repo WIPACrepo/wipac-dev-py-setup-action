@@ -1,1 +1,1 @@
-wipac-dev-tools[semvar]
+wipac-dev-tools[semver]
