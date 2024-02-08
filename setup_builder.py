@@ -18,7 +18,7 @@ import requests
 from wipac_dev_tools import (
     argparse_tools,
     logging_tools,
-    semvar_parser_tools,
+    semver_parser_tools,
     strtobool,
 )
 
@@ -124,7 +124,7 @@ class BuilderSection(Section):
         if not self.python_max:
             versions = (
                 (3, min_minor),
-                semvar_parser_tools.get_latest_py3_release(),
+                semver_parser_tools.get_latest_py3_release(),
             )
         else:
             max_minor = get_py3_minor(self.python_max, "python_max")
