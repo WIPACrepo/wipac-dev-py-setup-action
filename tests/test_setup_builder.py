@@ -1286,9 +1286,8 @@ def test_50_bumping(
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
     )
-
     if not patch_without_tag:
-        cicd_setup_builder += "patch_without_tag = False\n"
+        cicd_setup_builder.update(dict(patch_without_tag="False"))
 
     setup_cfg_in = f"""{cicd_setup_builder}
 {VANILLA_CFGIN_OPTIONS_SECTIONS}
