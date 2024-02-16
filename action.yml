@@ -48,7 +48,7 @@ runs:
       if: env.IS_GIT_BEHIND != 'true'
       run: |
         if [[ -f setup.cfg ]]; then
-          echo ""
+          echo " "
           echo "WIPACrepo/wipac-dev-py-setup-action no longer supports 'setup.cfg'"
           echo "Migration Steps:"
           echo "  1. Manually move the attributes from the [wipac:cicd_setup_builder]"
