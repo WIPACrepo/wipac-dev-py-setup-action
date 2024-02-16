@@ -4,54 +4,54 @@ description: 'GitHub Action Package for Automating Python-Package Setup'
 inputs:
   # REQUIRED
   python_min:
-    description: 'minimum required Python version'
+    description: 'Minimum required Python version'
     required: true
   keywords_spaced:
-    description: 'space-separated list of keywords'
+    description: 'Space-separated list of keywords'
     required: true
   # OPTIONAL (python)
   python_max:
-    description: 'maximum supported Python version (if not given, the most recent Python version will be used)'
+    description: 'Maximum supported Python version. If not provided, the most recent Python version will be used.'
     required: false
     default: ''
   # OPTIONAL (packaging)
   package_dirs:
-    description: "space-separated list of directories to release (if not given, all packages in the repo's root directory will be used)"
+    description: "Space-separated list of directories to release. If not provided, all packages in the repository's root directory will be used."
     required: false
     default: ''
   directory-exclude:
-    description: "space-separated list of directories to exclude from release, relative to the repo's root directory"
+    description: "Space-separated list of directories to exclude from release, relative to the repository's root directory."
     required: false
     default: 'test tests doc docs resource resources example examples'
   # OPTIONAL (releases)
   pypi_name:
-    description: 'name of the PyPI package'
+    description: 'Name of the PyPI package'
     required: false
     default: ''
   patch_without_tag:
-    description: 'whether to make a patch release even if commit message does not warrant one explicitly'
+    description: 'Whether to make a patch release even if the commit message does not explicitly warrant one'
     required: false
     default: 'True'
   # OPTIONAL (meta)
   author:
-    description: 'author of package (required if package is intended to be hosted on PyPI)'
+    description: 'Author of the package (required if the package is intended to be hosted on PyPI)'
     required: false
     default: ''
   author_email:
-    description: 'email of package author (required if package is intended to be hosted on PyPI)'
+    description: 'Email of the package author (required if the package is intended to be hosted on PyPI)'
     required: false
     default: ''
   license:
-    description: "repo's license type"
+    description: "Repository's license type"
     required: false
     default: 'MIT'
   # OPTIONAL (git)
   git_committer_name:
-    description: 'name used for "git config user.name"'
+    description: 'Name used for "git config user.name"'
     required: false
     default: github-actions
   git_committer_email:
-    description: 'email used for "git config user.email"'
+    description: 'Email used for "git config user.email"'
     required: false
     default: github-actions@github.com
 
