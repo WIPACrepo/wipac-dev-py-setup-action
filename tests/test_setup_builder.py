@@ -1,8 +1,10 @@
 """Test setup_builder.py"""
 
+
 # pylint:disable=redefined-outer-name,invalid-name
 # docfmt: skip-file-ric-evans
 
+import logging
 import os
 import sys
 import uuid
@@ -10,6 +12,9 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+
+LOGGER = logging.getLogger(__name__)
+
 
 sys.path.append(".")
 import setup_builder  # noqa: E402 # isort:skip # pylint:disable=import-error,wrong-import-position
@@ -242,12 +247,12 @@ def test_00_minimum_section(directory: str, requests_mock: Any) -> None:
     """Test using a minimum version[wipac:cicd_setup_builder]."""
     setup_cfg_path = Path(f"{directory}/setup.cfg")
 
-    cicd_setup_builder = f"""[wipac:cicd_setup_builder]
-pypi_name = wipac-mock-package
-python_min = 3.6
-author = {AUTHOR}
-author_email = {AUTHOR_EMAIL}
-"""
+    cicd_setup_builder = dict(
+        pypi_name="wipac-mock-package",
+        python_min="3.6",
+        author=AUTHOR,
+        author_email=AUTHOR_EMAIL,
+    )
 
     setup_cfg_in = f"""{cicd_setup_builder}
 {VANILLA_CFGIN_OPTIONS_SECTIONS}
@@ -319,11 +324,11 @@ def test_01_minimum_section_no_pypi(directory: str, requests_mock: Any) -> None:
     """Test using a minimum version[wipac:cicd_setup_builder] without PyPI attributes."""
     setup_cfg_path = Path(f"{directory}/setup.cfg")
 
-    cicd_setup_builder = f"""[wipac:cicd_setup_builder]
-python_min = 3.6
-author = {AUTHOR}
-author_email = {AUTHOR_EMAIL}
-"""
+    cicd_setup_builder = dict(
+        python_min="3.6",
+        author=AUTHOR,
+        author_email=AUTHOR_EMAIL,
+    )
 
     setup_cfg_in = f"""{cicd_setup_builder}
 {VANILLA_CFGIN_OPTIONS_SECTIONS}
@@ -387,9 +392,9 @@ def test_02_minimum_section_no_pypi_no_keywords_no_author(
     """Test using a minimum version[wipac:cicd_setup_builder] without PyPI attributes."""
     setup_cfg_path = Path(f"{directory}/setup.cfg")
 
-    cicd_setup_builder = """[wipac:cicd_setup_builder]
-python_min = 3.6
-"""
+    cicd_setup_builder = dict(
+        python_min="3.6",
+    )
 
     setup_cfg_in = f"""{cicd_setup_builder}
 {VANILLA_CFGIN_OPTIONS_SECTIONS}
@@ -448,13 +453,13 @@ def test_10_keywords_spaced(directory: str, requests_mock: Any) -> None:
     """Test using [wipac:cicd_setup_builder] with `keywords_spaced`."""
     setup_cfg_path = Path(f"{directory}/setup.cfg")
 
-    cicd_setup_builder = f"""[wipac:cicd_setup_builder]
-pypi_name = wipac-mock-package
-python_min = 3.6
-author = {AUTHOR}
-author_email = {AUTHOR_EMAIL}
-keywords_spaced = python REST tools "REST tools" utilities "OpenTelemetry" tracing telemetry "3+ word string keywords"
-"""
+    cicd_setup_builder = dict(
+        pypi_name="wipac-mock-package",
+        python_min="3.6",
+        author=AUTHOR,
+        author_email=AUTHOR_EMAIL,
+        keywords_spaced='python REST tools "REST tools" utilities "OpenTelemetry" tracing telemetry "3+ word string keywords"',
+    )
 
     setup_cfg_in = f"""{cicd_setup_builder}
 {VANILLA_CFGIN_OPTIONS_SECTIONS}
@@ -535,14 +540,14 @@ def test_20_python_max(directory: str, requests_mock: Any) -> None:
     """Test using [wipac:cicd_setup_builder] with `python_max`."""
     setup_cfg_path = Path(f"{directory}/setup.cfg")
 
-    cicd_setup_builder = f"""[wipac:cicd_setup_builder]
-pypi_name = wipac-mock-package
-python_min = 3.6
-python_max = 3.9
-author = {AUTHOR}
-author_email = {AUTHOR_EMAIL}
-keywords_spaced = python REST tools utilities OpenTelemetry tracing telemetry
-"""
+    cicd_setup_builder = dict(
+        pypi_name="wipac-mock-package",
+        python_min="3.6",
+        python_max="3.9",
+        author=AUTHOR,
+        author_email=AUTHOR_EMAIL,
+        keywords_spaced="python REST tools utilities OpenTelemetry tracing telemetry",
+    )
 
     setup_cfg_in = f"""{cicd_setup_builder}
 {VANILLA_CFGIN_OPTIONS_SECTIONS}
@@ -631,14 +636,14 @@ def test_30_package_dirs__single(directory: str, requests_mock: Any) -> None:
     """Test using [wipac:cicd_setup_builder] with `package_dirs` & a single desired package."""
     setup_cfg_path = Path(f"{directory}/setup.cfg")
 
-    cicd_setup_builder = f"""[wipac:cicd_setup_builder]
-pypi_name = wipac-mock-package
-python_min = 3.6
-author = {AUTHOR}
-author_email = {AUTHOR_EMAIL}
-package_dirs = mock_package
-keywords_spaced = python REST tools utilities OpenTelemetry tracing telemetry
-"""
+    cicd_setup_builder = dict(
+        pypi_name="wipac-mock-package",
+        python_min="3.6",
+        author=AUTHOR,
+        author_email=AUTHOR_EMAIL,
+        package_dirs="mock_package",
+        keywords_spaced="python REST tools utilities OpenTelemetry tracing telemetry",
+    )
 
     setup_cfg_in = f"""{cicd_setup_builder}
 {VANILLA_CFGIN_OPTIONS_SECTIONS}
@@ -724,15 +729,13 @@ def test_34_package_dirs__multi_autoname(directory: str, requests_mock: Any) -> 
     """Test using [wipac:cicd_setup_builder] with `package_dirs` & multiple desired packages."""
     setup_cfg_path = Path(f"{directory}/setup.cfg")
 
-    cicd_setup_builder = f"""[wipac:cicd_setup_builder]
-python_min = 3.6
-author = {AUTHOR}
-author_email = {AUTHOR_EMAIL}
-package_dirs =
-    mock_package
-    another_one
-keywords_spaced = python REST tools utilities OpenTelemetry tracing telemetry
-"""
+    cicd_setup_builder = dict(
+        python_min="3.6",
+        author=AUTHOR,
+        author_email=AUTHOR_EMAIL,
+        package_dirs="mock_package another_one",
+        keywords_spaced="python REST tools utilities OpenTelemetry tracing telemetry",
+    )
 
     setup_cfg_in = f"""{cicd_setup_builder}
 {VANILLA_CFGIN_OPTIONS_SECTIONS}
@@ -816,16 +819,14 @@ def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
     """Test using [wipac:cicd_setup_builder] with `package_dirs` & multiple desired packages."""
     setup_cfg_path = Path(f"{directory}/setup.cfg")
 
-    cicd_setup_builder = f"""[wipac:cicd_setup_builder]
-pypi_name = wipac-mock-package
-python_min = 3.6
-author = {AUTHOR}
-author_email = {AUTHOR_EMAIL}
-package_dirs =
-    mock_package
-    another_one
-keywords_spaced = python REST tools utilities OpenTelemetry tracing telemetry
-"""
+    cicd_setup_builder = dict(
+        pypi_name="wipac-mock-package",
+        python_min="3.6",
+        author=AUTHOR,
+        author_email=AUTHOR_EMAIL,
+        package_dirs="mock_package another_one",
+        keywords_spaced="python REST tools utilities OpenTelemetry tracing telemetry",
+    )
 
     setup_cfg_in = f"""{cicd_setup_builder}
 {VANILLA_CFGIN_OPTIONS_SECTIONS}
@@ -929,16 +930,14 @@ def test_36_package_dirs__multi_missing_init__error(
     """Test using [wipac:cicd_setup_builder] with `package_dirs` & multiple desired packages."""
     setup_cfg_path = Path(f"{directory}/setup.cfg")
 
-    cicd_setup_builder = f"""[wipac:cicd_setup_builder]
-pypi_name = wipac-mock-package
-python_min = 3.6
-author = {AUTHOR}
-author_email = {AUTHOR_EMAIL}
-package_dirs =
-    mock_package
-    another_one
-keywords_spaced = python REST tools utilities OpenTelemetry tracing telemetry
-"""
+    cicd_setup_builder = dict(
+        pypi_name="wipac-mock-package",
+        python_min="3.6",
+        author=AUTHOR,
+        author_email=AUTHOR_EMAIL,
+        package_dirs="mock_package another_one",
+        keywords_spaced="python REST tools utilities OpenTelemetry tracing telemetry",
+    )
 
     setup_cfg_in = f"""{cicd_setup_builder}
 {VANILLA_CFGIN_OPTIONS_SECTIONS}
@@ -980,16 +979,14 @@ def test_37_package_dirs__multi_missing_version__error(
     """Test using [wipac:cicd_setup_builder] with `package_dirs` & multiple desired packages."""
     setup_cfg_path = Path(f"{directory}/setup.cfg")
 
-    cicd_setup_builder = f"""[wipac:cicd_setup_builder]
-pypi_name = wipac-mock-package
-python_min = 3.6
-author = {AUTHOR}
-author_email = {AUTHOR_EMAIL}
-package_dirs =
-    mock_package
-    another_one
-keywords_spaced = python REST tools utilities OpenTelemetry tracing telemetry
-"""
+    cicd_setup_builder = dict(
+        pypi_name="wipac-mock-package",
+        python_min="3.6",
+        author=AUTHOR,
+        author_email=AUTHOR_EMAIL,
+        package_dirs="mock_package another_one",
+        keywords_spaced="python REST tools utilities OpenTelemetry tracing telemetry",
+    )
 
     setup_cfg_in = f"""{cicd_setup_builder}
 {VANILLA_CFGIN_OPTIONS_SECTIONS}
@@ -1032,16 +1029,14 @@ def test_38_package_dirs__multi_mismatch_version__error(
     """Test using [wipac:cicd_setup_builder] with `package_dirs` & multiple desired packages."""
     setup_cfg_path = Path(f"{directory}/setup.cfg")
 
-    cicd_setup_builder = f"""[wipac:cicd_setup_builder]
-pypi_name = wipac-mock-package
-python_min = 3.6
-author = {AUTHOR}
-author_email = {AUTHOR_EMAIL}
-package_dirs =
-    mock_package
-    another_one
-keywords_spaced = python REST tools utilities OpenTelemetry tracing telemetry
-"""
+    cicd_setup_builder = dict(
+        pypi_name="wipac-mock-package",
+        python_min="3.6",
+        author=AUTHOR,
+        author_email=AUTHOR_EMAIL,
+        package_dirs="mock_package another_one",
+        keywords_spaced="python REST tools utilities OpenTelemetry tracing telemetry",
+    )
 
     setup_cfg_in = f"""{cicd_setup_builder}
 {VANILLA_CFGIN_OPTIONS_SECTIONS}
@@ -1081,13 +1076,13 @@ def test_40_extra_fields(directory: str, requests_mock: Any) -> None:
     """Test using [wipac:cicd_setup_builder] with extra stuff in [options] & [metadata]."""
     setup_cfg_path = Path(f"{directory}/setup.cfg")
 
-    cicd_setup_builder = f"""[wipac:cicd_setup_builder]
-pypi_name = wipac-mock-package
-python_min = 3.6
-author = {AUTHOR}
-author_email = {AUTHOR_EMAIL}
-keywords_spaced = python REST tools utilities OpenTelemetry tracing telemetry
-"""
+    cicd_setup_builder = dict(
+        pypi_name="wipac-mock-package",
+        python_min="3.6",
+        author=AUTHOR,
+        author_email=AUTHOR_EMAIL,
+        keywords_spaced="python REST tools utilities OpenTelemetry tracing telemetry",
+    )
 
     setup_cfg_in = f"""{cicd_setup_builder}
 [metadata]
@@ -1285,12 +1280,13 @@ def test_50_bumping(
     """Test bumping configurations [wipac:cicd_setup_builder]."""
     setup_cfg_path = Path(f"{_directory(version)}/setup.cfg")
 
-    cicd_setup_builder = f"""[wipac:cicd_setup_builder]
-pypi_name = wipac-mock-package
-python_min = 3.6
-author = {AUTHOR}
-author_email = {AUTHOR_EMAIL}
-"""
+    cicd_setup_builder = dict(
+        pypi_name="wipac-mock-package",
+        python_min="3.6",
+        author=AUTHOR,
+        author_email=AUTHOR_EMAIL,
+    )
+
     if not patch_without_tag:
         cicd_setup_builder += "patch_without_tag = False\n"
 
