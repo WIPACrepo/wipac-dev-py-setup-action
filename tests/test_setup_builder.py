@@ -75,7 +75,7 @@ Source = "https://github.com/foobarbaz-org/foobarbaz-repo"
 
 PATCH_WITHOUT_TAG_WORKAROUND = f"""
     # allow patch releases without specified commit tags (patch_without_tag=True)
-    {str(chr(i) for i in range(32, 127)).lstrip("[").rstrip("]")}
+    {str([chr(i) for i in range(32, 127)]).lstrip("[").rstrip("]")}
 """
 
 VANILLA_PROJECT_VALUES = f"""
