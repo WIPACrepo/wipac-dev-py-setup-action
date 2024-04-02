@@ -84,9 +84,9 @@ version = "0.0.1"
 url = "https://github.com/foobarbaz-org/foobarbaz-repo"
 author = "{AUTHOR}"
 author_email = "{AUTHOR_EMAIL}"
-license = "MIT"
 description = "Ceci n’est pas une pipe"
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.6, <3.12"
 find = {{namespaces = false}}  # Disable implicit namespaces
 dependencies = [

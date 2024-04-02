@@ -409,31 +409,35 @@ def _build_out_sections(
             toml_dict["project"]["keywords"] = gha_input.keywords
     # if we DO want PyPI, then include everything:
     else:
-        toml_dict["project"] = dict(
-            name=gha_input.pypi_name,
-            version=meta_version_single,
-            url=gh_api.url,
-            author=gha_input.author,
-            author_email=gha_input.author_email,
-            description=gh_api.description,
-            long_description=f"file: {ffile.readme_path.name}",
-            long_description_content_type=long_description_content_type(
-                ffile.readme_path
-            ),
-            keywords=gha_input.keywords,
-            license=gha_input.license,
-            classifiers=[
-                ffile.development_status,
-                "License :: OSI Approved :: MIT License",
-            ]
-            + gha_input.python_classifiers(),
-            download_url=f"https://pypi.org/project/{gha_input.pypi_name}/",
-            project_urls=[
-                f"Tracker = {gh_api.url}/issues",
-                f"Source = {gh_api.url}",
-                # f"Documentation = {}",
-            ],
+        toml_dict["project"].update(
+            {
+                "name": gha_input.pypi_name,
+                "version": meta_version_single,
+                "url": gh_api.url,
+                "author": gha_input.author,
+                "author_email": gha_input.author_email,
+                "description": gh_api.description,
+                "readme": ffile.readme_path.name,
+                "license": gha_input.license,
+                "keywords": gha_input.keywords,
+                "classifiers": [
+                    ffile.development_status,
+                    "License :: OSI Approved :: MIT License",
+                ]
+                + gha_input.python_classifiers(),
+                "requires-python": gha_input.python_requires(),
+            }
         )
+
+    # [project.urls]
+    toml_dict["project.urls"] = dict(
+        download_url=f"https://pypi.org/project/{gha_input.pypi_name}/",
+        project_urls=[
+            f"Tracker = {gh_api.url}/issues",
+            f"Source = {gh_api.url}",
+            # f"Documentation = {}",
+        ],
+    )
 
     # [tool.semantic_release] -- will be completely overridden
     toml_dict["tool.semantic_release"] = dict(
@@ -449,13 +453,6 @@ def _build_out_sections(
         minor_emoji=", ".join(SEMANTIC_RELEASE_MINOR),
         patch_emoji=", ".join(SEMANTIC_RELEASE_PATCH),
         branch=gh_api.default_branch,
-    )
-
-    # [options]
-    toml_dict["options"] = dict(
-        python_requires=gha_input.python_requires(),
-        packages="find:",  # always use "find:", then use include/exclude
-        install_requires=toml_dict["options"].get("install_requires", ""),
     )
 
     # [options.packages.find]
