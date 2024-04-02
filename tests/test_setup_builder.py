@@ -1214,7 +1214,7 @@ def test_50_bumping(
         author_email=AUTHOR_EMAIL,
     )
     if not patch_without_tag:
-        gha_input.patch_without_tag = "False"
+        gha_input.patch_without_tag = False
 
     pyproject_toml_in = VANILLA_SECTIONS_IN
 
