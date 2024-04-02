@@ -9,7 +9,7 @@ import logging
 import os
 import re
 from pathlib import Path
-from typing import Any, Iterator, cast
+from typing import Iterator, cast
 
 import requests
 import toml
@@ -53,18 +53,6 @@ class GitHubAPI:
         _json = _req.json()
         self.default_branch = cast(str, _json["default_branch"])  # main/master/etc.
         self.description = cast(str, _json["description"])
-
-
-@dataclasses.dataclass
-class Section:
-    """Encapsulate a pyproject.toml section."""
-
-    def add_unique_fields(self, dict_in: dict[str, Any]) -> dict[str, Any]:
-        """Merge `dict_in` to a dict-cast copy of `self`.
-
-        `self` is given precedence for duplicate keys.
-        """
-        return {**dict_in, **dataclasses.asdict(self)}
 
 
 @dataclasses.dataclass
@@ -126,47 +114,6 @@ class GHAInput:
             f"Programming Language :: Python :: 3.{r}"
             for r in range(self.python_min[1], self.python_max[1] + 1)
         ]
-
-
-@dataclasses.dataclass
-class MetadataSection(Section):
-    """Encapsulates the *minimal* `[project]` section & checks for required/invalid fields."""
-
-    name: str
-    version: str
-    url: str
-    author: str
-    author_email: str
-    description: str
-    long_description: str
-    long_description_content_type: str
-    keywords: str
-    license: str
-    classifiers: str
-    download_url: str
-    project_urls: str
-
-
-@dataclasses.dataclass
-class OptionsSection(Section):
-    """Encapsulates the *minimal* `[options]` section & checks for required/invalid fields."""
-
-    python_requires: str
-    install_requires: str
-    packages: str
-
-    def __post_init__(self) -> None:
-        # sort dependencies if they're dangling
-        if "\n" in self.install_requires.strip():
-            as_lines = self.install_requires.strip().split("\n")
-            self.install_requires = list_to_dangling(as_lines, sort=True)
-
-
-def list_to_dangling(lines: list[str], sort: bool = False) -> str:
-    """Create a "dangling" multi-line formatted list."""
-    stripped = [ln.strip() for ln in lines]  # strip each
-    stripped = [ln for ln in stripped if ln]  # kick each out if its empty
-    return "\n" + "\n".join(sorted(stripped) if sort else stripped)
 
 
 def long_description_content_type(readme_path: Path) -> str:
@@ -459,10 +406,10 @@ def _build_out_sections(
         if gha_input.author_email:
             toml_dict["project"]["author_email"] = gha_input.author_email
         if gha_input.keywords:
-            toml_dict["project"]["keywords"] = list_to_dangling(gha_input.keywords)
+            toml_dict["project"]["keywords"] = gha_input.keywords
     # if we DO want PyPI, then include everything:
     else:
-        msec = MetadataSection(
+        toml_dict["project"] = dict(
             name=gha_input.pypi_name,
             version=meta_version_single,
             url=gh_api.url,
@@ -473,63 +420,53 @@ def _build_out_sections(
             long_description_content_type=long_description_content_type(
                 ffile.readme_path
             ),
-            keywords=list_to_dangling(gha_input.keywords),
+            keywords=gha_input.keywords,
             license=gha_input.license,
-            classifiers=list_to_dangling(
-                [ffile.development_status]
-                + ["License :: OSI Approved :: MIT License"]
-                + gha_input.python_classifiers(),
-            ),
+            classifiers=[
+                ffile.development_status,
+                "License :: OSI Approved :: MIT License",
+            ]
+            + gha_input.python_classifiers(),
             download_url=f"https://pypi.org/project/{gha_input.pypi_name}/",
-            project_urls=list_to_dangling(
-                [
-                    f"Tracker = {gh_api.url}/issues",
-                    f"Source = {gh_api.url}",
-                    # f"Documentation = {}",
-                ],
-            ),
+            project_urls=[
+                f"Tracker = {gh_api.url}/issues",
+                f"Source = {gh_api.url}",
+                # f"Documentation = {}",
+            ],
         )
-        toml_dict["project"] = msec.add_unique_fields(dict(toml_dict["project"]))
 
-    # [semantic_release] -- will be completely overridden
-    toml_dict["tool.semantic_release"] = {
+    # [tool.semantic_release] -- will be completely overridden
+    toml_dict["tool.semantic_release"] = dict(
         # "wipac_dev_tools/__init__.py:__version__"
         # "wipac_dev_tools/__init__.py:__version__,wipac_foo_tools/__init__.py:__version__"
-        "version_variable": ",".join(
+        version_variable=",".join(
             f"{p}/__init__.py:__version__" for p in ffile.packages
         ),
-        "upload_to_pypi": (
-            "True" if gha_input.pypi_name else "False"
-        ),  # >>> str(bool(x))
-        "patch_without_tag": gha_input.patch_without_tag,
-        "commit_parser": "semantic_release.history.emoji_parser",
-        "major_emoji": ", ".join(SEMANTIC_RELEASE_MAJOR),
-        "minor_emoji": ", ".join(SEMANTIC_RELEASE_MINOR),
-        "patch_emoji": ", ".join(SEMANTIC_RELEASE_PATCH),
-        "branch": gh_api.default_branch,
-    }
+        upload_to_pypi=("True" if gha_input.pypi_name else "False"),  # >>> str(bool(x))
+        patch_without_tag=gha_input.patch_without_tag,
+        commit_parser="semantic_release.history.emoji_parser",
+        major_emoji=", ".join(SEMANTIC_RELEASE_MAJOR),
+        minor_emoji=", ".join(SEMANTIC_RELEASE_MINOR),
+        patch_emoji=", ".join(SEMANTIC_RELEASE_PATCH),
+        branch=gh_api.default_branch,
+    )
 
     # [options]
-    if not toml_dict.get("options"):  # will only override some fields
-        toml_dict["options"] = {}
-    osec = OptionsSection(
+    toml_dict["options"] = dict(
         python_requires=gha_input.python_requires(),
         packages="find:",  # always use "find:", then use include/exclude
         install_requires=toml_dict["options"].get("install_requires", ""),
     )
-    toml_dict["options"] = osec.add_unique_fields(dict(toml_dict["options"]))
 
     # [options.packages.find]
     if toml_dict["options"]["packages"] == "find:":
         toml_dict["options.packages.find"] = {}
         if gha_input.package_dirs:
-            toml_dict["options.packages.find"]["include"] = list_to_dangling(
-                gha_input.package_dirs + [f"{p}.*" for p in gha_input.package_dirs]
-            )
+            toml_dict["options.packages.find"]["include"] = gha_input.package_dirs + [
+                f"{p}.*" for p in gha_input.package_dirs
+            ]
         if gha_input.directory_exclude:
-            toml_dict["options.packages.find"]["exclude"] = list_to_dangling(
-                gha_input.directory_exclude
-            )
+            toml_dict["options.packages.find"]["exclude"] = gha_input.directory_exclude
 
     # [options.package_data]
     if not toml_dict.get("options.package_data"):  # will only override some fields
