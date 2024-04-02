@@ -439,10 +439,10 @@ def _build_out_sections(
     gh_api = GitHubAPI(github_full_repo, oauth_token=token)
 
     # [build-system]
-    toml_dict["build-system"] = dict(
-        requires=["setuptools>=61.0"],
-        build_backend="setuptools.build_meta",
-    )
+    toml_dict["build-system"] = {
+        "requires": ["setuptools>=61.0"],
+        "build-backend": "setuptools.build_meta",
+    }
 
     # [project]
     if not toml_dict.get("project"):  # will only override some fields
