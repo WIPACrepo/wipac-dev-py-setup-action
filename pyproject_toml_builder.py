@@ -509,7 +509,7 @@ def _build_out_sections(
     osec = OptionsSection(
         python_requires=gha_input.python_requires(),
         packages="find:",  # always use "find:", then use include/exclude
-        install_requires=toml_dict["options"].get("install_requires", fallback=""),
+        install_requires=toml_dict["options"].get("install_requires", ""),
     )
     toml_dict["options"] = osec.add_unique_fields(dict(toml_dict["options"]))
 
@@ -528,7 +528,7 @@ def _build_out_sections(
     # [options.package_data]
     if not toml_dict.get("options.package_data"):  # will only override some fields
         toml_dict["options.package_data"] = {}
-    if "py.typed" not in toml_dict["options.package_data"].get("*", fallback=""):
+    if "py.typed" not in toml_dict["options.package_data"].get("*", ""):
         if not toml_dict["options.package_data"].get("*"):
             star_data = "py.typed"
         else:  # append to existing list
