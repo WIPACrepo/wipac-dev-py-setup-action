@@ -45,7 +45,7 @@ class GHAInput:
 
     # REQUIRED
     python_min: tuple[int, int]
-    keywords_spaced: str
+    keywords: list[str]
 
     # OPTIONAL (python)
     python_max: tuple[int, int] = dataclasses.field(
@@ -103,9 +103,7 @@ class BuilderSection(Section):
     python_max: str = ""  # python_requires
     package_dirs: str = ""
     keywords_spaced: str = ""  # comes as "A B C"
-    patch_without_tag: str = str(
-        PATCH_WITHOUT_TAG_DEFAULT  # use `get_patch_without_tag()` to get bool
-    )
+    patch_without_tag: str = str(True)  # use `get_patch_without_tag()` to get bool
 
     def __post_init__(self) -> None:
         if self.pypi_name:
@@ -169,38 +167,6 @@ class BuilderSection(Section):
     def packages(self) -> list[str]:
         """Get a list of directories for Python packages."""
         return self.package_dirs.strip().split()
-
-    def keywords_list(self, base_keywords: list[str]) -> list[str]:
-        """Get the user-defined keywords as a list, along with any base keywords."""
-        keywords = []
-        phrase = []
-        for word in self.keywords_spaced.strip().split():
-            # "foo" -> strip & add
-            if word.startswith('"') and word.endswith('"'):
-                keywords.append(word.strip('"'))
-            # "BAR -> store
-            elif word.startswith('"'):
-                phrase = [word.lstrip('"')]
-            # BAZ" -> pop & add phrase
-            elif word.endswith('"'):
-                phrase.append(word.rstrip('"'))
-                keywords.append(" ".join(phrase))
-                phrase = []
-            # are we within quotes? prev: "BAR; now: bat; later: BAZ" ("BAR bat BAZ")
-            elif phrase:
-                phrase.append(word)
-            # normal case (not within quotes)
-            else:
-                keywords.append(word)
-
-        keywords.extend(base_keywords)
-
-        if not keywords and self.pypi_name:
-            raise Exception(
-                "keywords must be provided in setup.cfg ([wipac:cicd_setup_builder]) "
-                "when 'pypi_name' is given (PyPI-metadata mode)"
-            )
-        return keywords
 
 
 @dataclasses.dataclass
@@ -495,11 +461,9 @@ def _build_out_sections(
     cfg: configparser.RawConfigParser,
     root_path: Path,
     github_full_repo: str,
-    base_keywords: list[str],
-    dirs_exclude: list[str],
-    repo_license: str,
     token: str,
     commit_message: str,
+    gha_input: GHAInput,
 ) -> READMEMarkdownManager | None:
     """Build out the `[metadata]`, `[semantic_release]`, and `[options]` sections in `cfg`.
 
@@ -509,7 +473,7 @@ def _build_out_sections(
     ffile = FromFiles(  # things requiring reading files
         root_path,
         bsec,
-        dirs_exclude,
+        gha_input.directory_exclude,
         commit_message,
     )
     gh_api = GitHubAPI(github_full_repo, oauth_token=token)
@@ -528,10 +492,8 @@ def _build_out_sections(
             cfg["metadata"]["author"] = bsec.author
         if bsec.author_email:
             cfg["metadata"]["author_email"] = bsec.author_email
-        if bsec.keywords_list(base_keywords):
-            cfg["metadata"]["keywords"] = list_to_dangling(
-                bsec.keywords_list(base_keywords)
-            )
+        if gha_input.keywords:
+            cfg["metadata"]["keywords"] = list_to_dangling(gha_input.keywords)
     # if we DO want PyPI, then include everything:
     else:
         msec = MetadataSection(
@@ -545,8 +507,8 @@ def _build_out_sections(
             long_description_content_type=long_description_content_type(
                 ffile.readme_path
             ),
-            keywords=list_to_dangling(bsec.keywords_list(base_keywords)),
-            license=repo_license,
+            keywords=list_to_dangling(gha_input.keywords),
+            license=gha_input.license,
             classifiers=list_to_dangling(
                 [ffile.development_status]
                 + ["License :: OSI Approved :: MIT License"]
@@ -597,8 +559,10 @@ def _build_out_sections(
             cfg["options.packages.find"]["include"] = list_to_dangling(
                 bsec.packages() + [f"{p}.*" for p in bsec.packages()]
             )
-        if dirs_exclude:
-            cfg["options.packages.find"]["exclude"] = list_to_dangling(dirs_exclude)
+        if gha_input.directory_exclude:
+            cfg["options.packages.find"]["exclude"] = list_to_dangling(
+                gha_input.directory_exclude
+            )
 
     # [options.package_data]
     if not cfg.has_section("options.package_data"):  # will only override some fields
@@ -623,11 +587,9 @@ class MissingSectionException(Exception):
 def write_setup_cfg(
     setup_cfg: Path,
     github_full_repo: str,
-    base_keywords: list[str],
-    dirs_exclude: list[str],
-    repo_license: str,
     token: str,
     commit_message: str,
+    gha_input: GHAInput,
 ) -> READMEMarkdownManager | None:
     """Build/write the `setup.cfg` sections according to `BUILDER_SECTION_NAME`.
 
@@ -644,11 +606,9 @@ def write_setup_cfg(
         cfg,
         setup_cfg.parent,
         github_full_repo,
-        base_keywords,
-        dirs_exclude,
-        repo_license,
         token,
         commit_message,
+        gha_input,
     )
 
     # Re-order some sections to the top
@@ -711,22 +671,18 @@ def write_setup_cfg(
 def main(
     setup_cfg: Path,
     github_full_repo: str,
-    base_keywords: list[str],
-    dirs_exclude: list[str],
-    repo_license: str,
     token: str,
     commit_message: str,
+    gha_input: GHAInput,
 ) -> None:
     """Read and write all necessary files."""
     # build & write the setup.cfg
     readme_mgr = write_setup_cfg(
         setup_cfg,
         github_full_repo,
-        base_keywords,
-        dirs_exclude,
-        repo_license,
         token,
         commit_message,
+        gha_input,
     )
 
     # also, write the readme, if necessary
@@ -761,6 +717,18 @@ if __name__ == "__main__":
         help="Fully-named GitHub repo, ex: WIPACrepo/wipac-dev-tools",
     )
     parser.add_argument(
+        "--token",
+        required=True,
+        help="An OAuth2 token, usually GITHUB_TOKEN",
+    )
+    parser.add_argument(
+        "--commit-message",
+        required=True,
+        help="the current commit message -- used for extracting versioning info",
+    )
+
+    # From Client GitHub Action Input
+    parser.add_argument(
         "--base-keywords",
         nargs="*",
         required=True,
@@ -777,25 +745,16 @@ if __name__ == "__main__":
         required=True,
         help="The repo's license type",
     )
-    parser.add_argument(
-        "--token",
-        required=True,
-        help="An OAuth2 token, usually GITHUB_TOKEN",
-    )
-    parser.add_argument(
-        "--commit-message",
-        required=True,
-        help="the current commit message -- used for extracting versioning info",
-    )
+
     args = parser.parse_args()
     logging_tools.log_argparse_args(args, logger=LOGGER, level="WARNING")
 
     main(
         args.setup_cfg_file,
         args.github_full_repo,
-        args.base_keywords,
-        args.directory_exclude,
-        args.license,
         args.token,
         args.commit_message,
+        GHAInput(
+            **{k: v for k, v in vars(args).items() if k in dataclasses.fields(GHAInput)}
+        ),
     )
