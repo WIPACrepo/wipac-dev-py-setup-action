@@ -40,7 +40,7 @@ NONBUMPING_COMMIT_MESSAGE = "foo bar baz"
 #
 
 
-VANILLA_SECTIONS_IN = f"""
+VANILLA_SECTIONS_IN = """
 [project]
 dependencies = [
     "pyjwt",
@@ -67,7 +67,7 @@ telemetry = [
 ]
 
 [project.urls]
-Homepage = "https://pypi.org/project/wipac-mock-package/" 
+Homepage = "https://pypi.org/project/wipac-mock-package/"
 Tracker = "https://github.com/foobarbaz-org/foobarbaz-repo/issues"
 Source = "https://github.com/foobarbaz-org/foobarbaz-repo"
 """
@@ -1027,7 +1027,7 @@ def test_40_extra_fields(directory: str, requests_mock: Any) -> None:
         ],
     )
 
-    pyproject_toml_in = f"""
+    pyproject_toml_in = """
 [project]
 nickname = the best python package around
 grocery_list =
