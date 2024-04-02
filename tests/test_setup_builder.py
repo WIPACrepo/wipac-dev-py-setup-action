@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+import toml
 
 LOGGER = logging.getLogger(__name__)
 
@@ -132,17 +133,11 @@ exclude = ["test", "tests", "doc", "docs", "resource", "resources"]
 def assert_outputted_pyproject_toml(
     pyproject_toml_path: Path, pyproject_toml_out: str
 ) -> None:
+    """Compare each's contents casted to a dict."""
+    expected = toml.loads(pyproject_toml_out)
     with open(pyproject_toml_path) as f:
-        print("EXPECTED:")
-        print(pyproject_toml_out + "\n")
-        expected = pyproject_toml_out.replace("    ", "\t").split("\n")
-        actual = list(f.readlines())
-        print("ACTUAL:")
-        for actual_line in actual:
-            print(actual_line, end="")
-        print("- " * 20)
-        for i, actual_line in enumerate(actual):
-            assert actual_line == expected[i] + "\n"
+        actual = toml.load(f)
+    assert expected == actual
 
 
 ################################################################################
