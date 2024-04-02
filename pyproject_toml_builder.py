@@ -728,22 +728,82 @@ if __name__ == "__main__":
     )
 
     # From Client GitHub Action Input
+    # REQUIRED
     parser.add_argument(
-        "--base-keywords",
-        nargs="*",
+        "--python-min",
+        type=str,
+        help="Minimum required Python version",
         required=True,
-        help="A list of keywords to add to metadata",
+    )
+    parser.add_argument(
+        "--keywords",
+        nargs="+",
+        type=str,
+        help="Space-separated list of keywords",
+        required=True,
+    )
+    # OPTIONAL (python)
+    parser.add_argument(
+        "--python-max",
+        type=str,
+        help="Maximum supported Python version. If not provided, the most recent Python version will be used.",
+        default="",
+    )
+    # OPTIONAL (packaging)
+    parser.add_argument(
+        "--package-dirs",
+        nargs="*",
+        type=str,
+        help="List of directories to release. If not provided, all packages in the repository's root directory will be used.",
+        default=[],
     )
     parser.add_argument(
         "--directory-exclude",
         nargs="*",
-        required=True,
-        help="A list of directories to exclude from release",
+        type=str,
+        help="List of directories to exclude from release, relative to the repository's root directory.",
+        default=[
+            "test",
+            "tests",
+            "doc",
+            "docs",
+            "resource",
+            "resources",
+            "example",
+            "examples",
+        ],
+    )
+    # OPTIONAL (releases)
+    parser.add_argument(
+        "--pypi-name",
+        type=str,
+        help="Name of the PyPI package",
+        default="",
+    )
+    parser.add_argument(
+        "--patch-without-tag",
+        type=bool,
+        help="Whether to make a patch release even if the commit message does not explicitly warrant one",
+        default=True,
+    )
+    # OPTIONAL (meta)
+    parser.add_argument(
+        "--author",
+        type=str,
+        help="Author of the package (required if the package is intended to be hosted on PyPI)",
+        default="",
+    )
+    parser.add_argument(
+        "--author-email",
+        type=str,
+        help="Email of the package author (required if the package is intended to be hosted on PyPI)",
+        default="",
     )
     parser.add_argument(
         "--license",
-        required=True,
-        help="The repo's license type",
+        type=str,
+        help="Repository's license type",
+        default="MIT",
     )
 
     args = parser.parse_args()
@@ -755,6 +815,11 @@ if __name__ == "__main__":
         args.token,
         args.commit_message,
         GHAInput(
-            **{k: v for k, v in vars(args).items() if k in dataclasses.fields(GHAInput)}
+            **{
+                k: v
+                for k, v in vars(args).items()
+                # use arg if it has non-falsy value -- otherwise, use default
+                if k in dataclasses.fields(GHAInput) and v
+            }
         ),
     )
