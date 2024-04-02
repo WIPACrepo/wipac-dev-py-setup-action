@@ -3,8 +3,6 @@
 Used in CI/CD, used by GH Action.
 """
 
-# docfmt: skip-file-ric-evans
-
 import argparse
 import configparser
 import dataclasses
@@ -12,7 +10,7 @@ import logging
 import os
 import re
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Tuple, cast
+from typing import Any, Iterator, cast
 
 import requests
 from wipac_dev_tools import (
@@ -38,7 +36,7 @@ DEV_STATUS_ALPHA_0_0_Z = "Development Status :: 3 - Alpha"
 DEV_STATUS_BETA_0_Y_Z = "Development Status :: 4 - Beta"
 DEV_STATUS_PROD_X_Y_Z = "Development Status :: 5 - Production/Stable"
 
-PythonMinMax = Tuple[Tuple[int, int], Tuple[int, int]]
+PythonMinMax = tuple[tuple[int, int], tuple[int, int]]
 
 
 @dataclasses.dataclass
@@ -46,11 +44,13 @@ class GHAInput:
     """The inputs passed from the client GitHub Action."""
 
     # REQUIRED
-    python_min: Tuple[int, int]
+    python_min: tuple[int, int]
     keywords_spaced: str
 
     # OPTIONAL (python)
-    python_max: Tuple[int, int] = semver_parser_tools.get_latest_py3_release()
+    python_max: tuple[int, int] = dataclasses.field(
+        default_factory=semver_parser_tools.get_latest_py3_release  # called only if no val
+    )
     # OPTIONAL (packaging)
     package_dirs: list[str] = dataclasses.field(default_factory=list)
     directory_exclude: list[str] = dataclasses.field(default_factory=list)
@@ -84,7 +84,7 @@ class GitHubAPI:
 class Section:
     """Encapsulate a setup.cfg section."""
 
-    def add_unique_fields(self, dict_in: Dict[str, Any]) -> Dict[str, Any]:
+    def add_unique_fields(self, dict_in: dict[str, Any]) -> dict[str, Any]:
         """Merge `dict_in` to a dict-cast copy of `self`.
 
         `self` is given precedence for duplicate keys.
@@ -154,7 +154,7 @@ class BuilderSection(Section):
         py_min_max = self._python3_min_max()
         return f">={py_min_max[0][0]}.{py_min_max[0][1]}, <{py_min_max[1][0]}.{py_min_max[1][1]+1}"
 
-    def python_classifiers(self) -> List[str]:
+    def python_classifiers(self) -> list[str]:
         """Get auto-detected `Programming Language :: Python :: *` list.
 
         NOTE: Will not work after the '3.* -> 4.0'-transition.
@@ -166,11 +166,11 @@ class BuilderSection(Section):
             for r in range(py_min_max[0][1], py_min_max[1][1] + 1)
         ]
 
-    def packages(self) -> List[str]:
+    def packages(self) -> list[str]:
         """Get a list of directories for Python packages."""
         return self.package_dirs.strip().split()
 
-    def keywords_list(self, base_keywords: List[str]) -> List[str]:
+    def keywords_list(self, base_keywords: list[str]) -> list[str]:
         """Get the user-defined keywords as a list, along with any base keywords."""
         keywords = []
         phrase = []
@@ -237,7 +237,7 @@ class OptionsSection(Section):
             self.install_requires = list_to_dangling(as_lines, sort=True)
 
 
-def list_to_dangling(lines: List[str], sort: bool = False) -> str:
+def list_to_dangling(lines: list[str], sort: bool = False) -> str:
     """Create a "dangling" multi-line formatted list."""
     stripped = [ln.strip() for ln in lines]  # strip each
     stripped = [ln for ln in stripped if ln]  # kick each out if its empty
@@ -262,7 +262,7 @@ class FromFiles:
         self,
         root: Path,
         bsec: BuilderSection,
-        dirs_exclude: List[str],
+        dirs_exclude: list[str],
         commit_message: str,
     ) -> None:
         if not os.path.exists(root):
@@ -277,7 +277,7 @@ class FromFiles:
         self.readme_path = self._get_readme_path()
         self.development_status = self._get_development_status(commit_message)
 
-    def _get_package_paths(self, dirs_exclude: List[str]) -> List[Path]:
+    def _get_package_paths(self, dirs_exclude: list[str]) -> list[Path]:
         """Find the package path(s)."""
 
         def _get_packages() -> Iterator[str]:
@@ -329,7 +329,7 @@ class FromFiles:
         raise FileNotFoundError(f"No README file found in '{self.root}'")
 
     @staticmethod
-    def _get_version(pkg_paths: List[Path]) -> str:
+    def _get_version(pkg_paths: list[Path]) -> str:
         """Get the package's `__version__` string.
 
         This is essentially [metadata]'s `version = attr: <module-path to __version__>`.
@@ -446,7 +446,7 @@ class READMEMarkdownManager:
         """Get the README file path."""
         return self.ffile.readme_path
 
-    def badges_lines(self) -> List[str]:
+    def badges_lines(self) -> list[str]:
         """Create and return the lines used to append to a README.md containing various linked-badges."""
         badges = [REAMDE_BADGES_START_DELIMITER, "\n"]
 
@@ -495,12 +495,12 @@ def _build_out_sections(
     cfg: configparser.RawConfigParser,
     root_path: Path,
     github_full_repo: str,
-    base_keywords: List[str],
-    dirs_exclude: List[str],
+    base_keywords: list[str],
+    dirs_exclude: list[str],
     repo_license: str,
     token: str,
     commit_message: str,
-) -> Optional[READMEMarkdownManager]:
+) -> READMEMarkdownManager | None:
     """Build out the `[metadata]`, `[semantic_release]`, and `[options]` sections in `cfg`.
 
     Return a 'READMEMarkdownManager' instance to write out. If, necessary.
@@ -623,12 +623,12 @@ class MissingSectionException(Exception):
 def write_setup_cfg(
     setup_cfg: Path,
     github_full_repo: str,
-    base_keywords: List[str],
-    dirs_exclude: List[str],
+    base_keywords: list[str],
+    dirs_exclude: list[str],
     repo_license: str,
     token: str,
     commit_message: str,
-) -> Optional[READMEMarkdownManager]:
+) -> READMEMarkdownManager | None:
     """Build/write the `setup.cfg` sections according to `BUILDER_SECTION_NAME`.
 
     Return a 'READMEMarkdownManager' instance to write out. If, necessary.
@@ -711,8 +711,8 @@ def write_setup_cfg(
 def main(
     setup_cfg: Path,
     github_full_repo: str,
-    base_keywords: List[str],
-    dirs_exclude: List[str],
+    base_keywords: list[str],
+    dirs_exclude: list[str],
     repo_license: str,
     token: str,
     commit_message: str,
