@@ -111,7 +111,7 @@ class GHAInput:
                 )
 
     def python_requires(self) -> str:
-        """Get a `[metadata]/python_requires` string from `self.python_range`.
+        """Get a `[project]/python_requires` string from `self.python_range`.
 
         Ex: "">=3.6, <3.10" (cannot do "<=3.9" because 3.9.1 > 3.9)
         """
@@ -130,7 +130,7 @@ class GHAInput:
 
 @dataclasses.dataclass
 class MetadataSection(Section):
-    """Encapsulates the *minimal* `[metadata]` section & checks for required/invalid fields."""
+    """Encapsulates the *minimal* `[project]` section & checks for required/invalid fields."""
 
     name: str
     version: str
@@ -259,7 +259,7 @@ class FromFiles:
     def _get_version(pkg_paths: list[Path]) -> str:
         """Get the package's `__version__` string.
 
-        This is essentially [metadata]'s `version = attr: <module-path to __version__>`.
+        This is essentially [project]'s `version = attr: <module-path to __version__>`.
 
         `__version__` needs to be parsed as plain text due to potential
         race condition, see:
@@ -426,7 +426,7 @@ def _build_out_sections(
     commit_message: str,
     gha_input: GHAInput,
 ) -> READMEMarkdownManager | None:
-    """Build out the `[metadata]`, `[semantic_release]`, and `[options]` sections in `toml_dict`.
+    """Build out the `[project]`, `[semantic_release]`, and `[options]` sections in `toml_dict`.
 
     Return a 'READMEMarkdownManager' instance to write out. If, necessary.
     """
@@ -438,22 +438,28 @@ def _build_out_sections(
     )
     gh_api = GitHubAPI(github_full_repo, oauth_token=token)
 
-    # [metadata]
-    if not toml_dict.get("metadata"):  # will only override some fields
-        toml_dict["metadata"] = {}
+    # [build-system]
+    toml_dict["build-system"] = dict(
+        requires=["setuptools>=61.0"],
+        build_backend="setuptools.build_meta",
+    )
+
+    # [project]
+    if not toml_dict.get("project"):  # will only override some fields
+        toml_dict["project"] = {}
     meta_version_single = (  # even if there are >1 packages, use just one (they're all the same)
         f"attr: {ffile.packages[0]}.__version__"  # "wipac_dev_tools.__version__"
     )
     # if we DON'T want PyPI stuff:
     if not gha_input.pypi_name:
-        toml_dict["metadata"]["name"] = "_".join(ffile.packages).replace("_", "-")
-        toml_dict["metadata"]["version"] = meta_version_single
+        toml_dict["project"]["name"] = "_".join(ffile.packages).replace("_", "-")
+        toml_dict["project"]["version"] = meta_version_single
         if gha_input.author:
-            toml_dict["metadata"]["author"] = gha_input.author
+            toml_dict["project"]["author"] = gha_input.author
         if gha_input.author_email:
-            toml_dict["metadata"]["author_email"] = gha_input.author_email
+            toml_dict["project"]["author_email"] = gha_input.author_email
         if gha_input.keywords:
-            toml_dict["metadata"]["keywords"] = list_to_dangling(gha_input.keywords)
+            toml_dict["project"]["keywords"] = list_to_dangling(gha_input.keywords)
     # if we DO want PyPI, then include everything:
     else:
         msec = MetadataSection(
@@ -483,10 +489,10 @@ def _build_out_sections(
                 ],
             ),
         )
-        toml_dict["metadata"] = msec.add_unique_fields(dict(toml_dict["metadata"]))
+        toml_dict["project"] = msec.add_unique_fields(dict(toml_dict["project"]))
 
     # [semantic_release] -- will be completely overridden
-    toml_dict["semantic_release"] = {
+    toml_dict["tool.semantic_release"] = {
         # "wipac_dev_tools/__init__.py:__version__"
         # "wipac_dev_tools/__init__.py:__version__,wipac_foo_tools/__init__.py:__version__"
         "version_variable": ",".join(
