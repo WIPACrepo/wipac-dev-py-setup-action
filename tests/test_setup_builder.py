@@ -269,11 +269,14 @@ def mock_many_requests(requests_mock: Any) -> None:
 
 def test_00_minimum_section(directory: str, requests_mock: Any) -> None:
     """Test using a minimum version[wipac:cicd_pyproject_toml_builder]."""
+    mock_many_requests(requests_mock)
+
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
 
-    gha_input = dict(
+    gha_input = pyproject_toml_builder.GHAInput(
         pypi_name="wipac-mock-package",
-        python_min="3.6",
+        python_min=(3, 6),
+        keywords=[""],
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
     )
@@ -312,18 +315,13 @@ classifiers = [
     with open(pyproject_toml_path, "w") as f:
         f.write(pyproject_toml_in)
 
-    # mock the outgoing requests
-    mock_many_requests(requests_mock)
-
     # run pyproject_toml_builder
     pyproject_toml_builder.main(
         pyproject_toml_path,
         GITHUB_FULL_REPO,
-        BASE_KEYWORDS,
-        DIRECTORY_EXCLUDE,
-        LICENSE,
         TOKEN,
         NONBUMPING_COMMIT_MESSAGE,
+        gha_input,
     )
 
     # assert outputted pyproject.toml
@@ -332,24 +330,16 @@ classifiers = [
 
 def test_01_minimum_section_no_pypi(directory: str, requests_mock: Any) -> None:
     """Test using a minimum versionout PyPI attributes."""
+    mock_many_requests(requests_mock)
+
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
 
-    gha_input = dict(
+    gha_input = pyproject_toml_builder.GHAInput(
         # REQUIRED
-        python_min="3.6",
-        keywords_spaced=BASE_KEYWORDS,
-        # OPTIONAL (python)
-        python_max=None,
-        # OPTIONAL (packaging)
-        package_dirs=None,
-        directory_exclude=None,
-        # OPTIONAL (releases)
-        pypi_name=None,
-        patch_without_tag=None,
-        # OPTIONAL (meta)
+        python_min=(3, 6),
+        keywords=BASE_KEYWORDS,
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
-        license=None,
     )
 
     pyproject_toml_in = VANILLA_SECTIONS_IN
@@ -379,9 +369,6 @@ keywords = [
     with open(pyproject_toml_path, "w") as f:
         f.write(pyproject_toml_in)
 
-    # mock the outgoing requests
-    mock_many_requests(requests_mock)
-
     # run pyproject_toml_builder
     pyproject_toml_builder.main(
         pyproject_toml_path,
@@ -399,10 +386,13 @@ def test_02_minimum_section_no_pypi_no_keywords_no_author(
     directory: str, requests_mock: Any
 ) -> None:
     """Test using a minimum versionout PyPI attributes."""
+    mock_many_requests(requests_mock)
+
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
 
-    gha_input = dict(
-        python_min="3.6",
+    gha_input = pyproject_toml_builder.GHAInput(
+        python_min=(3, 6),
+        keywords=[""],
     )
 
     pyproject_toml_in = VANILLA_SECTIONS_IN
@@ -428,34 +418,41 @@ version = attr: mock_package.__version__
     with open(pyproject_toml_path, "w") as f:
         f.write(pyproject_toml_in)
 
-    # mock the outgoing requests
-    mock_many_requests(requests_mock)
-
     # run pyproject_toml_builder
     pyproject_toml_builder.main(
         pyproject_toml_path,
         GITHUB_FULL_REPO,
-        [],
-        DIRECTORY_EXCLUDE,
-        LICENSE,
         TOKEN,
         NONBUMPING_COMMIT_MESSAGE,
+        gha_input,
     )
 
     # assert outputted pyproject.toml
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_out)
 
 
-def test_10_keywords_spaced(directory: str, requests_mock: Any) -> None:
+def test_10_keywords(directory: str, requests_mock: Any) -> None:
     """Test using  `keywords`."""
+    mock_many_requests(requests_mock)
+
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
 
-    gha_input = dict(
+    gha_input = pyproject_toml_builder.GHAInput(
         pypi_name="wipac-mock-package",
-        python_min="3.6",
+        python_min=(3, 6),
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
-        keywords_spaced='python REST tools "REST tools" utilities "OpenTelemetry" tracing telemetry "3+ word string keywords"',
+        keywords=[
+            "python",
+            "REST",
+            "tools",
+            "REST tools",
+            "utilities",
+            "OpenTelemetry",
+            "tracing",
+            "telemetry",
+            "3+ word string keywords",
+        ],
     )
 
     pyproject_toml_in = VANILLA_SECTIONS_IN
@@ -501,18 +498,13 @@ classifiers = [
     with open(pyproject_toml_path, "w") as f:
         f.write(pyproject_toml_in)
 
-    # mock the outgoing requests
-    mock_many_requests(requests_mock)
-
     # run pyproject_toml_builder
     pyproject_toml_builder.main(
         pyproject_toml_path,
         GITHUB_FULL_REPO,
-        BASE_KEYWORDS,
-        DIRECTORY_EXCLUDE,
-        LICENSE,
         TOKEN,
         NONBUMPING_COMMIT_MESSAGE,
+        gha_input,
     )
 
     # assert outputted pyproject.toml
@@ -521,15 +513,25 @@ classifiers = [
 
 def test_20_python_max(directory: str, requests_mock: Any) -> None:
     """Test using  `python_max`."""
+    mock_many_requests(requests_mock)
+
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
 
-    gha_input = dict(
+    gha_input = pyproject_toml_builder.GHAInput(
         pypi_name="wipac-mock-package",
-        python_min="3.6",
-        python_max="3.9",
+        python_min=(3, 6),
+        python_max=(3, 9),
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
-        keywords_spaced="python REST tools utilities OpenTelemetry tracing telemetry",
+        keywords=[
+            "python",
+            "REST",
+            "tools",
+            "utilities",
+            "OpenTelemetry",
+            "tracing",
+            "telemetry",
+        ],
     )
 
     pyproject_toml_in = VANILLA_SECTIONS_IN
@@ -583,18 +585,13 @@ telemetry =
     with open(pyproject_toml_path, "w") as f:
         f.write(pyproject_toml_in)
 
-    # mock the outgoing requests
-    mock_many_requests(requests_mock)
-
     # run pyproject_toml_builder
     pyproject_toml_builder.main(
         pyproject_toml_path,
         GITHUB_FULL_REPO,
-        BASE_KEYWORDS,
-        DIRECTORY_EXCLUDE,
-        LICENSE,
         TOKEN,
         NONBUMPING_COMMIT_MESSAGE,
+        gha_input,
     )
 
     # assert outputted pyproject.toml
@@ -603,15 +600,25 @@ telemetry =
 
 def test_30_package_dirs__single(directory: str, requests_mock: Any) -> None:
     """Test using  `package_dirs` & a single desired package."""
+    mock_many_requests(requests_mock)
+
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
 
-    gha_input = dict(
+    gha_input = pyproject_toml_builder.GHAInput(
         pypi_name="wipac-mock-package",
-        python_min="3.6",
+        python_min=(3, 6),
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
-        package_dirs="mock_package",
-        keywords_spaced="python REST tools utilities OpenTelemetry tracing telemetry",
+        package_dirs=["mock_package"],
+        keywords=[
+            "python",
+            "REST",
+            "tools",
+            "utilities",
+            "OpenTelemetry",
+            "tracing",
+            "telemetry",
+        ],
     )
 
     pyproject_toml_in = VANILLA_SECTIONS_IN
@@ -660,18 +667,13 @@ include = ["mock_package", "mock_package.*"]
     with open(pyproject_toml_path, "w") as f:
         f.write(pyproject_toml_in)
 
-    # mock the outgoing requests
-    mock_many_requests(requests_mock)
-
     # run pyproject_toml_builder
     pyproject_toml_builder.main(
         pyproject_toml_path,
         GITHUB_FULL_REPO,
-        BASE_KEYWORDS,
-        DIRECTORY_EXCLUDE,
-        LICENSE,
         TOKEN,
         NONBUMPING_COMMIT_MESSAGE,
+        gha_input,
     )
 
     # assert outputted pyproject.toml
@@ -680,14 +682,24 @@ include = ["mock_package", "mock_package.*"]
 
 def test_34_package_dirs__multi_autoname(directory: str, requests_mock: Any) -> None:
     """Test using  `package_dirs` & multiple desired packages."""
+    mock_many_requests(requests_mock)
+
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
 
-    gha_input = dict(
-        python_min="3.6",
+    gha_input = pyproject_toml_builder.GHAInput(
+        python_min=(3, 6),
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
-        package_dirs="mock_package another_one",
-        keywords_spaced="python REST tools utilities OpenTelemetry tracing telemetry",
+        package_dirs=["mock_package", "another_one"],
+        keywords=[
+            "python",
+            "REST",
+            "tools",
+            "utilities",
+            "OpenTelemetry",
+            "tracing",
+            "telemetry",
+        ],
     )
 
     pyproject_toml_in = VANILLA_SECTIONS_IN
@@ -735,18 +747,13 @@ include = ["mock_package", "another_one", "mock_package.*", "another_one.*"]
     with open(pyproject_toml_path, "w") as f:
         f.write(pyproject_toml_in)
 
-    # mock the outgoing requests
-    mock_many_requests(requests_mock)
-
     # run pyproject_toml_builder
     pyproject_toml_builder.main(
         pyproject_toml_path,
         GITHUB_FULL_REPO,
-        BASE_KEYWORDS,
-        DIRECTORY_EXCLUDE,
-        LICENSE,
         TOKEN,
         NONBUMPING_COMMIT_MESSAGE,
+        gha_input,
     )
 
     # assert outputted pyproject.toml
@@ -755,15 +762,25 @@ include = ["mock_package", "another_one", "mock_package.*", "another_one.*"]
 
 def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
     """Test using  `package_dirs` & multiple desired packages."""
+    mock_many_requests(requests_mock)
+
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
 
-    gha_input = dict(
+    gha_input = pyproject_toml_builder.GHAInput(
         pypi_name="wipac-mock-package",
-        python_min="3.6",
+        python_min=(3, 6),
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
-        package_dirs="mock_package another_one",
-        keywords_spaced="python REST tools utilities OpenTelemetry tracing telemetry",
+        package_dirs=["mock_package", "another_one"],
+        keywords=[
+            "python",
+            "REST",
+            "tools",
+            "utilities",
+            "OpenTelemetry",
+            "tracing",
+            "telemetry",
+        ],
     )
 
     pyproject_toml_in = VANILLA_SECTIONS_IN
@@ -818,18 +835,13 @@ include = ["mock_package", "another_one", "mock_package.*", "another_one.*"]
     with open(pyproject_toml_path, "w") as f:
         f.write(pyproject_toml_in)
 
-    # mock the outgoing requests
-    mock_many_requests(requests_mock)
-
     # run pyproject_toml_builder
     pyproject_toml_builder.main(
         pyproject_toml_path,
         GITHUB_FULL_REPO,
-        BASE_KEYWORDS,
-        DIRECTORY_EXCLUDE,
-        LICENSE,
         TOKEN,
         NONBUMPING_COMMIT_MESSAGE,
+        gha_input,
     )
 
     # assert outputted pyproject.toml
@@ -840,15 +852,25 @@ def test_36_package_dirs__multi_missing_init__error(
     directory: str, requests_mock: Any
 ) -> None:
     """Test using  `package_dirs` & multiple desired packages."""
+    mock_many_requests(requests_mock)
+
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
 
-    gha_input = dict(
+    gha_input = pyproject_toml_builder.GHAInput(
         pypi_name="wipac-mock-package",
-        python_min="3.6",
+        python_min=(3, 6),
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
-        package_dirs="mock_package another_one",
-        keywords_spaced="python REST tools utilities OpenTelemetry tracing telemetry",
+        package_dirs=["mock_package", "another_one"],
+        keywords=[
+            "python",
+            "REST",
+            "tools",
+            "utilities",
+            "OpenTelemetry",
+            "tracing",
+            "telemetry",
+        ],
     )
 
     pyproject_toml_in = VANILLA_SECTIONS_IN
@@ -864,9 +886,6 @@ def test_36_package_dirs__multi_missing_init__error(
     with open(pyproject_toml_path, "w") as f:
         f.write(pyproject_toml_in)
 
-    # mock the outgoing requests
-    mock_many_requests(requests_mock)
-
     # run pyproject_toml_builder
     with pytest.raises(
         Exception,
@@ -875,11 +894,9 @@ def test_36_package_dirs__multi_missing_init__error(
         pyproject_toml_builder.main(
             pyproject_toml_path,
             GITHUB_FULL_REPO,
-            BASE_KEYWORDS,
-            DIRECTORY_EXCLUDE,
-            LICENSE,
             TOKEN,
             NONBUMPING_COMMIT_MESSAGE,
+            gha_input,
         )
 
 
@@ -887,15 +904,25 @@ def test_37_package_dirs__multi_missing_version__error(
     directory: str, requests_mock: Any
 ) -> None:
     """Test using  `package_dirs` & multiple desired packages."""
+    mock_many_requests(requests_mock)
+
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
 
-    gha_input = dict(
+    gha_input = pyproject_toml_builder.GHAInput(
         pypi_name="wipac-mock-package",
-        python_min="3.6",
+        python_min=(3, 6),
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
-        package_dirs="mock_package another_one",
-        keywords_spaced="python REST tools utilities OpenTelemetry tracing telemetry",
+        package_dirs=["mock_package", "another_one"],
+        keywords=[
+            "python",
+            "REST",
+            "tools",
+            "utilities",
+            "OpenTelemetry",
+            "tracing",
+            "telemetry",
+        ],
     )
 
     pyproject_toml_in = VANILLA_SECTIONS_IN
@@ -912,9 +939,6 @@ def test_37_package_dirs__multi_missing_version__error(
     with open(pyproject_toml_path, "w") as f:
         f.write(pyproject_toml_in)
 
-    # mock the outgoing requests
-    mock_many_requests(requests_mock)
-
     # run pyproject_toml_builder
     with pytest.raises(
         Exception,
@@ -923,11 +947,9 @@ def test_37_package_dirs__multi_missing_version__error(
         pyproject_toml_builder.main(
             pyproject_toml_path,
             GITHUB_FULL_REPO,
-            BASE_KEYWORDS,
-            DIRECTORY_EXCLUDE,
-            LICENSE,
             TOKEN,
             NONBUMPING_COMMIT_MESSAGE,
+            gha_input,
         )
 
 
@@ -935,15 +957,25 @@ def test_38_package_dirs__multi_mismatch_version__error(
     directory: str, requests_mock: Any
 ) -> None:
     """Test using  `package_dirs` & multiple desired packages."""
+    mock_many_requests(requests_mock)
+
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
 
-    gha_input = dict(
+    gha_input = pyproject_toml_builder.GHAInput(
         pypi_name="wipac-mock-package",
-        python_min="3.6",
+        python_min=(3, 6),
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
-        package_dirs="mock_package another_one",
-        keywords_spaced="python REST tools utilities OpenTelemetry tracing telemetry",
+        package_dirs=["mock_package", "another_one"],
+        keywords=[
+            "python",
+            "REST",
+            "tools",
+            "utilities",
+            "OpenTelemetry",
+            "tracing",
+            "telemetry",
+        ],
     )
 
     pyproject_toml_in = VANILLA_SECTIONS_IN
@@ -962,32 +994,37 @@ def test_38_package_dirs__multi_mismatch_version__error(
     with open(pyproject_toml_path, "w") as f:
         f.write(pyproject_toml_in)
 
-    # mock the outgoing requests
-    mock_many_requests(requests_mock)
-
     # run pyproject_toml_builder
     with pytest.raises(Exception, match=r"Version mismatch between packages*"):
         pyproject_toml_builder.main(
             pyproject_toml_path,
             GITHUB_FULL_REPO,
-            BASE_KEYWORDS,
-            DIRECTORY_EXCLUDE,
-            LICENSE,
             TOKEN,
             NONBUMPING_COMMIT_MESSAGE,
+            gha_input,
         )
 
 
 def test_40_extra_fields(directory: str, requests_mock: Any) -> None:
     """Test using  extra stuff in [options] & [project]."""
+    mock_many_requests(requests_mock)
+
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
 
-    gha_input = dict(
+    gha_input = pyproject_toml_builder.GHAInput(
         pypi_name="wipac-mock-package",
-        python_min="3.6",
+        python_min=(3, 6),
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
-        keywords_spaced="python REST tools utilities OpenTelemetry tracing telemetry",
+        keywords=[
+            "python",
+            "REST",
+            "tools",
+            "utilities",
+            "OpenTelemetry",
+            "tracing",
+            "telemetry",
+        ],
     )
 
     pyproject_toml_in = f"""
@@ -1083,18 +1120,13 @@ telemetry =
     with open(pyproject_toml_path, "w") as f:
         f.write(pyproject_toml_in)
 
-    # mock the outgoing requests
-    mock_many_requests(requests_mock)
-
     # run pyproject_toml_builder
     pyproject_toml_builder.main(
         pyproject_toml_path,
         GITHUB_FULL_REPO,
-        BASE_KEYWORDS,
-        DIRECTORY_EXCLUDE,
-        LICENSE,
         TOKEN,
         NONBUMPING_COMMIT_MESSAGE,
+        gha_input,
     )
 
     # assert outputted pyproject.toml
@@ -1170,16 +1202,19 @@ def test_50_bumping(
     requests_mock: Any,
 ) -> None:
     """Test bumping configurations [wipac:cicd_pyproject_toml_builder]."""
+    mock_many_requests(requests_mock)
+
     pyproject_toml_path = Path(f"{_directory(version)}/pyproject.toml")
 
-    gha_input = dict(
+    gha_input = pyproject_toml_builder.GHAInput(
         pypi_name="wipac-mock-package",
-        python_min="3.6",
+        python_min=(3, 6),
+        keywords=[""],
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
     )
     if not patch_without_tag:
-        gha_input.update(dict(patch_without_tag="False"))
+        gha_input.patch_without_tag = "False"
 
     pyproject_toml_in = VANILLA_SECTIONS_IN
 
@@ -1215,18 +1250,13 @@ classifiers = [
     with open(pyproject_toml_path, "w") as f:
         f.write(pyproject_toml_in)
 
-    # mock the outgoing requests
-    mock_many_requests(requests_mock)
-
     # run pyproject_toml_builder
     pyproject_toml_builder.main(
         pyproject_toml_path,
         GITHUB_FULL_REPO,
-        BASE_KEYWORDS,
-        DIRECTORY_EXCLUDE,
-        LICENSE,
         TOKEN,
         commit_message,
+        gha_input,
     )
 
     # assert outputted pyproject.toml
