@@ -27,8 +27,9 @@ REAMDE_BADGES_END_DELIMITER = "<!--- End of README Badges (automated) --->"
 LOGGER = logging.getLogger("setup-builder")
 
 SEMANTIC_RELEASE_MAJOR = ["[major]"]
-SEMANTIC_RELEASE_MINOR = ["[minor]"]
-SEMANTIC_RELEASE_PATCH = ["[fix]", "[patch]"]
+SEMANTIC_RELEASE_MINOR = ["[minor]", "[feature]"]
+SEMANTIC_RELEASE_PATCH = ["[patch]", "[fix]"]
+PATCH_WITHOUT_TAG_WORKAROUND = [chr(i) for i in range(32, 127)]
 
 DEV_STATUS_PREALPHA_0_0_0 = "Development Status :: 2 - Pre-Alpha"
 DEV_STATUS_ALPHA_0_0_Z = "Development Status :: 3 - Alpha"
@@ -441,18 +442,17 @@ def _build_out_sections(
 
     # [tool.semantic_release] -- will be completely overridden
     toml_dict["tool.semantic_release"] = dict(
-        # "wipac_dev_tools/__init__.py:__version__"
-        # "wipac_dev_tools/__init__.py:__version__,wipac_foo_tools/__init__.py:__version__"
-        version_variable=",".join(
-            f"{p}/__init__.py:__version__" for p in ffile.packages
+        version_toml=["pyproject.toml:project.version"],
+        commit_parser="emoji",
+    )
+    toml_dict["tool.semantic_release.commit_parser_options"] = dict(
+        major_tags=SEMANTIC_RELEASE_MAJOR,
+        minor_tags=SEMANTIC_RELEASE_MINOR,
+        patch_tags=(
+            SEMANTIC_RELEASE_PATCH
+            if not gha_input.patch_without_tag
+            else SEMANTIC_RELEASE_PATCH + PATCH_WITHOUT_TAG_WORKAROUND
         ),
-        upload_to_pypi=("True" if gha_input.pypi_name else "False"),  # >>> str(bool(x))
-        patch_without_tag=gha_input.patch_without_tag,
-        commit_parser="semantic_release.history.emoji_parser",
-        major_emoji=", ".join(SEMANTIC_RELEASE_MAJOR),
-        minor_emoji=", ".join(SEMANTIC_RELEASE_MINOR),
-        patch_emoji=", ".join(SEMANTIC_RELEASE_PATCH),
-        branch=gh_api.default_branch,
     )
 
     # [tool.setuptools.packages.find]
