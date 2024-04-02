@@ -1,10 +1,9 @@
-"""Module to build `setup.cfg` sections for use by `setup.py`/`setuptools`.
+"""Module to build `pyproject.toml` sections for use by `setup.py`/`setuptools`.
 
 Used in CI/CD, used by GH Action.
 """
 
 import argparse
-import configparser
 import dataclasses
 import logging
 import os
@@ -13,11 +12,11 @@ from pathlib import Path
 from typing import Any, Iterator, cast
 
 import requests
+import toml
 from wipac_dev_tools import (
     argparse_tools,
     logging_tools,
     semver_parser_tools,
-    strtobool,
 )
 
 BUILDER_SECTION_NAME = "wipac:cicd_setup_builder"
@@ -37,6 +36,35 @@ DEV_STATUS_BETA_0_Y_Z = "Development Status :: 4 - Beta"
 DEV_STATUS_PROD_X_Y_Z = "Development Status :: 5 - Production/Stable"
 
 PythonMinMax = tuple[tuple[int, int], tuple[int, int]]
+
+
+class GitHubAPI:
+    """Relay info from the GitHub API."""
+
+    def __init__(self, github_full_repo: str, oauth_token: str) -> None:
+        self.url = f"https://github.com/{github_full_repo}"
+
+        _headers = {"authorization": f"Bearer {oauth_token}"}
+        _req = requests.get(
+            f"https://api.github.com/repos/{github_full_repo}",
+            headers=_headers,
+        )
+        _req.raise_for_status()
+        _json = _req.json()
+        self.default_branch = cast(str, _json["default_branch"])  # main/master/etc.
+        self.description = cast(str, _json["description"])
+
+
+@dataclasses.dataclass
+class Section:
+    """Encapsulate a pyproject.toml section."""
+
+    def add_unique_fields(self, dict_in: dict[str, Any]) -> dict[str, Any]:
+        """Merge `dict_in` to a dict-cast copy of `self`.
+
+        `self` is given precedence for duplicate keys.
+        """
+        return {**dict_in, **dataclasses.asdict(self)}
 
 
 @dataclasses.dataclass
@@ -62,111 +90,42 @@ class GHAInput:
     author_email: str = ""
     license: str = ""
 
-
-class GitHubAPI:
-    """Relay info from the GitHub API."""
-
-    def __init__(self, github_full_repo: str, oauth_token: str) -> None:
-        self.url = f"https://github.com/{github_full_repo}"
-
-        _headers = {"authorization": f"Bearer {oauth_token}"}
-        _req = requests.get(
-            f"https://api.github.com/repos/{github_full_repo}",
-            headers=_headers,
-        )
-        _req.raise_for_status()
-        _json = _req.json()
-        self.default_branch = cast(str, _json["default_branch"])  # main/master/etc.
-        self.description = cast(str, _json["description"])
-
-
-@dataclasses.dataclass
-class Section:
-    """Encapsulate a setup.cfg section."""
-
-    def add_unique_fields(self, dict_in: dict[str, Any]) -> dict[str, Any]:
-        """Merge `dict_in` to a dict-cast copy of `self`.
-
-        `self` is given precedence for duplicate keys.
-        """
-        return {**dict_in, **dataclasses.asdict(self)}
-
-
-@dataclasses.dataclass
-class BuilderSection(Section):
-    """Encapsulates the `BUILDER_SECTION_NAME` section & checks for required/invalid fields."""
-
-    python_min: str  # python_requires
-    author: str = ""
-    author_email: str = ""
-    pypi_name: str = ""  # enables PyPI publishing, badges, sections, etc.
-    python_max: str = ""  # python_requires
-    package_dirs: str = ""
-    keywords_spaced: str = ""  # comes as "A B C"
-    patch_without_tag: str = str(True)  # use `get_patch_without_tag()` to get bool
-
     def __post_init__(self) -> None:
         if self.pypi_name:
             if not self.author or not self.author_email:
                 raise Exception(
-                    "'author' and 'author_email' must be provided in "
-                    "setup.cfg ([wipac:cicd_setup_builder]) when "
-                    "'pypi_name' is given (PyPI-metadata mode)"
+                    "'author' and 'author_email' must be provided when "
+                    "'pypi_name' is given"
                 )
-
-    def get_patch_without_tag(self) -> bool:
-        return strtobool(self.patch_without_tag)
-
-    def _python3_min_max(self) -> PythonMinMax:
-        """Get the `PythonMinMax` version of `self.python_min`."""
-
-        def get_py3_minor(py_release: str, attr_name: str) -> int:
-            m = re.match(r"(?P<maj>\d+)\.(?P<min>\d+)$", py_release)
-            if not m:
-                raise Exception(f"'{attr_name}' is not a valid release: '{py_release}'")
-
-            major, minor = int(m.groupdict()["maj"]), int(m.groupdict()["min"])
-
+        for major, attr_name in [
+            (self.python_min[0], "python_min"),
+            (self.python_max[0], "python_max"),
+        ]:
             if major < 3:
                 raise Exception(
                     f"Python-release automation ('{attr_name}') does not work for python <3."
                 )
-            if major >= 4:
+            elif major >= 4:
                 raise Exception(
                     f"Python-release automation ('{attr_name}') does not work for python 4+."
                 )
-
-            return minor
-
-        min_minor = get_py3_minor(self.python_min, "python_min")
-        max_minor = get_py3_minor(self.python_max, "python_max")
-        versions = ((3, min_minor), (3, max_minor))
-
-        return cast(PythonMinMax, tuple(sorted(versions)))
 
     def python_requires(self) -> str:
         """Get a `[metadata]/python_requires` string from `self.python_range`.
 
         Ex: "">=3.6, <3.10" (cannot do "<=3.9" because 3.9.1 > 3.9)
         """
-        py_min_max = self._python3_min_max()
-        return f">={py_min_max[0][0]}.{py_min_max[0][1]}, <{py_min_max[1][0]}.{py_min_max[1][1]+1}"
+        return f">={self.python_min[0]}.{self.python_min[1]}, <{self.python_max[0]}.{self.python_max[1]+1}"
 
     def python_classifiers(self) -> list[str]:
         """Get auto-detected `Programming Language :: Python :: *` list.
 
         NOTE: Will not work after the '3.* -> 4.0'-transition.
         """
-        py_min_max = self._python3_min_max()
-
         return [
             f"Programming Language :: Python :: 3.{r}"
-            for r in range(py_min_max[0][1], py_min_max[1][1] + 1)
+            for r in range(self.python_min[1], self.python_max[1] + 1)
         ]
-
-    def packages(self) -> list[str]:
-        """Get a list of directories for Python packages."""
-        return self.package_dirs.strip().split()
 
 
 @dataclasses.dataclass
@@ -227,13 +186,13 @@ class FromFiles:
     def __init__(
         self,
         root: Path,
-        bsec: BuilderSection,
+        gha_input: GHAInput,
         dirs_exclude: list[str],
         commit_message: str,
     ) -> None:
         if not os.path.exists(root):
             raise NotADirectoryError(root)
-        self._bsec = bsec
+        self.gha_input = gha_input
         self.root = root.resolve()
 
         pkg_paths = self._get_package_paths(dirs_exclude)
@@ -259,29 +218,31 @@ class FromFiles:
                 f"No package found in '{self.root}'. Are you missing an __init__.py?"
             )
 
-        # check the setup.cfg: package_dirs
-        if self._bsec.packages():
-            if not_ins := [p for p in self._bsec.packages() if p not in available_pkgs]:
+        # check the pyproject.toml: package_dirs
+        if self.gha_input.package_dirs:
+            if not_ins := [
+                p for p in self.gha_input.package_dirs if p not in available_pkgs
+            ]:
                 if len(not_ins) == 1:
                     raise Exception(
                         f"Package directory not found: "
-                        f"{not_ins[0]} (defined in setup.cfg). "
+                        f"{not_ins[0]} (defined in pyproject.toml). "
                         f"Is the directory missing an __init__.py?"
                     )
                 raise Exception(
                     f"Package directories not found: "
-                    f"{', '.join(not_ins)} (defined in setup.cfg). "
+                    f"{', '.join(not_ins)} (defined in pyproject.toml). "
                     f"Are the directories missing __init__.py files?"
                 )
 
-            return [self.root / p for p in self._bsec.packages()]
+            return [self.root / p for p in self.gha_input.package_dirs]
         # use the auto-detected package (if there's ONE)
         else:
             if len(available_pkgs) > 1:
                 raise Exception(
                     f"More than one package found in '{self.root}': {', '.join(available_pkgs)}. "
                     f"Either "
-                    f"[1] list *all* your desired packages in your setup.cfg's 'package_dirs', "
+                    f"[1] list *all* your desired packages in your pyproject.toml's 'package_dirs', "
                     f"[2] remove the extra __init__.py file(s), "
                     f"or [3] list which packages to ignore in your GitHub Action step's 'with.directory-exclude'."
                 )
@@ -339,7 +300,7 @@ class FromFiles:
         # detect version threshold crossing
         pending_major_bump = any(k in commit_message for k in SEMANTIC_RELEASE_MAJOR)
         pending_minor_bump = any(k in commit_message for k in SEMANTIC_RELEASE_MINOR)
-        pending_patch_bump = self._bsec.get_patch_without_tag() or any(
+        pending_patch_bump = self.gha_input.patch_without_tag or any(
             k in commit_message for k in SEMANTIC_RELEASE_PATCH
         )
 
@@ -385,12 +346,12 @@ class READMEMarkdownManager:
         self,
         ffile: FromFiles,
         github_full_repo: str,
-        bsec: BuilderSection,
+        gha_input: GHAInput,
         gh_api: GitHubAPI,
     ) -> None:
         self.ffile = ffile
         self.github_full_repo = github_full_repo
-        self.bsec = bsec
+        self.bsec = gha_input
         self.gh_api = gh_api
         with open(ffile.readme_path) as f:
             lines_to_keep = []
@@ -458,50 +419,49 @@ class READMEMarkdownManager:
 
 
 def _build_out_sections(
-    cfg: configparser.RawConfigParser,
+    toml_dict: dict,
     root_path: Path,
     github_full_repo: str,
     token: str,
     commit_message: str,
     gha_input: GHAInput,
 ) -> READMEMarkdownManager | None:
-    """Build out the `[metadata]`, `[semantic_release]`, and `[options]` sections in `cfg`.
+    """Build out the `[metadata]`, `[semantic_release]`, and `[options]` sections in `toml_dict`.
 
     Return a 'READMEMarkdownManager' instance to write out. If, necessary.
     """
-    bsec = BuilderSection(**dict(cfg[BUILDER_SECTION_NAME]))  # checks req/extra fields
     ffile = FromFiles(  # things requiring reading files
         root_path,
-        bsec,
+        gha_input,
         gha_input.directory_exclude,
         commit_message,
     )
     gh_api = GitHubAPI(github_full_repo, oauth_token=token)
 
     # [metadata]
-    if not cfg.has_section("metadata"):  # will only override some fields
-        cfg["metadata"] = {}
+    if not toml_dict.get("metadata"):  # will only override some fields
+        toml_dict["metadata"] = {}
     meta_version_single = (  # even if there are >1 packages, use just one (they're all the same)
         f"attr: {ffile.packages[0]}.__version__"  # "wipac_dev_tools.__version__"
     )
     # if we DON'T want PyPI stuff:
-    if not bsec.pypi_name:
-        cfg["metadata"]["name"] = "_".join(ffile.packages).replace("_", "-")
-        cfg["metadata"]["version"] = meta_version_single
-        if bsec.author:
-            cfg["metadata"]["author"] = bsec.author
-        if bsec.author_email:
-            cfg["metadata"]["author_email"] = bsec.author_email
+    if not gha_input.pypi_name:
+        toml_dict["metadata"]["name"] = "_".join(ffile.packages).replace("_", "-")
+        toml_dict["metadata"]["version"] = meta_version_single
+        if gha_input.author:
+            toml_dict["metadata"]["author"] = gha_input.author
+        if gha_input.author_email:
+            toml_dict["metadata"]["author_email"] = gha_input.author_email
         if gha_input.keywords:
-            cfg["metadata"]["keywords"] = list_to_dangling(gha_input.keywords)
+            toml_dict["metadata"]["keywords"] = list_to_dangling(gha_input.keywords)
     # if we DO want PyPI, then include everything:
     else:
         msec = MetadataSection(
-            name=bsec.pypi_name,
+            name=gha_input.pypi_name,
             version=meta_version_single,
             url=gh_api.url,
-            author=bsec.author,
-            author_email=bsec.author_email,
+            author=gha_input.author,
+            author_email=gha_input.author_email,
             description=gh_api.description,
             long_description=f"file: {ffile.readme_path.name}",
             long_description_content_type=long_description_content_type(
@@ -512,9 +472,9 @@ def _build_out_sections(
             classifiers=list_to_dangling(
                 [ffile.development_status]
                 + ["License :: OSI Approved :: MIT License"]
-                + bsec.python_classifiers(),
+                + gha_input.python_classifiers(),
             ),
-            download_url=f"https://pypi.org/project/{bsec.pypi_name}/",
+            download_url=f"https://pypi.org/project/{gha_input.pypi_name}/",
             project_urls=list_to_dangling(
                 [
                     f"Tracker = {gh_api.url}/issues",
@@ -523,18 +483,19 @@ def _build_out_sections(
                 ],
             ),
         )
-        cfg["metadata"] = msec.add_unique_fields(dict(cfg["metadata"]))
+        toml_dict["metadata"] = msec.add_unique_fields(dict(toml_dict["metadata"]))
 
-    # [semantic_release]
-    cfg.remove_section("semantic_release")  # will be completely overridden
-    cfg["semantic_release"] = {
+    # [semantic_release] -- will be completely overridden
+    toml_dict["semantic_release"] = {
         # "wipac_dev_tools/__init__.py:__version__"
         # "wipac_dev_tools/__init__.py:__version__,wipac_foo_tools/__init__.py:__version__"
         "version_variable": ",".join(
             f"{p}/__init__.py:__version__" for p in ffile.packages
         ),
-        "upload_to_pypi": "True" if bsec.pypi_name else "False",  # >>> str(bool(x))
-        "patch_without_tag": bsec.patch_without_tag,
+        "upload_to_pypi": (
+            "True" if gha_input.pypi_name else "False"
+        ),  # >>> str(bool(x))
+        "patch_without_tag": gha_input.patch_without_tag,
         "commit_parser": "semantic_release.history.emoji_parser",
         "major_emoji": ", ".join(SEMANTIC_RELEASE_MAJOR),
         "minor_emoji": ", ".join(SEMANTIC_RELEASE_MINOR),
@@ -543,40 +504,40 @@ def _build_out_sections(
     }
 
     # [options]
-    if not cfg.has_section("options"):  # will only override some fields
-        cfg["options"] = {}
+    if not toml_dict.get("options"):  # will only override some fields
+        toml_dict["options"] = {}
     osec = OptionsSection(
-        python_requires=bsec.python_requires(),
+        python_requires=gha_input.python_requires(),
         packages="find:",  # always use "find:", then use include/exclude
-        install_requires=cfg["options"].get("install_requires", fallback=""),
+        install_requires=toml_dict["options"].get("install_requires", fallback=""),
     )
-    cfg["options"] = osec.add_unique_fields(dict(cfg["options"]))
+    toml_dict["options"] = osec.add_unique_fields(dict(toml_dict["options"]))
 
     # [options.packages.find]
-    if cfg["options"]["packages"] == "find:":
-        cfg["options.packages.find"] = {}
-        if bsec.packages():
-            cfg["options.packages.find"]["include"] = list_to_dangling(
-                bsec.packages() + [f"{p}.*" for p in bsec.packages()]
+    if toml_dict["options"]["packages"] == "find:":
+        toml_dict["options.packages.find"] = {}
+        if gha_input.package_dirs:
+            toml_dict["options.packages.find"]["include"] = list_to_dangling(
+                gha_input.package_dirs + [f"{p}.*" for p in gha_input.package_dirs]
             )
         if gha_input.directory_exclude:
-            cfg["options.packages.find"]["exclude"] = list_to_dangling(
+            toml_dict["options.packages.find"]["exclude"] = list_to_dangling(
                 gha_input.directory_exclude
             )
 
     # [options.package_data]
-    if not cfg.has_section("options.package_data"):  # will only override some fields
-        cfg["options.package_data"] = {}
-    if "py.typed" not in cfg["options.package_data"].get("*", fallback=""):
-        if not cfg["options.package_data"].get("*"):
+    if not toml_dict.get("options.package_data"):  # will only override some fields
+        toml_dict["options.package_data"] = {}
+    if "py.typed" not in toml_dict["options.package_data"].get("*", fallback=""):
+        if not toml_dict["options.package_data"].get("*"):
             star_data = "py.typed"
         else:  # append to existing list
-            star_data = f"py.typed, {cfg['options.package_data']['*']}"
-        cfg["options.package_data"]["*"] = star_data
+            star_data = f"py.typed, {toml_dict['options.package_data']['*']}"
+        toml_dict["options.package_data"]["*"] = star_data
 
     # Automate some README stuff
     if ffile.readme_path.suffix == ".md":
-        return READMEMarkdownManager(ffile, github_full_repo, bsec, gh_api)
+        return READMEMarkdownManager(ffile, github_full_repo, gha_input, gh_api)
     return None
 
 
@@ -584,101 +545,46 @@ class MissingSectionException(Exception):
     """Raise when the wanted section is missing."""
 
 
-def write_setup_cfg(
-    setup_cfg: Path,
+def write_toml(
+    toml_file: Path,
     github_full_repo: str,
     token: str,
     commit_message: str,
     gha_input: GHAInput,
 ) -> READMEMarkdownManager | None:
-    """Build/write the `setup.cfg` sections according to `BUILDER_SECTION_NAME`.
+    """Build/write the `pyproject.toml` sections according to `BUILDER_SECTION_NAME`.
 
     Return a 'READMEMarkdownManager' instance to write out. If, necessary.
     """
-    setup_cfg = setup_cfg.resolve()
-
-    cfg = configparser.RawConfigParser(allow_no_value=True, comment_prefixes="/")
-    cfg.read(setup_cfg)
-    if not cfg.has_section(BUILDER_SECTION_NAME):
-        raise MissingSectionException(f"'setup.cfg' is missing {BUILDER_SECTION_NAME}")
+    with open(toml_file.resolve(), "r") as f:
+        toml_dict = toml.load(f)
 
     readme_mgr = _build_out_sections(
-        cfg,
-        setup_cfg.parent,
+        toml_dict,
+        toml_file.parent,
         github_full_repo,
         token,
         commit_message,
         gha_input,
     )
 
-    # Re-order some sections to the top
-    tops = [
-        BUILDER_SECTION_NAME,
-        "metadata",
-        "semantic_release",
-        "options",
-    ]
-    # and any 'options.*' & sort them
-    tops.extend(
-        sorted(s for s in cfg.sections() if s.startswith("options.") and s not in tops)
-    )
-
-    # Build new 'setup.cfg'
-    cfg_new = configparser.RawConfigParser(allow_no_value=True)  # no interpolation
-    for sec in tops:
-        cfg_new[sec] = cfg[sec]
-    for sec in cfg.sections():  # add rest of existing sections
-        if sec not in tops:
-            cfg_new[sec] = cfg[sec]
-    with open(setup_cfg, "w") as f:
-        cfg_new.write(f)
-
-    # Comment generated sections w/ comments saying so & clean up whitespace
-    with open(setup_cfg) as f:
-        c = f.read()
-        meta_auto_attrs = [
-            f.name
-            for f in dataclasses.fields(MetadataSection)
-            if f.name in cfg_new["metadata"].keys()
-        ]
-        c = c.replace(
-            "[metadata]",
-            f"[metadata]  # {GENERATED_STR}: {', '.join(meta_auto_attrs)}",
-        )
-        c = c.replace(
-            "[semantic_release]",
-            f"[semantic_release]  # fully-{GENERATED_STR}",
-        )
-        c = c.replace(
-            "[options]",
-            f"[options]  # {GENERATED_STR}: python_requires, packages",
-        )
-        c = c.replace(
-            "[options.package_data]",
-            f"[options.package_data]  # {GENERATED_STR}: '*'",
-        )
-        c = c.replace(
-            "[options.packages.find]",
-            f"[options.packages.find]  # {GENERATED_STR}: include/exclude",
-        )
-        c = re.sub(r"(\t| )+\n", "\n", c)  # remove trailing whitespace
-    with open(setup_cfg, "w") as f:
-        f.write(c)
+    with open(toml_file, "w") as f:
+        toml.dump(toml_dict, f)
 
     return readme_mgr
 
 
 def main(
-    setup_cfg: Path,
+    toml_file: Path,
     github_full_repo: str,
     token: str,
     commit_message: str,
     gha_input: GHAInput,
 ) -> None:
     """Read and write all necessary files."""
-    # build & write the setup.cfg
-    readme_mgr = write_setup_cfg(
-        setup_cfg,
+    # build & write the pyproject.toml
+    readme_mgr = write_toml(
+        toml_file,
         github_full_repo,
         token,
         commit_message,
@@ -694,18 +600,18 @@ def main(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description=f"Read/transform 'setup.cfg' and 'README.md' files. "
-        f"Builds out 'setup.cfg' sections according to [{BUILDER_SECTION_NAME}].",
+        description=f"Read/transform 'pyproject.toml' and 'README.md' files. "
+        f"Builds out 'pyproject.toml' sections according to [{BUILDER_SECTION_NAME}].",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
-        "setup_cfg_file",
+        "toml_file",
         type=lambda x: argparse_tools.validate_arg(
             Path(x),
-            Path(x).name == "setup.cfg" and Path(x).exists(),
-            FileNotFoundError("setup.cfg"),
+            Path(x).name == "pyproject.toml" and Path(x).exists(),
+            FileNotFoundError("pyproject.toml"),
         ),
-        help="path to the 'setup.cfg' file",
+        help="path to the 'pyproject.toml' file",
     )
     parser.add_argument(
         "github_full_repo",
@@ -810,7 +716,7 @@ if __name__ == "__main__":
     logging_tools.log_argparse_args(args, logger=LOGGER, level="WARNING")
 
     main(
-        args.setup_cfg_file,
+        args.toml,
         args.github_full_repo,
         args.token,
         args.commit_message,

@@ -1,1 +1,2 @@
 wipac-dev-tools[semver]
+toml
