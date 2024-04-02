@@ -134,9 +134,15 @@ def assert_outputted_pyproject_toml(
     pyproject_toml_path: Path, pyproject_toml_out: str
 ) -> None:
     """Compare each's contents casted to a dict."""
+    print("EXPECTED TOML OUTPUT:")
+    print(pyproject_toml_out)
     expected = toml.loads(pyproject_toml_out)
+
+    print("ACTUAL TOML OUTPUT:")
     with open(pyproject_toml_path) as f:
         actual = toml.load(f)
+        print(actual)
+
     assert expected == actual
 
 
