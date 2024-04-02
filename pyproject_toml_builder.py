@@ -455,15 +455,16 @@ def _build_out_sections(
         branch=gh_api.default_branch,
     )
 
-    # [options.packages.find]
-    if toml_dict["options"]["packages"] == "find:":
-        toml_dict["options.packages.find"] = {}
-        if gha_input.package_dirs:
-            toml_dict["options.packages.find"]["include"] = gha_input.package_dirs + [
-                f"{p}.*" for p in gha_input.package_dirs
-            ]
-        if gha_input.directory_exclude:
-            toml_dict["options.packages.find"]["exclude"] = gha_input.directory_exclude
+    # [tool.setuptools.packages.find]
+    toml_dict["tool.setuptools.packages.find"] = {}
+    if gha_input.package_dirs:
+        toml_dict["tool.setuptools.packages.find"]["include"] = (
+            gha_input.package_dirs + [f"{p}.*" for p in gha_input.package_dirs]
+        )
+    if gha_input.directory_exclude:
+        toml_dict["tool.setuptools.packages.find"][
+            "exclude"
+        ] = gha_input.directory_exclude
 
     # [options.package_data]
     if not toml_dict.get("options.package_data"):  # will only override some fields
