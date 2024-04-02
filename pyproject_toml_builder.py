@@ -29,8 +29,6 @@ REAMDE_BADGES_END_DELIMITER = "<!--- End of README Badges (automated) --->"
 
 LOGGER = logging.getLogger("setup-builder")
 
-PATCH_WITHOUT_TAG_DEFAULT = True  # this is 'True'
-
 SEMANTIC_RELEASE_MAJOR = ["[major]"]
 SEMANTIC_RELEASE_MINOR = ["[minor]"]
 SEMANTIC_RELEASE_PATCH = ["[fix]", "[patch]"]
@@ -41,6 +39,28 @@ DEV_STATUS_BETA_0_Y_Z = "Development Status :: 4 - Beta"
 DEV_STATUS_PROD_X_Y_Z = "Development Status :: 5 - Production/Stable"
 
 PythonMinMax = Tuple[Tuple[int, int], Tuple[int, int]]
+
+
+@dataclasses.dataclass
+class GHAInput:
+    """The inputs passed from the client GitHub Action."""
+
+    # REQUIRED
+    python_min: Tuple[int, int]
+    keywords_spaced: str
+
+    # OPTIONAL (python)
+    python_max: Tuple[int, int] = semver_parser_tools.get_latest_py3_release()
+    # OPTIONAL (packaging)
+    package_dirs: list[str] = dataclasses.field(default_factory=list)
+    directory_exclude: list[str] = dataclasses.field(default_factory=list)
+    # OPTIONAL (releases)
+    pypi_name: str = ""
+    patch_without_tag: bool = True
+    # OPTIONAL (meta)
+    author: str = ""
+    author_email: str = ""
+    license: str = ""
 
 
 class GitHubAPI:
@@ -121,14 +141,8 @@ class BuilderSection(Section):
             return minor
 
         min_minor = get_py3_minor(self.python_min, "python_min")
-        if not self.python_max:
-            versions = (
-                (3, min_minor),
-                semver_parser_tools.get_latest_py3_release(),
-            )
-        else:
-            max_minor = get_py3_minor(self.python_max, "python_max")
-            versions = ((3, min_minor), (3, max_minor))
+        max_minor = get_py3_minor(self.python_max, "python_max")
+        versions = ((3, min_minor), (3, max_minor))
 
         return cast(PythonMinMax, tuple(sorted(versions)))
 
