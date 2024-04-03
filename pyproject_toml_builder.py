@@ -446,13 +446,12 @@ def _build_out_sections(
                 "requires-python": gha_input.python_requires(),
             }
         )
-
-    # [project.urls]
-    toml_dict["project.urls"] = dict(
-        Homepage=f"https://pypi.org/project/{gha_input.pypi_name}/",
-        Tracker=f"{gh_api.url}/issues",
-        Source=gh_api.url,
-    )
+        # [project.urls]
+        toml_dict["project.urls"] = dict(
+            Homepage=f"https://pypi.org/project/{gha_input.pypi_name}/",
+            Tracker=f"{gh_api.url}/issues",
+            Source=gh_api.url,
+        )
 
     # [tool.semantic_release] -- will be completely overridden
     toml_dict["tool.semantic_release"] = dict(
