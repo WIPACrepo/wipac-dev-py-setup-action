@@ -396,7 +396,7 @@ def _build_out_sections(
     if not toml_dict.get("project"):  # will only override some fields
         toml_dict["project"] = {}
     # always add these fields
-    toml_dict.update(
+    toml_dict["project"].update(
         {
             "find": {"namespaces": False},
             "version": (  # even if there are >1 packages, use just one (they're all the same)
