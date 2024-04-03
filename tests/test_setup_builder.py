@@ -1204,7 +1204,8 @@ def test_50_bumping(
             ],
         },
         **{
-            (
+            k: v
+            for k, v in (
                 VANILLA_SEMANTIC_RELEASE_SECTIONS
                 if patch_without_tag
                 else SEMANTIC_RELEASE_SECTIONS_NO_PATCH
