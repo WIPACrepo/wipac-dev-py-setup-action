@@ -8,6 +8,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+import dotty_dict
 import pytest
 import toml
 
@@ -149,7 +150,7 @@ def assert_outputted_pyproject_toml(
         print(actual)
 
     print()
-    assert expected == actual
+    assert dotty_dict.dotty(expected) == dotty_dict.dotty(actual)  # resolve dotted keys
 
 
 ################################################################################
