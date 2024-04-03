@@ -395,13 +395,18 @@ def _build_out_sections(
     # [project]
     if not toml_dict.get("project"):  # will only override some fields
         toml_dict["project"] = {}
-    meta_version_single = (  # even if there are >1 packages, use just one (they're all the same)
-        f"attr: {ffile.packages[0]}.__version__"  # "wipac_dev_tools.__version__"
+    # always add these fields
+    toml_dict.update(
+        {
+            "find": {"namespaces": False},
+            "version": (  # even if there are >1 packages, use just one (they're all the same)
+                f"attr: {ffile.packages[0]}.__version__"  # "wipac_dev_tools.__version__"
+            ),
+        }
     )
     # if we DON'T want PyPI stuff:
     if not gha_input.pypi_name:
         toml_dict["project"]["name"] = "_".join(ffile.packages).replace("_", "-")
-        toml_dict["project"]["version"] = meta_version_single
         if gha_input.author:
             toml_dict["project"]["author"] = gha_input.author
         if gha_input.author_email:
@@ -413,7 +418,6 @@ def _build_out_sections(
         toml_dict["project"].update(
             {
                 "name": gha_input.pypi_name,
-                "version": meta_version_single,
                 "url": gh_api.url,
                 "author": gha_input.author,
                 "author_email": gha_input.author_email,
