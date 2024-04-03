@@ -29,7 +29,11 @@ LOGGER = logging.getLogger("setup-builder")
 SEMANTIC_RELEASE_MAJOR = ["[major]"]
 SEMANTIC_RELEASE_MINOR = ["[minor]", "[feature]"]
 SEMANTIC_RELEASE_PATCH = ["[patch]", "[fix]"]
-PATCH_WITHOUT_TAG_WORKAROUND = [chr(i) for i in range(32, 127)]
+PATCH_WITHOUT_TAG_WORKAROUND = [
+    chr(i)
+    for i in range(32, 127)
+    if chr(i) not in ['"', ","]  # else upsets toml syntax
+]
 
 DEV_STATUS_PREALPHA_0_0_0 = "Development Status :: 2 - Pre-Alpha"
 DEV_STATUS_ALPHA_0_0_Z = "Development Status :: 3 - Alpha"

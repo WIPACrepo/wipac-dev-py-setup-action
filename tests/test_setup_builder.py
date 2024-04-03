@@ -78,7 +78,11 @@ VANILLA_SECTIONS_OUT = {
 }
 
 # allow patch releases without specified commit tags (patch_without_tag=True)
-PATCH_WITHOUT_TAG_WORKAROUND = [chr(i) for i in range(32, 127)]
+PATCH_WITHOUT_TAG_WORKAROUND = [
+    chr(i)
+    for i in range(32, 127)
+    if chr(i) not in ['"', ","]  # else upsets toml syntax
+]
 
 VANILLA_PROJECT_KEYVALS = {
     "name": "wipac-mock-package",
