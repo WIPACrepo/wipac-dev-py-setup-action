@@ -107,7 +107,7 @@ VANILLA_SEMANTIC_RELEASE_SECTIONS = {
         "commit_parser_options": {
             "major_tags": ["[major]"],
             "minor_tags": ["[minor]", "[feature]"],
-            "patch_tags": ["[patch]", "[fix]"] + PATCH_WITHOUT_TAG_WORKAROUND,
+            "patch_tags": ["[patch]", "[fix]"] + sorted(PATCH_WITHOUT_TAG_WORKAROUND),
         },
     }
 }

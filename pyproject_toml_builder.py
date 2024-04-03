@@ -451,7 +451,7 @@ def _build_out_sections(
             patch_tags=(
                 SEMANTIC_RELEASE_PATCH
                 if not gha_input.patch_without_tag
-                else SEMANTIC_RELEASE_PATCH + PATCH_WITHOUT_TAG_WORKAROUND
+                else SEMANTIC_RELEASE_PATCH + sorted(PATCH_WITHOUT_TAG_WORKAROUND)
             ),
         ),
     )
