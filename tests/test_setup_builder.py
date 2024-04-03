@@ -150,7 +150,8 @@ def assert_outputted_pyproject_toml(
         print(actual)
 
     print()
-    assert dotty_dict.dotty(expected) == dotty_dict.dotty(actual)  # resolve dotted keys
+    # resolve dotted keys for comparison
+    assert dotty_dict.dotty(expected).dictionary == dotty_dict.dotty(actual).dictionary
 
 
 ################################################################################
