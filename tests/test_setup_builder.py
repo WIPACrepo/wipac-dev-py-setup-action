@@ -430,8 +430,6 @@ def test_10_keywords(directory: str, requests_mock: Any) -> None:
                 "tracing",
                 "telemetry",
                 "3+ word string keywords",
-                "WIPAC",
-                "IceCube",
             ],
             "classifiers": [
                 "Development Status :: 5 - Production/Stable",
@@ -504,8 +502,6 @@ def test_20_python_max(directory: str, requests_mock: Any) -> None:
                 "OpenTelemetry",
                 "tracing",
                 "telemetry",
-                "WIPAC",
-                "IceCube",
             ],
             "classifiers": [
                 "Development Status :: 5 - Production/Stable",
@@ -589,8 +585,6 @@ def test_30_package_dirs__single(directory: str, requests_mock: Any) -> None:
                 "OpenTelemetry",
                 "tracing",
                 "telemetry",
-                "WIPAC",
-                "IceCube",
             ],
             "classifiers": [
                 "Development Status :: 5 - Production/Stable",
@@ -667,8 +661,6 @@ def test_34_package_dirs__multi_autoname(directory: str, requests_mock: Any) -> 
                 "OpenTelemetry",
                 "tracing",
                 "telemetry",
-                "WIPAC",
-                "IceCube",
             ],
         },
         **VANILLA_SEMANTIC_RELEASE_SECTIONS,
@@ -747,8 +739,6 @@ def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
                 "OpenTelemetry",
                 "tracing",
                 "telemetry",
-                "WIPAC",
-                "IceCube",
             ],
             "classifiers": [
                 "Development Status :: 5 - Production/Stable",
@@ -1011,8 +1001,6 @@ def test_40_extra_fields(directory: str, requests_mock: Any) -> None:
                 "OpenTelemetry",
                 "tracing",
                 "telemetry",
-                "WIPAC",
-                "IceCube",
             ],
             "classifiers": [
                 "Development Status :: 5 - Production/Stable",
