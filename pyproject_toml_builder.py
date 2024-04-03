@@ -432,12 +432,9 @@ def _build_out_sections(
 
     # [project.urls]
     toml_dict["project.urls"] = dict(
-        download_url=f"https://pypi.org/project/{gha_input.pypi_name}/",
-        project_urls=[
-            f"Tracker = {gh_api.url}/issues",
-            f"Source = {gh_api.url}",
-            # f"Documentation = {}",
-        ],
+        Homepage=f"https://pypi.org/project/{gha_input.pypi_name}/",
+        Tracker=f"{gh_api.url}/issues",
+        Source=gh_api.url,
     )
 
     # [tool.semantic_release] -- will be completely overridden
