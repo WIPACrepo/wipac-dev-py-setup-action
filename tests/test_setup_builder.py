@@ -138,9 +138,7 @@ VANILLA_PACKAGE_DATA_SECTION = {
     },
 }
 
-VANILLA_FIND_EXCLUDE_KEYVAL = {
-    "exclude": ["test", "tests", "doc", "docs", "resource", "resources"]
-}
+VANILLA_FIND_EXCLUDE_KEYVAL = {"exclude": DIRECTORY_EXCLUDE}
 
 
 ################################################################################
