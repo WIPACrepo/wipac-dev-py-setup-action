@@ -408,15 +408,13 @@ def _build_out_sections(
     }
 
     # [project]
-    if not toml_dict.get("project"):  # will only override some fields
+    if not toml_dict.get("project"):
         toml_dict["project"] = {}
     # always add these fields
     toml_dict["project"].update(
         {
             "find": {"namespaces": False},
-            "version": (  # even if there are >1 packages, use just one (they're all the same)
-                f"attr: {ffile.packages[0]}.__version__"  # "wipac_dev_tools.__version__"
-            ),
+            "version": toml_dict.get("project", {}).get("version", "0.0.0"),
         }
     )
     # if we DON'T want PyPI stuff:
@@ -496,10 +494,6 @@ def _build_out_sections(
     if ffile.readme_path.suffix == ".md":
         return READMEMarkdownManager(ffile, github_full_repo, gha_input, gh_api)
     return None
-
-
-class MissingSectionException(Exception):
-    """Raise when the wanted section is missing."""
 
 
 def write_toml(

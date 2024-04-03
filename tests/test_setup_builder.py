@@ -54,13 +54,14 @@ NONBUMPING_COMMIT_MESSAGE = "foo bar baz"
 
 VANILLA_SECTIONS_IN = {
     "project": {
+        "version": "1.2.3",
         "dependencies": [
             "pyjwt",
             "requests",
             "requests-futures",
             "tornado",
             "wipac-dev-tools",
-        ]
+        ],
     },
     "project.optional-dependencies": {
         "telemetry": [
@@ -95,7 +96,7 @@ PATCH_WITHOUT_TAG_WORKAROUND = [
 
 VANILLA_PROJECT_KEYVALS = {
     "name": "wipac-mock-package",
-    "version": "0.0.1",
+    "version": "1.2.3",
     "url": "https://github.com/foobarbaz-org/foobarbaz-repo",
     "author": AUTHOR,
     "author_email": AUTHOR_EMAIL,
