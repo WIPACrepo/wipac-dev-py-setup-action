@@ -74,7 +74,18 @@ class GHAInput:
     )
     # OPTIONAL (packaging)
     package_dirs: list[str] = dataclasses.field(default_factory=list)
-    directory_exclude: list[str] = dataclasses.field(default_factory=list)
+    directory_exclude: list[str] = dataclasses.field(
+        default_factory=lambda: [  # cannot use mutable type
+            "test",
+            "tests",
+            "doc",
+            "docs",
+            "resource",
+            "resources",
+            "example",
+            "examples",
+        ]
+    )
     # OPTIONAL (releases)
     pypi_name: str = ""
     patch_without_tag: bool = True
@@ -87,7 +98,7 @@ class GHAInput:
         if self.pypi_name:
             if not self.author or not self.author_email:
                 raise Exception(
-                    "'author' and 'author_email' must be provided when "
+                    "'author' and 'authorl_email' must be provided when "
                     "'pypi_name' is given"
                 )
         for major, attr_name in [
@@ -614,16 +625,7 @@ if __name__ == "__main__":
         nargs="*",
         type=str,
         help="List of directories to exclude from release, relative to the repository's root directory.",
-        default=[
-            "test",
-            "tests",
-            "doc",
-            "docs",
-            "resource",
-            "resources",
-            "example",
-            "examples",
-        ],
+        default=[],
     )
     # OPTIONAL (releases)
     parser.add_argument(
