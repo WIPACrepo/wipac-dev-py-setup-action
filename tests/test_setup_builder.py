@@ -135,14 +135,14 @@ def assert_outputted_pyproject_toml(
 ) -> None:
     """Compare each's contents casted to a dict."""
     print()
-    print("EXPECTED TOML OUTPUT:")
+    print("EXPECTED TOML OUTPUT (left):")
     print(pyproject_toml_out)
     expected = toml.loads(pyproject_toml_out)
 
     print()
-    print("ACTUAL TOML OUTPUT:")
+    print("ACTUAL TOML OUTPUT (right):")
     with open(pyproject_toml_path) as f:
-        actual = toml.load(f)
+        actual = toml.loads(f.read())  # splits out dotted keys
         print(actual)
 
     print()
