@@ -444,14 +444,14 @@ def _build_out_sections(
     toml_dict["tool.semantic_release"] = dict(
         version_toml=["pyproject.toml:project.version"],
         commit_parser="emoji",
-    )
-    toml_dict["tool.semantic_release.commit_parser_options"] = dict(
-        major_tags=SEMANTIC_RELEASE_MAJOR,
-        minor_tags=SEMANTIC_RELEASE_MINOR,
-        patch_tags=(
-            SEMANTIC_RELEASE_PATCH
-            if not gha_input.patch_without_tag
-            else SEMANTIC_RELEASE_PATCH + PATCH_WITHOUT_TAG_WORKAROUND
+        commit_parser_options=dict(
+            major_tags=SEMANTIC_RELEASE_MAJOR,
+            minor_tags=SEMANTIC_RELEASE_MINOR,
+            patch_tags=(
+                SEMANTIC_RELEASE_PATCH
+                if not gha_input.patch_without_tag
+                else SEMANTIC_RELEASE_PATCH + PATCH_WITHOUT_TAG_WORKAROUND
+            ),
         ),
     )
 
