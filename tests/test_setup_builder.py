@@ -31,7 +31,16 @@ GITHUB_FULL_REPO = "foobarbaz-org/foobarbaz-repo"
 AUTHOR = "WIPAC Developers"
 AUTHOR_EMAIL = "developers@icecube.wisc.edu"
 BASE_KEYWORDS = ["WIPAC", "IceCube"]
-DIRECTORY_EXCLUDE = ["test", "tests", "doc", "docs", "resource", "resources"]
+DIRECTORY_EXCLUDE = [
+    "test",
+    "tests",
+    "doc",
+    "docs",
+    "resource",
+    "resources",
+    "example",
+    "examples",
+]
 LICENSE = "MIT"
 TOKEN = "token"
 
