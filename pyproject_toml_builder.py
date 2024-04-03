@@ -466,15 +466,17 @@ def _build_out_sections(
             "exclude"
         ] = gha_input.directory_exclude
 
-    # [options.package_data]
-    if not toml_dict.get("options.package_data"):  # will only override some fields
-        toml_dict["options.package_data"] = {}
-    if "py.typed" not in toml_dict["options.package_data"].get("*", ""):
-        if not toml_dict["options.package_data"].get("*"):
+    # [tool.setuptools.package-data]
+    if not toml_dict.get(
+        "tool.setuptools.package-data"
+    ):  # will only override some fields
+        toml_dict["tool.setuptools.package-data"] = {}
+    if "py.typed" not in toml_dict["tool.setuptools.package-data"].get("*", ""):
+        if not toml_dict["tool.setuptools.package-data"].get("*"):
             star_data = "py.typed"
         else:  # append to existing list
-            star_data = f"py.typed, {toml_dict['options.package_data']['*']}"
-        toml_dict["options.package_data"]["*"] = star_data
+            star_data = f"py.typed, {toml_dict['tool.setuptools.package-data']['*']}"
+        toml_dict["tool.setuptools.package-data"]["*"] = star_data
 
     # Automate some README stuff
     if ffile.readme_path.suffix == ".md":
