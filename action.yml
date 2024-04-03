@@ -6,9 +6,6 @@ inputs:
   python_min:
     description: 'Minimum required Python version'
     required: true
-  keywords_spaced:
-    description: 'Space-separated list of keywords'
-    required: true
   # OPTIONAL (python)
   python_max:
     description: 'Maximum supported Python version. If not provided, the most recent Python version will be used.'
@@ -33,6 +30,10 @@ inputs:
     required: false
     default: 'True'
   # OPTIONAL (meta)
+  keywords_spaced:
+    description: 'Space-separated list of keywords'
+    required: false
+    default: ''
   author:
     description: 'Author of the package (required if the package is intended to be hosted on PyPI)'
     required: false

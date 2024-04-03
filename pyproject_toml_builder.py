@@ -66,7 +66,6 @@ class GHAInput:
 
     # REQUIRED
     python_min: tuple[int, int]
-    keywords: list[str]
 
     # OPTIONAL (python)
     python_max: tuple[int, int] = dataclasses.field(
@@ -90,15 +89,16 @@ class GHAInput:
     pypi_name: str = ""
     patch_without_tag: bool = True
     # OPTIONAL (meta)
+    keywords: list[str] = dataclasses.field(default_factory=list)
     author: str = ""
     author_email: str = ""
     license: str = "MIT"
 
     def __post_init__(self) -> None:
         if self.pypi_name:
-            if not self.author or not self.author_email:
+            if not self.keywords or not self.author or not self.author_email:
                 raise Exception(
-                    "'author' and 'authorl_email' must be provided when "
+                    "'keywords', 'author', and 'author_email' must be provided when "
                     "'pypi_name' is given"
                 )
         for major, attr_name in [
@@ -594,10 +594,10 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--keywords",
-        nargs="+",
+        nargs="*",
         type=str,
         help="Space-separated list of keywords",
-        required=True,
+        default=[],
     )
     # OPTIONAL (python)
     parser.add_argument(
