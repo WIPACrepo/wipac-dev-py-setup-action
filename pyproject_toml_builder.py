@@ -464,9 +464,8 @@ def _build_out_sections(
         ] = gha_input.directory_exclude
 
     # [tool.setuptools.package-data]
-    if not toml_dict.get(
-        "tool.setuptools.package-data"
-    ):  # will only override some fields
+    if not toml_dict.get("tool.setuptools.package-data"):
+        # will only override some fields
         toml_dict["tool.setuptools.package-data"] = {}
     if "py.typed" not in toml_dict["tool.setuptools.package-data"].get("*", ""):
         if not toml_dict["tool.setuptools.package-data"].get("*"):

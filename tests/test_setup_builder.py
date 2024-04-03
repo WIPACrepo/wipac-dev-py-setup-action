@@ -285,7 +285,7 @@ def test_00_minimum_section(directory: str, requests_mock: Any) -> None:
     gha_input = pyproject_toml_builder.GHAInput(
         pypi_name="wipac-mock-package",
         python_min=(3, 6),
-        keywords=[""],
+        keywords=[],
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
     )
@@ -393,7 +393,7 @@ def test_02_minimum_section_no_pypi_no_keywords_no_author(
 
     gha_input = pyproject_toml_builder.GHAInput(
         python_min=(3, 6),
-        keywords=[""],
+        keywords=[],
     )
 
     # write the original pyproject.toml
@@ -1176,7 +1176,7 @@ def test_50_bumping(
     gha_input = pyproject_toml_builder.GHAInput(
         pypi_name="wipac-mock-package",
         python_min=(3, 6),
-        keywords=[""],
+        keywords=[],
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
     )
