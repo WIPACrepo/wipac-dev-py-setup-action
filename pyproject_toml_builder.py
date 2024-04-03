@@ -470,10 +470,9 @@ def _build_out_sections(
         toml_dict["tool.setuptools.package-data"] = {}
     if "py.typed" not in toml_dict["tool.setuptools.package-data"].get("*", ""):
         if not toml_dict["tool.setuptools.package-data"].get("*"):
-            star_data = "py.typed"
+            toml_dict["tool.setuptools.package-data"]["*"] = ["py.typed"]
         else:  # append to existing list
-            star_data = f"py.typed, {toml_dict['tool.setuptools.package-data']['*']}"
-        toml_dict["tool.setuptools.package-data"]["*"] = star_data
+            toml_dict["tool.setuptools.package-data"]["*"].append("py.typed")
 
     # Automate some README stuff
     if ffile.readme_path.suffix == ".md":
