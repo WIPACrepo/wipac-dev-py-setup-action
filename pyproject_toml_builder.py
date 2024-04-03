@@ -77,7 +77,7 @@ class GHAInput:
     # OPTIONAL (meta)
     author: str = ""
     author_email: str = ""
-    license: str = ""
+    license: str = "MIT"
 
     def __post_init__(self) -> None:
         if self.pypi_name:
@@ -647,7 +647,7 @@ if __name__ == "__main__":
         "--license",
         type=str,
         help="Repository's license type",
-        default="MIT",
+        default="",
     )
 
     args = parser.parse_args()
