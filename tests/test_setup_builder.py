@@ -961,7 +961,7 @@ def test_40_extra_stuff(directory: str, requests_mock: Any) -> None:
 
     # write the original pyproject.toml
     with open(pyproject_toml_path, "w") as f:
-        extra_stuff: dict = copy.deepcopy(VANILLA_SECTIONS_IN)
+        extra_stuff: dict[str, Any] = copy.deepcopy(VANILLA_SECTIONS_IN)
         # extra fields
         extra_stuff["project"]["nickname"] = "the best python package around"
         extra_stuff["project"]["grocery_list"] = ["apple", "banana", "pumpkin"]
