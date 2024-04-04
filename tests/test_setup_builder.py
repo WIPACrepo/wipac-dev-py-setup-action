@@ -935,8 +935,8 @@ def test_38_package_dirs__multi_mismatch_version__error(
         )
 
 
-def test_40_extra_fields(directory: str, requests_mock: Any) -> None:
-    """Test using  extra stuff."""
+def test_40_extra_stuff(directory: str, requests_mock: Any) -> None:
+    """Test using extra stuff."""
     mock_many_requests(requests_mock)
 
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
@@ -959,29 +959,14 @@ def test_40_extra_fields(directory: str, requests_mock: Any) -> None:
 
     # write the original pyproject.toml
     with open(pyproject_toml_path, "w") as f:
-        toml.dump(
-            {
-                "project": {
-                    "nickname": "the best python package around",
-                    "grocery_list": ["apple", "banana", "pumpkin"],
-                },
-                "options": {
-                    "install_requires": [
-                        "pyjwt",
-                        "requests",
-                        "requests-futures",
-                        "tornado",
-                        "wipac-dev-tools",
-                    ],
-                    "heres_an_obviously_extra_field": "it's very obvious, isn't it",
-                    "foo_bar_baz_foo_bar_baz_foo_bar_baz": ["foo!", "bar!", "baz!"],
-                },
-                "options.extras_require": {
-                    "telemetry": ["wipac-telemetry"],
-                },
-            },
-            f,
-        )
+        extra_stuff = copy.deepcopy(VANILLA_SECTIONS_IN)
+        # extra fields
+        extra_stuff["project"]["nickname"] = "the best python package around"
+        extra_stuff["project"]["grocery_list"] = ["apple", "banana", "pumpkin"]
+        # extra sections
+        extra_stuff["baz"] = {"a": 11}
+        extra_stuff["foo.bar"] = {"b": 22}
+        toml.dump(extra_stuff, f)
 
     pyproject_toml_expected = {
         "project": {
@@ -1010,30 +995,14 @@ def test_40_extra_fields(directory: str, requests_mock: Any) -> None:
             ],
         },
         **VANILLA_SEMANTIC_RELEASE_SECTIONS,
-        "options": {
-            "install_requires": [
-                "pyjwt",
-                "requests",
-                "requests-futures",
-                "tornado",
-                "wipac-dev-tools",
-            ],
-            "heres_an_obviously_extra_field": "it's very obvious, isn't it",
-            "foo_bar_baz_foo_bar_baz_foo_bar_baz": [
-                "foo!",
-                "bar!",
-                "baz!",
-            ],
-            "requires-python": ">=3.6, <3.12",
-            "packages": "find:",
+        **VANILLA_SECTIONS_OUT,
+        **VANILLA_PACKAGE_DATA_SECTION,
+        "tool.setuptools.packages.find": {
+            **VANILLA_FIND_EXCLUDE_KEYVAL,
         },
-        "options.extras_require": {
-            "telemetry": ["wipac-telemetry"],
-            **VANILLA_PACKAGE_DATA_SECTION,
-            "tool.setuptools.packages.find": {
-                **VANILLA_FIND_EXCLUDE_KEYVAL,
-            },
-        },
+        # the extra sections
+        "baz": extra_stuff["baz"],
+        "foo.bar": extra_stuff["foo.bar"],
     }
 
     # run pyproject_toml_builder

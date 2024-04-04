@@ -20,7 +20,7 @@ jobs:
           python-version: '3.12'
       - uses: WIPACrepo/wipac-dev-mypy-action@v1.2
 
-  setup_builder:
+  test:
     runs-on: ubuntu-latest
     env:
       PY_COLORS: "1"
