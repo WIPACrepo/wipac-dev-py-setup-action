@@ -16,7 +16,7 @@ inputs:
     description: "Space-separated list of directories to release. If not provided, all packages in the repository's root directory will be used."
     required: false
     default: ''
-  directory-exclude:
+  directory_exclude:
     description: "Space-separated list of directories to exclude from release, relative to the repository's root directory."
     required: false
     default: 'test tests doc docs resource resources example examples'

@@ -132,17 +132,6 @@ class GHAInput:
         ]
 
 
-def long_description_content_type(readme_path: Path) -> str:
-    """Return the long_description_content_type for the given file extension."""
-    match readme_path.suffix:
-        case ".md":
-            return "text/markdown"
-        case ".rst":
-            return "text/x-rst"
-        case _:
-            return "text/plain"
-
-
 class FromFiles:
     """Get things that require reading files."""
 
