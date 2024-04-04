@@ -420,6 +420,7 @@ def _build_out_sections(
     # if we DON'T want PyPI stuff:
     if not gha_input.pypi_name:
         toml_dict["project"]["name"] = "_".join(ffile.packages).replace("_", "-")
+        # add the following if they were given:
         if gha_input.author:
             toml_dict["project"]["author"] = gha_input.author
         if gha_input.author_email:
