@@ -1,5 +1,4 @@
 flake8
-dotty-dict
 mypy
 pytest
 requests-mock
