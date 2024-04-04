@@ -99,7 +99,7 @@ class GHAInput:
             if not self.keywords or not self.author or not self.author_email:
                 raise Exception(
                     "'keywords', 'author', and 'author_email' must be provided when "
-                    "'pypi_name' is given"
+                    "'pypi_name' is `True`"
                 )
         for major, attr_name in [
             (self.python_min[0], "python_min"),
