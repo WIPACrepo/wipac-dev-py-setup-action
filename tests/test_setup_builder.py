@@ -1127,7 +1127,7 @@ def test_50_bumping(
                 VANILLA_SEMANTIC_RELEASE_SECTIONS
                 if patch_without_tag
                 else SEMANTIC_RELEASE_SECTIONS_NO_PATCH
-            )
+            ).items()
         },
         **VANILLA_SECTIONS_OUT,
         **VANILLA_PACKAGE_DATA_SECTION,
