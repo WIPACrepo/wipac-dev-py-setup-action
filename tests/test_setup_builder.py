@@ -134,10 +134,12 @@ VANILLA_SEMANTIC_RELEASE_SECTIONS = {
 }
 
 SEMANTIC_RELEASE_SECTIONS_NO_PATCH = copy.deepcopy(VANILLA_SEMANTIC_RELEASE_SECTIONS)
-for entry in PATCH_WITHOUT_TAG_WORKAROUND:
-    SEMANTIC_RELEASE_SECTIONS_NO_PATCH["tool.semantic_release"][
-        "commit_parser_options"
-    ]["patch_tags"].remove(entry)
+for tag in PATCH_WITHOUT_TAG_WORKAROUND:
+    # fmt: off
+    SEMANTIC_RELEASE_SECTIONS_NO_PATCH["tool.semantic_release"]["commit_parser_options"]["patch_tags"].remove(
+        tag
+    )  # type: ignore[index]
+    # fmt: on
 assert VANILLA_SEMANTIC_RELEASE_SECTIONS != SEMANTIC_RELEASE_SECTIONS_NO_PATCH
 
 VANILLA_PACKAGE_DATA_SECTION = {
@@ -959,7 +961,7 @@ def test_40_extra_stuff(directory: str, requests_mock: Any) -> None:
 
     # write the original pyproject.toml
     with open(pyproject_toml_path, "w") as f:
-        extra_stuff = copy.deepcopy(VANILLA_SECTIONS_IN)
+        extra_stuff: dict = copy.deepcopy(VANILLA_SECTIONS_IN)
         # extra fields
         extra_stuff["project"]["nickname"] = "the best python package around"
         extra_stuff["project"]["grocery_list"] = ["apple", "banana", "pumpkin"]
