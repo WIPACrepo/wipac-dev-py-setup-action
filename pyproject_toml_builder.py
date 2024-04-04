@@ -11,6 +11,7 @@ import re
 from pathlib import Path
 from typing import Iterator, cast
 
+import dotty_dict
 import requests
 import toml
 from wipac_dev_tools import (
@@ -382,14 +383,14 @@ class READMEMarkdownManager:
 
 
 def _build_out_sections(
-    toml_dict: dict,
+    toml_dotty: dotty_dict.Dotty,
     root_path: Path,
     github_full_repo: str,
     token: str,
     commit_message: str,
     gha_input: GHAInput,
 ) -> READMEMarkdownManager | None:
-    """Build out the `[project]`, `[semantic_release]`, and `[options]` sections in `toml_dict`.
+    """Build out the `[project]`, `[semantic_release]`, and `[options]` sections in `toml_dotty`.
 
     Return a 'READMEMarkdownManager' instance to write out. If, necessary.
     """
@@ -402,33 +403,33 @@ def _build_out_sections(
     gh_api = GitHubAPI(github_full_repo, oauth_token=token)
 
     # [build-system]
-    toml_dict["build-system"] = {
+    toml_dotty["build-system"] = {
         "requires": ["setuptools>=61.0"],
         "build-backend": "setuptools.build_meta",
     }
 
     # [project]
-    if not toml_dict.get("project"):
-        toml_dict["project"] = {}
+    if not toml_dotty.get("project"):
+        toml_dotty["project"] = {}
     # always add these fields
-    toml_dict["project"].update(
+    toml_dotty["project"].update(
         {
             "find": {"namespaces": False},
-            "version": toml_dict.get("project", {}).get("version", "0.0.0"),
+            "version": toml_dotty.get("project", {}).get("version", "0.0.0"),
         }
     )
     # if we DON'T want PyPI stuff:
     if not gha_input.pypi_name:
-        toml_dict["project"]["name"] = "_".join(ffile.packages).replace("_", "-")
+        toml_dotty["project"]["name"] = "_".join(ffile.packages).replace("_", "-")
         if gha_input.author:
-            toml_dict["project"]["author"] = gha_input.author
+            toml_dotty["project"]["author"] = gha_input.author
         if gha_input.author_email:
-            toml_dict["project"]["author_email"] = gha_input.author_email
+            toml_dotty["project"]["author_email"] = gha_input.author_email
         if gha_input.keywords:
-            toml_dict["project"]["keywords"] = gha_input.keywords
+            toml_dotty["project"]["keywords"] = gha_input.keywords
     # if we DO want PyPI, then include everything:
     else:
-        toml_dict["project"].update(
+        toml_dotty["project"].update(
             {
                 "name": gha_input.pypi_name,
                 "url": gh_api.url,
@@ -447,14 +448,14 @@ def _build_out_sections(
             }
         )
         # [project.urls]
-        toml_dict["project.urls"] = dict(
+        toml_dotty["project.urls"] = dict(
             Homepage=f"https://pypi.org/project/{gha_input.pypi_name}/",
             Tracker=f"{gh_api.url}/issues",
             Source=gh_api.url,
         )
 
     # [tool.semantic_release] -- will be completely overridden
-    toml_dict["tool.semantic_release"] = dict(
+    toml_dotty["tool.semantic_release"] = dict(
         version_toml=["pyproject.toml:project.version"],
         commit_parser="emoji",
         commit_parser_options=dict(
@@ -469,25 +470,25 @@ def _build_out_sections(
     )
 
     # [tool.setuptools.packages.find]
-    toml_dict["tool.setuptools.packages.find"] = {}
+    toml_dotty["tool.setuptools.packages.find"] = {}
     if gha_input.package_dirs:
-        toml_dict["tool.setuptools.packages.find"]["include"] = (
+        toml_dotty["tool.setuptools.packages.find"]["include"] = (
             gha_input.package_dirs + [f"{p}.*" for p in gha_input.package_dirs]
         )
     if gha_input.directory_exclude:
-        toml_dict["tool.setuptools.packages.find"][
+        toml_dotty["tool.setuptools.packages.find"][
             "exclude"
         ] = gha_input.directory_exclude
 
     # [tool.setuptools.package-data]
-    if not toml_dict.get("tool.setuptools.package-data"):
+    if not toml_dotty.get("tool.setuptools.package-data"):
         # will only override some fields
-        toml_dict["tool.setuptools.package-data"] = {}
-    if "py.typed" not in toml_dict["tool.setuptools.package-data"].get("*", ""):
-        if not toml_dict["tool.setuptools.package-data"].get("*"):
-            toml_dict["tool.setuptools.package-data"]["*"] = ["py.typed"]
+        toml_dotty["tool.setuptools.package-data"] = {}
+    if "py.typed" not in toml_dotty["tool.setuptools.package-data"].get("*", ""):
+        if not toml_dotty["tool.setuptools.package-data"].get("*"):
+            toml_dotty["tool.setuptools.package-data"]["*"] = ["py.typed"]
         else:  # append to existing list
-            toml_dict["tool.setuptools.package-data"]["*"].append("py.typed")
+            toml_dotty["tool.setuptools.package-data"]["*"].append("py.typed")
 
     # Automate some README stuff
     if ffile.readme_path.suffix == ".md":
@@ -507,10 +508,10 @@ def write_toml(
     Return a 'READMEMarkdownManager' instance to write out. If, necessary.
     """
     with open(toml_file.resolve(), "r") as f:
-        toml_dict = toml.load(f)
+        toml_dotty = dotty_dict.Dotty(toml.load(f))
 
     readme_mgr = _build_out_sections(
-        toml_dict,
+        toml_dotty,
         toml_file.parent,
         github_full_repo,
         token,
@@ -519,7 +520,7 @@ def write_toml(
     )
 
     with open(toml_file, "w") as f:
-        toml.dump(toml_dict, f)
+        toml.dump(toml_dotty.to_dict(), f)
 
     return readme_mgr
 
