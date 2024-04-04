@@ -136,9 +136,7 @@ VANILLA_SEMANTIC_RELEASE_SECTIONS = {
 SEMANTIC_RELEASE_SECTIONS_NO_PATCH = copy.deepcopy(VANILLA_SEMANTIC_RELEASE_SECTIONS)
 for tag in PATCH_WITHOUT_TAG_WORKAROUND:
     # fmt: off
-    SEMANTIC_RELEASE_SECTIONS_NO_PATCH["tool.semantic_release"]["commit_parser_options"]["patch_tags"].remove(
-        tag
-    )  # type: ignore[index]
+    SEMANTIC_RELEASE_SECTIONS_NO_PATCH["tool.semantic_release"]["commit_parser_options"]["patch_tags"].remove(tag)  # type: ignore[index]
     # fmt: on
 assert VANILLA_SEMANTIC_RELEASE_SECTIONS != SEMANTIC_RELEASE_SECTIONS_NO_PATCH
 
