@@ -1,2 +1,3 @@
+dacite
 wipac-dev-tools[semver]
 toml
