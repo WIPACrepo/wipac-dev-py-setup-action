@@ -656,11 +656,12 @@ if __name__ == "__main__":
         args.token,
         args.commit_message,
         GHAInput(
+            python_min=args.python_min,
             **{
                 k: v
                 for k, v in vars(args).items()
                 # use arg if it has non-falsy value -- otherwise, use default
                 if k in dataclasses.fields(GHAInput) and v
-            }
+            },
         ),
     )
