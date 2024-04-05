@@ -11,7 +11,6 @@ import re
 from pathlib import Path
 from typing import Iterator, cast
 
-import dacite
 import requests
 import toml
 from wipac_dev_tools import (
@@ -656,13 +655,12 @@ if __name__ == "__main__":
         args.github_full_repo,
         args.token,
         args.commit_message,
-        dacite.from_dict(
-            GHAInput,
-            {
+        GHAInput(
+            **{
                 k: v
                 for k, v in vars(args).items()
                 # use arg if it has non-falsy value -- otherwise, use default
                 if k in dataclasses.fields(GHAInput) and v
-            },
+            }
         ),
     )
