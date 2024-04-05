@@ -650,7 +650,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     logging_tools.log_argparse_args(args, logger=LOGGER, level="WARNING")
-
+    print(args)
     main(
         args.toml,
         args.github_full_repo,
