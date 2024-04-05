@@ -553,6 +553,7 @@ if __name__ == "__main__":
             Path(x).name == "pyproject.toml",
             ValueError("toml file needs to be named 'pyproject.toml'"),
         ),
+        required=True,
         help="path to the 'pyproject.toml' file",
     )
     parser.add_argument(
@@ -562,6 +563,7 @@ if __name__ == "__main__":
             bool(re.match(r"(\w|-)+/(\w|-)+$", x)),
             ValueError("Not a valid GitHub repo"),
         ),
+        required=True,
         help="Fully-named GitHub repo, ex: WIPACrepo/wipac-dev-tools",
     )
     parser.add_argument(
@@ -582,13 +584,6 @@ if __name__ == "__main__":
         type=str,
         help="Minimum required Python version",
         required=True,
-    )
-    parser.add_argument(
-        "--keywords",
-        nargs="*",
-        type=str,
-        help="Space-separated list of keywords",
-        default=[],
     )
     # OPTIONAL (python)
     parser.add_argument(
@@ -626,6 +621,13 @@ if __name__ == "__main__":
         default=True,
     )
     # OPTIONAL (meta)
+    parser.add_argument(
+        "--keywords",
+        nargs="*",
+        type=str,
+        help="Space-separated list of keywords",
+        default=[],
+    )
     parser.add_argument(
         "--author",
         type=str,
