@@ -133,9 +133,9 @@ runs:
           --token ${{ github.token }} \
           --commit-message "$HEAD_COMMIT_MESSAGE" \
           --python-min "${{ inputs.python_min }}" \
-          --package-dirs ${{ inputs.package_dirs }} \  
           --keywords ${{ inputs.keywords }} \ 
           --python-max "${{ inputs.python_max }}" \
+          --package-dirs ${{ inputs.package_dirs }} \  
           --exclude-dirs ${{ inputs.exclude_dirs }} \  
           --pypi-name "${{ inputs.pypi_name }}" \
           --patch-without-tag "${{ inputs.patch_without_tag }}" \
