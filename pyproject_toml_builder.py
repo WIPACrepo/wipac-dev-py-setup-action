@@ -496,8 +496,12 @@ def write_toml(
 
     Return a 'READMEMarkdownManager' instance to write out. If, necessary.
     """
-    with open(toml_file.resolve(), "r") as f:
-        toml_dict = toml.load(f)
+    toml_file = toml_file.resolve()
+    if toml_file.exists():
+        with open(toml_file, "r") as f:
+            toml_dict = toml.load(f)
+    else:
+        toml_dict = {}
 
     readme_mgr = _build_out_sections(
         toml_dict,
@@ -548,8 +552,8 @@ if __name__ == "__main__":
         "toml_file",
         type=lambda x: argparse_tools.validate_arg(
             Path(x),
-            Path(x).name == "pyproject.toml" and Path(x).exists(),
-            FileNotFoundError("pyproject.toml"),
+            Path(x).name == "pyproject.toml",
+            ValueError("toml file needs to be named 'pyproject.toml'"),
         ),
         help="path to the 'pyproject.toml' file",
     )
