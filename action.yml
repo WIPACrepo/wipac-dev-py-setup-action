@@ -128,8 +128,8 @@ runs:
         set -x
         # NOTE: when an arg is a list, don't quote it
         python3 ${{ github.action_path }}/pyproject_toml_builder.py \
-          pyproject.toml \
-          $GITHUB_REPOSITORY \
+          --toml pyproject.toml \
+          --github-full-repo $GITHUB_REPOSITORY \
           --token ${{ github.token }} \
           --commit-message "$HEAD_COMMIT_MESSAGE" \
           --python-min "${{ inputs.python_min }}" \

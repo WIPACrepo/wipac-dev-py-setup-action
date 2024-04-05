@@ -547,7 +547,7 @@ if __name__ == "__main__":
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
-        "toml",
+        "--toml",
         type=lambda x: argparse_tools.validate_arg(
             Path(x),
             Path(x).name == "pyproject.toml",
@@ -557,7 +557,7 @@ if __name__ == "__main__":
         help="path to the 'pyproject.toml' file",
     )
     parser.add_argument(
-        "github_full_repo",
+        "--github-full-repo",
         type=lambda x: argparse_tools.validate_arg(
             x,
             bool(re.match(r"(\w|-)+/(\w|-)+$", x)),
@@ -582,69 +582,69 @@ if __name__ == "__main__":
     parser.add_argument(
         "--python-min",
         type=str,
-        help="Minimum required Python version",
         required=True,
+        help="Minimum required Python version",
     )
     # OPTIONAL (python)
     parser.add_argument(
         "--python-max",
         type=str,
-        help="Maximum supported Python version. If not provided, the most recent Python version will be used.",
         default="",
+        help="Maximum supported Python version. If not provided, the most recent Python version will be used.",
     )
     # OPTIONAL (packaging)
     parser.add_argument(
         "--package-dirs",
         nargs="*",
         type=str,
-        help="List of directories to release. If not provided, all packages in the repository's root directory will be used.",
         default=[],
+        help="List of directories to release. If not provided, all packages in the repository's root directory will be used.",
     )
     parser.add_argument(
         "--exclude-dirs",
         nargs="*",
         type=str,
-        help="List of directories to exclude from release, relative to the repository's root directory.",
         default=[],
+        help="List of directories to exclude from release, relative to the repository's root directory.",
     )
     # OPTIONAL (releases)
     parser.add_argument(
         "--pypi-name",
         type=str,
-        help="Name of the PyPI package",
         default="",
+        help="Name of the PyPI package",
     )
     parser.add_argument(
         "--patch-without-tag",
         type=bool,
-        help="Whether to make a patch release even if the commit message does not explicitly warrant one",
         default=True,
+        help="Whether to make a patch release even if the commit message does not explicitly warrant one",
     )
     # OPTIONAL (meta)
     parser.add_argument(
         "--keywords",
         nargs="*",
         type=str,
-        help="Space-separated list of keywords",
         default=[],
+        help="Space-separated list of keywords",
     )
     parser.add_argument(
         "--author",
         type=str,
-        help="Author of the package (required if the package is intended to be hosted on PyPI)",
         default="",
+        help="Author of the package (required if the package is intended to be hosted on PyPI)",
     )
     parser.add_argument(
         "--author-email",
         type=str,
-        help="Email of the package author (required if the package is intended to be hosted on PyPI)",
         default="",
+        help="Email of the package author (required if the package is intended to be hosted on PyPI)",
     )
     parser.add_argument(
         "--license",
         type=str,
-        help="Repository's license type",
         default="",
+        help="Repository's license type",
     )
 
     args = parser.parse_args()
