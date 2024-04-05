@@ -125,6 +125,7 @@ runs:
         )
         
         # Build!
+        set -x
         python3 ${{ github.action_path }}/pyproject_toml_builder.py \
           pyproject.toml \
           $GITHUB_REPOSITORY \
@@ -140,6 +141,7 @@ runs:
           --author "${{ inputs.author }}" \
           --author-email "${{ inputs.author_email }}" \
           --license "${{ inputs.license }}"
+        set +x
         
         cat pyproject.toml
         # Commits
