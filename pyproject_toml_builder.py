@@ -73,7 +73,7 @@ class GHAInput:
     )
     # OPTIONAL (packaging)
     package_dirs: list[str] = dataclasses.field(default_factory=list)
-    directory_exclude: list[str] = dataclasses.field(
+    exclude_dirs: list[str] = dataclasses.field(
         default_factory=lambda: [  # cannot use mutable type
             "test",
             "tests",
@@ -196,7 +196,7 @@ class FromFiles:
                     f"Either "
                     f"[1] list *all* your desired packages in your pyproject.toml's 'package_dirs', "
                     f"[2] remove the extra __init__.py file(s), "
-                    f"or [3] list which packages to ignore in your GitHub Action step's 'with.directory-exclude'."
+                    f"or [3] list which packages to ignore in your GitHub Action step's 'with.exclude-dirs'."
                 )
             return [self.root / available_pkgs[0]]
 
@@ -385,7 +385,7 @@ def _build_out_sections(
     ffile = FromFiles(  # things requiring reading files
         root_path,
         gha_input,
-        gha_input.directory_exclude,
+        gha_input.exclude_dirs,
         commit_message,
     )
     gh_api = GitHubAPI(github_full_repo, oauth_token=token)
@@ -464,10 +464,8 @@ def _build_out_sections(
         toml_dict["tool.setuptools.packages.find"]["include"] = (
             gha_input.package_dirs + [f"{p}.*" for p in gha_input.package_dirs]
         )
-    if gha_input.directory_exclude:
-        toml_dict["tool.setuptools.packages.find"][
-            "exclude"
-        ] = gha_input.directory_exclude
+    if gha_input.exclude_dirs:
+        toml_dict["tool.setuptools.packages.find"]["exclude"] = gha_input.exclude_dirs
 
     # [tool.setuptools.package-data]
     if not toml_dict.get("tool.setuptools.package-data"):
@@ -608,7 +606,7 @@ if __name__ == "__main__":
         default=[],
     )
     parser.add_argument(
-        "--directory-exclude",
+        "--exclude-dirs",
         nargs="*",
         type=str,
         help="List of directories to exclude from release, relative to the repository's root directory.",

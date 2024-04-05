@@ -31,7 +31,7 @@ GITHUB_FULL_REPO = "foobarbaz-org/foobarbaz-repo"
 AUTHOR = "WIPAC Developers"
 AUTHOR_EMAIL = "developers@icecube.wisc.edu"
 BASE_KEYWORDS = ["WIPAC", "IceCube"]
-DIRECTORY_EXCLUDE = [
+EXCLUDE_DIRS = [
     "test",
     "tests",
     "doc",
@@ -146,7 +146,7 @@ VANILLA_PACKAGE_DATA_SECTION = {
     },
 }
 
-VANILLA_FIND_EXCLUDE_KEYVAL = {"exclude": DIRECTORY_EXCLUDE}
+VANILLA_FIND_EXCLUDE_KEYVAL = {"exclude": EXCLUDE_DIRS}
 
 
 ################################################################################
