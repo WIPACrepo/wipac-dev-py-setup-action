@@ -120,9 +120,11 @@ runs:
         python3 ${{ github.action_path }}/pyproject_toml_builder.py \
           pyproject.toml \
           $GITHUB_REPOSITORY \
+          # required 
           --token ${{ github.token }} \
-          --commit-message "$HEAD_COMMIT_MESSAGE"
+          --commit-message "$HEAD_COMMIT_MESSAGE" \
           --python-min ${{ inputs.python_min }} \
+          # optionals
           --keywords ${{ inputs.keywords }} \
           --python-max ${{ inputs.python_max }} \
           --package-dirs ${{ inputs.package_dirs }} \
