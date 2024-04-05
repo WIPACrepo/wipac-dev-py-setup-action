@@ -547,7 +547,7 @@ if __name__ == "__main__":
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
-        "toml_file",
+        "toml",
         type=lambda x: argparse_tools.validate_arg(
             Path(x),
             Path(x).name == "pyproject.toml",

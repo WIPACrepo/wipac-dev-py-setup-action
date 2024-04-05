@@ -126,16 +126,17 @@ runs:
         
         # Build!
         set -x
+        # NOTE: when an arg is a list, don't quote it
         python3 ${{ github.action_path }}/pyproject_toml_builder.py \
           pyproject.toml \
           $GITHUB_REPOSITORY \
           --token ${{ github.token }} \
           --commit-message "$HEAD_COMMIT_MESSAGE" \
           --python-min "${{ inputs.python_min }}" \
-          --keywords ${{ inputs.keywords }} \  # its a list, so no quotes
+          --keywords ${{ inputs.keywords }} \ 
           --python-max "${{ inputs.python_max }}" \
-          --package-dirs ${{ inputs.package_dirs }} \  # its a list, so no quotes
-          --exclude-dirs ${{ inputs.exclude_dirs }} \  # its a list, so no quotes
+          --package-dirs ${{ inputs.package_dirs }} \  
+          --exclude-dirs ${{ inputs.exclude_dirs }} \  
           --pypi-name "${{ inputs.pypi_name }}" \
           --patch-without-tag "${{ inputs.patch_without_tag }}" \
           --author "${{ inputs.author }}" \
