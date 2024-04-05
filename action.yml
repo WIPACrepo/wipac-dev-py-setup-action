@@ -5,7 +5,7 @@ inputs:
   # REQUIRED
   python_min:
     description: 'Minimum required Python version'
-    required: true
+    required: true  # needs to be explicitly checked
   # OPTIONAL (python)
   python_max:
     description: 'Maximum supported Python version. If not provided, the most recent Python version will be used.'
@@ -64,6 +64,14 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: check required inputs
+      run: |
+        if [ -z "${{ inputs.python_min }}" ]; then
+          echo "required input not provided: python_min"
+          exit 1
+        fi
+      shell: bash
+
     - uses: actions/setup-python@v4
       with:
         python-version: '3.11'  # NOTE: update, someday. Also tests.yml
