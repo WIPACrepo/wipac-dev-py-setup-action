@@ -96,25 +96,25 @@ class GHAInput:
     author_email: str = ""
     license: str = "MIT"
 
-    # def __post_init__(self) -> None:
-    #     if self.pypi_name:
-    #         if not self.keywords or not self.author or not self.author_email:
-    #             raise Exception(
-    #                 "'keywords', 'author', and 'author_email' must be provided when "
-    #                 "'pypi_name' is `True`"
-    #             )
-    #     for major, attr_name in [
-    #         (self.python_min[0], "python_min"),
-    #         (self.python_max[0], "python_max"),
-    #     ]:
-    #         if major < 3:
-    #             raise Exception(
-    #                 f"Python-release automation ('{attr_name}') does not work for python <3."
-    #             )
-    #         elif major >= 4:
-    #             raise Exception(
-    #                 f"Python-release automation ('{attr_name}') does not work for python 4+."
-    #             )
+    def __post_init__(self) -> None:
+        if self.pypi_name:
+            if not self.keywords or not self.author or not self.author_email:
+                raise Exception(
+                    "'keywords', 'author', and 'author_email' must be provided when "
+                    "'pypi_name' is `True`"
+                )
+        for major, attr_name in [
+            (self.python_min[0], "python_min"),
+            (self.python_max[0], "python_max"),
+        ]:
+            if major < 3:
+                raise Exception(
+                    f"Python-release automation ('{attr_name}') does not work for python <3."
+                )
+            elif major >= 4:
+                raise Exception(
+                    f"Python-release automation ('{attr_name}') does not work for python 4+."
+                )
 
     def python_requires(self) -> str:
         """Get a `[project]/python_requires` string from `self.python_range`.
