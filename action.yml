@@ -116,7 +116,7 @@ runs:
         EOF
         )
         # Build!
-        python3 ${{ github.action_path }}/setup_builder.py \
+        python3 ${{ github.action_path }}/pyproject_toml_builder.py \
           setup.cfg \
           $GITHUB_REPOSITORY \
           --base-keywords ${{ inputs.base-keywords }} \
