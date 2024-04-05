@@ -13,6 +13,7 @@ from typing import Iterator, cast
 
 import requests
 import toml
+import typeguard
 from wipac_dev_tools import (
     argparse_tools,
     logging_tools,
@@ -60,6 +61,7 @@ class GitHubAPI:
         self.description = cast(str, _json["description"])
 
 
+@typeguard.typechecked
 @dataclasses.dataclass
 class GHAInput:
     """The inputs passed from the client GitHub Action."""
@@ -656,7 +658,9 @@ if __name__ == "__main__":
         args.token,
         args.commit_message,
         GHAInput(
+            # positionals (requireds):
             python_min=args.python_min,
+            # optionals:
             **{
                 k: v
                 for k, v in vars(args).items()
