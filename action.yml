@@ -150,6 +150,8 @@ runs:
         git commit -m "<bot> update pyproject.toml" || true
         git add README.md || true
         git commit -m "<bot> update README.md" || true
+        
+        exit 1
       shell: bash
 
     - name: Add py.typed file(s) (and commit)
