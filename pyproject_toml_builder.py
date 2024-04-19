@@ -628,7 +628,7 @@ def main() -> None:
 
     gha_input = GHAInput(
         **{
-            k: v
+            k: True
             for k, v in vars(args).items()
             # use arg if it has non-falsy value -- otherwise, use default
             if v and (k in [f.name for f in dataclasses.fields(GHAInput)])
