@@ -639,11 +639,11 @@ def main() -> None:
     )
     LOGGER.info(gha_input)
 
-    commit_message = subprocess.run(
-        "git log -1 --pretty=%B".split(),
-        check=True,
-        text=True,
-    ).stdout
+    commit_message = (
+        subprocess.check_output("git log -1 --pretty=%B".split())
+        .decode("utf-8")
+        .strip()
+    )
     LOGGER.info(f"{commit_message=}")
 
     # build & write the pyproject.toml
