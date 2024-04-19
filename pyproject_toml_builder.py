@@ -8,6 +8,7 @@ import dataclasses
 import logging
 import os
 import re
+import subprocess
 from pathlib import Path
 from typing import Iterator, cast
 
@@ -550,11 +551,6 @@ def main() -> None:
         required=True,
         help="An OAuth2 token, usually GITHUB_TOKEN",
     )
-    parser.add_argument(
-        "--commit-message",
-        required=True,
-        help="the current commit message -- used for extracting versioning info",
-    )
 
     # From Client GitHub Action Input
     # REQUIRED
@@ -643,12 +639,19 @@ def main() -> None:
     )
     LOGGER.info(gha_input)
 
+    commit_message = subprocess.run(
+        "git log -1 --pretty=%B".split(),
+        check=True,
+        text=True,
+    ).stdout
+    LOGGER.info(f"{commit_message=}")
+
     # build & write the pyproject.toml
     readme_mgr = write_toml(
         args.toml,
         args.github_full_repo,
         args.token,
-        args.commit_message,
+        commit_message,
         gha_input,
     )
 
