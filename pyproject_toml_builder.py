@@ -650,7 +650,8 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    logging_tools.log_argparse_args(args, logger=LOGGER, level="WARNING")
+    logging_tools.set_level("DEBUG", LOGGER)
+    logging_tools.log_argparse_args(args, logger=LOGGER)
 
     gha_input = GHAInput(
         # positionals (requireds):
