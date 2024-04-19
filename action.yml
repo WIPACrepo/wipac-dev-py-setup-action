@@ -120,10 +120,10 @@ runs:
         echo $GITHUB_REPOSITORY
         echo "pyproject.toml (+ README.md)"
         # since GHA injects raw string, must use EOF to avoid quote-mangling
-        HEAD_COMMIT_MESSAGE=$(cat <<EOF
+        HEAD_COMMIT_MESSAGE="$(cat <<EOF
         ${{ github.event.head_commit.message }}
         EOF
-        )
+        )"  # must double-quote to prevent word splitting
         echo "$HEAD_COMMIT_MESSAGE"
         
         # Build!
