@@ -550,8 +550,8 @@ def main() -> None:
         help="An OAuth2 token, usually GITHUB_TOKEN",
     )
 
-    def coerce_python_version(val: str) -> None | tuple[int, int]:
-        if val is None:
+    def coerce_python_version(val: str | None) -> None | tuple[int, int]:
+        if not val:
             return None
         # will raise error if not good format
         return tuple(int(d) for d in val.split(".", maxsplit=1))  # type: ignore[return-value]
