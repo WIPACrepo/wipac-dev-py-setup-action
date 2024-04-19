@@ -623,7 +623,7 @@ def main() -> None:
     )
 
     args = parser.parse_args()
-    logging_tools.set_level("DEBUG", LOGGER)
+    logging_tools.set_level("DEBUG", LOGGER, use_coloredlogs=True)
     logging_tools.log_argparse_args(args, logger=LOGGER)
 
     gha_input = GHAInput(
