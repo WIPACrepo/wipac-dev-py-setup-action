@@ -62,8 +62,8 @@ class GitHubAPI:
         self.description = cast(str, _json["description"])
 
 
-@typeguard.typechecked
 @dataclasses.dataclass
+@typeguard.typechecked
 class GHAInput:
     """The inputs passed from the client GitHub Action."""
 
