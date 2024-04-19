@@ -124,6 +124,7 @@ runs:
         ${{ github.event.head_commit.message }}
         EOF
         )
+        echo "$HEAD_COMMIT_MESSAGE"
         
         # Build!
         set -x
