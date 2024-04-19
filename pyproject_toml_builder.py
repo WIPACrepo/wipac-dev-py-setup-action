@@ -627,9 +627,6 @@ def main() -> None:
     logging_tools.log_argparse_args(args, logger=LOGGER)
 
     gha_input = GHAInput(
-        # positionals (requireds):
-        python_min=args.python_min,
-        # optionals:
         **{
             k: v
             for k, v in vars(args).items()
