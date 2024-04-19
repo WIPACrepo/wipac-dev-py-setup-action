@@ -550,12 +550,18 @@ def main() -> None:
         help="An OAuth2 token, usually GITHUB_TOKEN",
     )
 
+    def coerce_python_version(val: str) -> None | tuple[int, int]:
+        if val is None:
+            return None
+        # will raise error if not good format
+        return tuple(int(d) for d in val.split(".", maxsplit=1))  # type: ignore[return-value]
+
     # From Client GitHub Action Input
     # REQUIRED
     parser.add_argument(
         "--python-min",
         # "3.12" -> (3,12)
-        type=lambda x: tuple(int(d) for d in x.split(".", maxsplit=2)),
+        type=coerce_python_version,
         required=True,
         help="Minimum required Python version",
     )
@@ -563,8 +569,8 @@ def main() -> None:
     parser.add_argument(
         "--python-max",
         # "3.12" -> (3,12)
-        type=lambda x: tuple(int(d) for d in x.split(".", maxsplit=2)),
-        default="",
+        type=coerce_python_version,
+        default=None,
         help="Maximum supported Python version. If not provided, the most recent Python version will be used.",
     )
     # OPTIONAL (packaging)
@@ -630,7 +636,7 @@ def main() -> None:
         **{
             k: v
             for k, v in vars(args).items()
-            # use arg if it has non-falsy value -- otherwise, use default
+            # use arg if it has non-falsy value -- otherwise, rely on default
             if v and (k in [f.name for f in dataclasses.fields(GHAInput)])
         },
     )
