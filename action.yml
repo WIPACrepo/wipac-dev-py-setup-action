@@ -74,7 +74,7 @@ runs:
 
     - uses: actions/setup-python@v4
       with:
-        python-version: '3.11'  # NOTE: update, someday. Also tests.yml
+        python-version: '3.12'  # NOTE: update, someday.
 
     - name: Is this most recent commit? It won't be if action was reran
       run: |
