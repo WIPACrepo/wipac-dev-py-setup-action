@@ -14,7 +14,6 @@ from typing import Iterator, cast
 
 import requests
 import toml
-import typeguard
 from wipac_dev_tools import (
     argparse_tools,
     logging_tools,
@@ -63,7 +62,6 @@ class GitHubAPI:
 
 
 @dataclasses.dataclass
-@typeguard.typechecked
 class GHAInput:
     """The inputs passed from the client GitHub Action."""
 
@@ -556,14 +554,16 @@ def main() -> None:
     # REQUIRED
     parser.add_argument(
         "--python-min",
-        type=str,
+        # "3.12" -> (3,12)
+        type=lambda x: tuple(int(d) for d in x.split(".", maxsplit=2)),
         required=True,
         help="Minimum required Python version",
     )
     # OPTIONAL (python)
     parser.add_argument(
         "--python-max",
-        type=str,
+        # "3.12" -> (3,12)
+        type=lambda x: tuple(int(d) for d in x.split(".", maxsplit=2)),
         default="",
         help="Maximum supported Python version. If not provided, the most recent Python version will be used.",
     )
@@ -628,7 +628,7 @@ def main() -> None:
 
     gha_input = GHAInput(
         **{
-            k: True
+            k: v
             for k, v in vars(args).items()
             # use arg if it has non-falsy value -- otherwise, use default
             if v and (k in [f.name for f in dataclasses.fields(GHAInput)])
