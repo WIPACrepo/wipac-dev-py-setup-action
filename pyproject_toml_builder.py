@@ -518,31 +518,8 @@ def write_toml(
     return readme_mgr
 
 
-def main(
-    toml_file: Path,
-    github_full_repo: str,
-    token: str,
-    commit_message: str,
-    gha_input: GHAInput,
-) -> None:
+def main() -> None:
     """Read and write all necessary files."""
-    # build & write the pyproject.toml
-    readme_mgr = write_toml(
-        toml_file,
-        github_full_repo,
-        token,
-        commit_message,
-        gha_input,
-    )
-
-    # also, write the readme, if necessary
-    if readme_mgr:
-        with open(readme_mgr.readme_path, "w") as f:
-            for line in readme_mgr.lines:
-                f.write(line)
-
-
-if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=f"Read/transform 'pyproject.toml' and 'README.md' files. "
         f"Builds out 'pyproject.toml' sections according to [{BUILDER_SECTION_NAME}].",
@@ -666,10 +643,21 @@ if __name__ == "__main__":
     )
     LOGGER.info(gha_input)
 
-    main(
+    # build & write the pyproject.toml
+    readme_mgr = write_toml(
         args.toml,
         args.github_full_repo,
         args.token,
         args.commit_message,
         gha_input,
     )
+
+    # also, write the readme, if necessary
+    if readme_mgr:
+        with open(readme_mgr.readme_path, "w") as f:
+            for line in readme_mgr.lines:
+                f.write(line)
+
+
+if __name__ == "__main__":
+    main()
