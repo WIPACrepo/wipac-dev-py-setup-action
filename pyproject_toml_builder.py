@@ -631,7 +631,7 @@ def main() -> None:
         python_min=args.python_min,
         # optionals:
         **{
-            k: v
+            k: True
             for k, v in vars(args).items()
             # use arg if it has non-falsy value -- otherwise, use default
             if k in dataclasses.fields(GHAInput) and v
@@ -639,7 +639,7 @@ def main() -> None:
     )
     LOGGER.info(gha_input)
 
-    commit_message = (
+    commit_message = (  # retrieving this in bash is messy since the string can include any character
         subprocess.check_output("git log -1 --pretty=%B".split())
         .decode("utf-8")
         .strip()
