@@ -631,10 +631,10 @@ def main() -> None:
         python_min=args.python_min,
         # optionals:
         **{
-            k: True
+            k: v
             for k, v in vars(args).items()
             # use arg if it has non-falsy value -- otherwise, use default
-            if k in dataclasses.fields(GHAInput) and v
+            if v and (k in [f.name for f in dataclasses.fields(GHAInput)])
         },
     )
     LOGGER.info(gha_input)
