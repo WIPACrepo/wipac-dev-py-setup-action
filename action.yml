@@ -113,6 +113,7 @@ runs:
     - name: Build pyproject.toml + README.md (and commit)
       if: env.IS_GIT_BEHIND != 'true'
       run: |
+        set -e
         sudo apt-get update
         pip3 install -r ${{ github.action_path }}/requirements.txt
 
