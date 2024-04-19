@@ -463,9 +463,9 @@ def _build_out_sections(
     # [tool.setuptools.packages.find]
     toml_dict["tool.setuptools.packages.find"] = {}
     if gha_input.package_dirs:
-        toml_dict["tool.setuptools.packages.find"]["include"] = (
-            gha_input.package_dirs + [f"{p}.*" for p in gha_input.package_dirs]
-        )
+        toml_dict["tool.setuptools.packages.find"][
+            "include"
+        ] = gha_input.package_dirs + [f"{p}.*" for p in gha_input.package_dirs]
     if gha_input.exclude_dirs:
         toml_dict["tool.setuptools.packages.find"]["exclude"] = gha_input.exclude_dirs
 
@@ -651,21 +651,24 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     logging_tools.log_argparse_args(args, logger=LOGGER, level="WARNING")
-    print(args)
+
+    gha_input = GHAInput(
+        # positionals (requireds):
+        python_min=args.python_min,
+        # optionals:
+        **{
+            k: v
+            for k, v in vars(args).items()
+            # use arg if it has non-falsy value -- otherwise, use default
+            if k in dataclasses.fields(GHAInput) and v
+        },
+    )
+    LOGGER.info(gha_input)
+
     main(
         args.toml,
         args.github_full_repo,
         args.token,
         args.commit_message,
-        GHAInput(
-            # positionals (requireds):
-            python_min=args.python_min,
-            # optionals:
-            **{
-                k: v
-                for k, v in vars(args).items()
-                # use arg if it has non-falsy value -- otherwise, use default
-                if k in dataclasses.fields(GHAInput) and v
-            },
-        ),
+        gha_input,
     )
