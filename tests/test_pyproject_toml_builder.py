@@ -90,7 +90,7 @@ PATCH_WITHOUT_TAG_WORKAROUND = [
 ]
 
 VANILLA_PROJECT_KEYVALS = {
-    **VANILLA_SECTIONS_IN,
+    **VANILLA_SECTIONS_IN["project"],
     "url": "https://github.com/foobarbaz-org/foobarbaz-repo",
     "author": AUTHOR,
     "author_email": AUTHOR_EMAIL,
