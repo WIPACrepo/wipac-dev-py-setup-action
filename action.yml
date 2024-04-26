@@ -148,8 +148,10 @@ runs:
       if: env.IS_GIT_BEHIND != 'true'
       run: |
         python -c '
-        import os
+        import os, sys
         from pathlib import Path
+        
+        sys.path.append(os.path.abspath("${{ github.action_path }}"))
         from find_packages import iterate_dirnames
         
         for pkg_dname in iterate_dirnames(Path("."), "${{ inputs.exclude_dirs }}".split()):
