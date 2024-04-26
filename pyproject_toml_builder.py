@@ -439,14 +439,18 @@ def _build_out_sections(
             }
         )
         # [project.urls]
-        toml_dict["project.urls"] = dict(
+        toml_dict["project"]["urls"] = dict(
             Homepage=f"https://pypi.org/project/{gha_input.pypi_name}/",
             Tracker=f"{gh_api.url}/issues",
             Source=gh_api.url,
         )
 
+    # [tool]
+    if not toml_dict.get("tool"):
+        toml_dict["tool"] = {}
+
     # [tool.semantic_release] -- will be completely overridden
-    toml_dict["tool.semantic_release"] = dict(
+    toml_dict["tool"]["semantic_release"] = dict(
         version_toml=["pyproject.toml:project.version"],
         commit_parser="emoji",
         commit_parser_options=dict(
@@ -460,24 +464,34 @@ def _build_out_sections(
         ),
     )
 
-    # [tool.setuptools.packages.find]
-    toml_dict["tool.setuptools.packages.find"] = {}
-    if gha_input.package_dirs:
-        toml_dict["tool.setuptools.packages.find"][
-            "include"
-        ] = gha_input.package_dirs + [f"{p}.*" for p in gha_input.package_dirs]
-    if gha_input.exclude_dirs:
-        toml_dict["tool.setuptools.packages.find"]["exclude"] = gha_input.exclude_dirs
+    # [tool.setuptools.packages]
+    def tool_setuptools_packages_find():
+        if gha_input.package_dirs:
+            return dict(
+                include=gha_input.package_dirs
+                + [f"{p}.*" for p in gha_input.package_dirs]
+            )
+        if gha_input.exclude_dirs:
+            return dict(exclude=gha_input.exclude_dirs)
 
-    # [tool.setuptools.package-data]
-    if not toml_dict.get("tool.setuptools.package-data"):
-        # will only override some fields
-        toml_dict["tool.setuptools.package-data"] = {}
-    if "py.typed" not in toml_dict["tool.setuptools.package-data"].get("*", ""):
-        if not toml_dict["tool.setuptools.package-data"].get("*"):
-            toml_dict["tool.setuptools.package-data"]["*"] = ["py.typed"]
-        else:  # append to existing list
-            toml_dict["tool.setuptools.package-data"]["*"].append("py.typed")
+    def tool_setuptools_packagedata_star():
+        # add py.typed to "*" (if there)
+        try:
+            return toml_dict["tool"]["setuptools"]["package-data"]["*"] + ["py.typed"]
+        except KeyError:
+            return ["py.typed"]
+
+    toml_dict["tool"]["setuptools"].update(
+        {
+            "packages": {
+                "find": tool_setuptools_packages_find(),
+            },
+            "package-data": {
+                **toml_dict["tool"].get("setuptools", {}).get("package-data", {}),
+                "*": tool_setuptools_packagedata_star(),
+            },
+        }
+    )
 
     # Automate some README stuff
     if ffile.readme_path.suffix == ".md":
