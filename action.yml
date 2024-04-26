@@ -150,20 +150,11 @@ runs:
         python -c '
         import os
         from pathlib import Path
-
-        line_to_parse = ""
-        with open("setup.cfg") as f:
-          for line in f.readlines():
-            if line.startswith("version_variable = "):
-              line_to_parse = line.strip()  # remove newline
-        if not line_to_parse:
-          raise Exception("Cannot addd py.typed files (missing version_variable in setup.cfg)")
-
-        for version_path in line_to_parse.removeprefix("version_variable = ").split(","):
-          print(version_path)
-          dpath = version_path.removesuffix("__init__.py:__version__")
-          print(dpath)
-          fpath = Path(dpath) / "py.typed"
+        from find_packages import iterate_dirnames
+        
+        for pkg_dname in iterate_dirnames(Path("."), "${{ inputs.exclude_dirs }}".split()):
+          print(pkg_dname)
+          fpath = Path(pkg_dname) / "py.typed"
           print(fpath)
           fpath.touch()  # create if needed!
         '
