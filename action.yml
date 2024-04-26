@@ -136,6 +136,9 @@ runs:
           --license "${{ inputs.license }}"
         set +x
         
+        pip install toml-sort
+        toml-sort --in-place --ignore-case pyproject.toml
+        
         cat pyproject.toml
         # Commits
         git add pyproject.toml
