@@ -12,9 +12,6 @@ from typing import Any
 import pytest
 import toml
 
-# pylint:disable=redefined-outer-name,invalid-name
-# docfmt: skip-file-ric-evans
-
 LOGGER = logging.getLogger(__name__)
 
 
@@ -161,6 +158,7 @@ def assert_outputted_pyproject_toml(
     pyproject_toml_path: Path, expected: dict[str, Any]
 ) -> None:
     """Compare each's contents casted to a dict."""
+    pyproject_toml_builder.NoDotsDict(expected)  # test that we aren't using dots
     print()
     print("EXPECTED TOML OUTPUT:")
     print(expected)
