@@ -136,6 +136,7 @@ runs:
           --license "${{ inputs.license }}"
         set +x
         
+        # format (inc. sorting sections)
         pip install toml-sort
         toml-sort --in-place --ignore-case pyproject.toml
         

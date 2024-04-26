@@ -46,6 +46,15 @@ DEV_STATUS_PROD_X_Y_Z = "Development Status :: 5 - Production/Stable"
 PythonMinMax = tuple[tuple[int, int], tuple[int, int]]
 
 
+class NoDotsDict(dict):
+    """A custom dictionary class that disallows keys with dots ('.')."""
+
+    def __setitem__(self, key, value):
+        if "." in key:
+            raise ValueError("Keys cannot contain dots ('.').")
+        super().__setitem__(key, value)
+
+
 class GitHubAPI:
     """Relay info from the GitHub API."""
 
@@ -365,7 +374,7 @@ class READMEMarkdownManager:
 
 
 def _build_out_sections(
-    toml_dict: dict,
+    toml_dict: NoDotsDict,
     root_path: Path,
     github_full_repo: str,
     token: str,
@@ -490,9 +499,9 @@ def write_toml(
     toml_file = toml_file.resolve()
     if toml_file.exists():
         with open(toml_file, "r") as f:
-            toml_dict = toml.load(f)
+            toml_dict = NoDotsDict(toml.load(f))
     else:
-        toml_dict = {}
+        toml_dict = NoDotsDict()
 
     readme_mgr = _build_out_sections(
         toml_dict,
