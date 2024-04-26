@@ -12,7 +12,7 @@ def iterate_dirnames(
     if dirs_exclude is None:
         dirs_exclude = []
     else:
-        dirs_exclude = [d.split().split("/") for d in dirs_exclude]  # type: ignore
+        dirs_exclude = [d.strip().strip("/") for d in dirs_exclude]
 
     for directory in [p for p in root_dir.iterdir() if p.is_dir()]:
         if directory.name in dirs_exclude:
