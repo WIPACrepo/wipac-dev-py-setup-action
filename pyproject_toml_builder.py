@@ -142,7 +142,6 @@ class FromFiles:
         self,
         root: Path,
         gha_input: GHAInput,
-        dirs_exclude: list[str],
         commit_message: str,
     ) -> None:
         if not os.path.exists(root):
@@ -150,7 +149,7 @@ class FromFiles:
         self.gha_input = gha_input
         self.root = root.resolve()
 
-        pkg_paths = self._get_package_paths(dirs_exclude)
+        pkg_paths = self._get_package_paths(self.gha_input.exclude_dirs)
         self.packages = [p.name for p in pkg_paths]
         self.version = self._get_version(pkg_paths)
 
@@ -380,7 +379,6 @@ def _build_out_sections(
     ffile = FromFiles(  # things requiring reading files
         root_path,
         gha_input,
-        gha_input.exclude_dirs,
         commit_message,
     )
     gh_api = GitHubAPI(github_full_repo, oauth_token=token)
