@@ -322,7 +322,7 @@ def test_00_minimum_input(directory: str, requests_mock: Any) -> None:
     }
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.main(
+    pyproject_toml_builder.work(
         pyproject_toml_path,
         GITHUB_FULL_REPO,
         TOKEN,
@@ -377,7 +377,7 @@ def test_01_minimum_input_w_pypi(directory: str, requests_mock: Any) -> None:
     }
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.main(
+    pyproject_toml_builder.work(
         pyproject_toml_path,
         GITHUB_FULL_REPO,
         TOKEN,
@@ -452,7 +452,7 @@ def test_10_keywords(directory: str, requests_mock: Any) -> None:
     }
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.main(
+    pyproject_toml_builder.work(
         pyproject_toml_path,
         GITHUB_FULL_REPO,
         TOKEN,
@@ -523,7 +523,7 @@ def test_20_python_max(directory: str, requests_mock: Any) -> None:
     }
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.main(
+    pyproject_toml_builder.work(
         pyproject_toml_path,
         GITHUB_FULL_REPO,
         TOKEN,
@@ -600,7 +600,7 @@ def test_30_package_dirs__single(directory: str, requests_mock: Any) -> None:
     Path(f"{directory}/mock_package_test/__init__.py").touch()
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.main(
+    pyproject_toml_builder.work(
         pyproject_toml_path,
         GITHUB_FULL_REPO,
         TOKEN,
@@ -681,7 +681,7 @@ def test_34_package_dirs__multi_autoname__no_pypi(
         f.write("__version__ = '1.2.3'\n")
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.main(
+    pyproject_toml_builder.work(
         pyproject_toml_path,
         GITHUB_FULL_REPO,
         TOKEN,
@@ -769,7 +769,7 @@ def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
         f.write("__version__ = '1.2.3'\n")
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.main(
+    pyproject_toml_builder.work(
         pyproject_toml_path,
         GITHUB_FULL_REPO,
         TOKEN,
@@ -825,7 +825,7 @@ def test_36_package_dirs__multi_missing_init__error(
             "Is the directory missing an __init__.py?"
         ),
     ):
-        pyproject_toml_builder.main(
+        pyproject_toml_builder.work(
             pyproject_toml_path,
             GITHUB_FULL_REPO,
             TOKEN,
@@ -876,7 +876,7 @@ def test_37_package_dirs__multi_missing_version__error(
         Exception,
         match=r"Cannot find __version__ in .*/another_one/__init__\.py",
     ):
-        pyproject_toml_builder.main(
+        pyproject_toml_builder.work(
             pyproject_toml_path,
             GITHUB_FULL_REPO,
             TOKEN,
@@ -926,7 +926,7 @@ def test_38_package_dirs__multi_mismatch_version__error(
 
     # run pyproject_toml_builder
     with pytest.raises(Exception, match=r"Version mismatch between packages*"):
-        pyproject_toml_builder.main(
+        pyproject_toml_builder.work(
             pyproject_toml_path,
             GITHUB_FULL_REPO,
             TOKEN,
@@ -1006,7 +1006,7 @@ def test_40_extra_stuff(directory: str, requests_mock: Any) -> None:
     }
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.main(
+    pyproject_toml_builder.work(
         pyproject_toml_path,
         GITHUB_FULL_REPO,
         TOKEN,
@@ -1137,7 +1137,7 @@ def test_50_bumping(
     }
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.main(
+    pyproject_toml_builder.work(
         pyproject_toml_path,
         GITHUB_FULL_REPO,
         TOKEN,
