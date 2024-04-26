@@ -90,7 +90,7 @@ PATCH_WITHOUT_TAG_WORKAROUND = [
 ]
 
 VANILLA_PROJECT_KEYVALS = {
-    "version": "1.2.3",
+    **VANILLA_SECTIONS_IN,
     "url": "https://github.com/foobarbaz-org/foobarbaz-repo",
     "author": AUTHOR,
     "author_email": AUTHOR_EMAIL,
@@ -99,18 +99,11 @@ VANILLA_PROJECT_KEYVALS = {
     "license": "MIT",
     "requires-python": ">=3.6, <3.12",
     "find": {"namespaces": False},
-    "dependencies": [
-        "pyjwt",
-        "requests",
-        "requests-futures",
-        "tornado",
-        "wipac-dev-tools",
-    ],
 }
 NO_PYPI_VANILLA_PROJECT_KEYVALS = {  # even MORE vanilla than vanilla
     k: v
     for k, v in VANILLA_PROJECT_KEYVALS.items()
-    if k in ["dependencies", "find", "version"]
+    if k in ["dependencies", "find", "version", "optional-dependencies"]
 }
 
 
