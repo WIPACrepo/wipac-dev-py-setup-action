@@ -464,7 +464,6 @@ def _build_out_sections(
         ),
     )
 
-    # [tool.setuptools.packages]
     def tool_setuptools_packages_find():
         if gha_input.package_dirs:
             return dict(
@@ -481,6 +480,9 @@ def _build_out_sections(
         except KeyError:
             return ["py.typed"]
 
+    # [tool.setuptools]
+    if not toml_dict["tool"].get("setuptools"):
+        toml_dict["tool"]["setuptools"] = {}
     toml_dict["tool"]["setuptools"].update(
         {
             "packages": {
