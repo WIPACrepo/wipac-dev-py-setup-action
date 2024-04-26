@@ -158,7 +158,6 @@ def assert_outputted_pyproject_toml(
     pyproject_toml_path: Path, expected: dict[str, Any]
 ) -> None:
     """Compare each's contents casted to a dict."""
-    pyproject_toml_builder.NoDotsDict(expected)  # test that we aren't using dots
     print()
     print("EXPECTED TOML OUTPUT:")
     print(expected)
@@ -309,18 +308,20 @@ def test_00_minimum_input(directory: str, requests_mock: Any) -> None:
     with open(pyproject_toml_path, "w") as f:
         toml.dump(VANILLA_SECTIONS_IN, f)
 
-    pyproject_toml_expected = {
-        "project": {
-            "name": "mock-package",
-            **NO_PYPI_VANILLA_PROJECT_KEYVALS,  # the true minimum is more vanilla than vanilla)
-        },
-        **VANILLA_SEMANTIC_RELEASE_SECTIONS,
-        **NO_PYPI_VANILLA_SECTIONS_OUT,  # see above comment on vanilla-ness
-        **VANILLA_PACKAGE_DATA_SECTION,
-        "tool.setuptools.packages.find": {
-            **VANILLA_FIND_EXCLUDE_KEYVAL,
-        },
-    }
+    pyproject_toml_expected = pyproject_toml_builder.NoDotsDict(
+        {
+            "project": {
+                "name": "mock-package",
+                **NO_PYPI_VANILLA_PROJECT_KEYVALS,  # the true minimum is more vanilla than vanilla)
+            },
+            **VANILLA_SEMANTIC_RELEASE_SECTIONS,
+            **NO_PYPI_VANILLA_SECTIONS_OUT,  # see above comment on vanilla-ness
+            **VANILLA_PACKAGE_DATA_SECTION,
+            "tool.setuptools.packages.find": {
+                **VANILLA_FIND_EXCLUDE_KEYVAL,
+            },
+        }
+    )
 
     # run pyproject_toml_builder
     pyproject_toml_builder.work(
@@ -353,29 +354,31 @@ def test_01_minimum_input_w_pypi(directory: str, requests_mock: Any) -> None:
     with open(pyproject_toml_path, "w") as f:
         toml.dump(VANILLA_SECTIONS_IN, f)
 
-    pyproject_toml_expected = {
-        "project": {
-            "name": "wipac-mock-package",
-            **VANILLA_PROJECT_KEYVALS,
-            "keywords": ["WIPAC", "IceCube"],
-            "classifiers": [
-                "Development Status :: 5 - Production/Stable",
-                "License :: OSI Approved :: MIT License",
-                "Programming Language :: Python :: 3.6",
-                "Programming Language :: Python :: 3.7",
-                "Programming Language :: Python :: 3.8",
-                "Programming Language :: Python :: 3.9",
-                "Programming Language :: Python :: 3.10",
-                "Programming Language :: Python :: 3.11",
-            ],
-        },
-        **VANILLA_SEMANTIC_RELEASE_SECTIONS,
-        **VANILLA_SECTIONS_OUT,
-        **VANILLA_PACKAGE_DATA_SECTION,
-        "tool.setuptools.packages.find": {
-            **VANILLA_FIND_EXCLUDE_KEYVAL,
-        },
-    }
+    pyproject_toml_expected = pyproject_toml_builder.NoDotsDict(
+        {
+            "project": {
+                "name": "wipac-mock-package",
+                **VANILLA_PROJECT_KEYVALS,
+                "keywords": ["WIPAC", "IceCube"],
+                "classifiers": [
+                    "Development Status :: 5 - Production/Stable",
+                    "License :: OSI Approved :: MIT License",
+                    "Programming Language :: Python :: 3.6",
+                    "Programming Language :: Python :: 3.7",
+                    "Programming Language :: Python :: 3.8",
+                    "Programming Language :: Python :: 3.9",
+                    "Programming Language :: Python :: 3.10",
+                    "Programming Language :: Python :: 3.11",
+                ],
+            },
+            **VANILLA_SEMANTIC_RELEASE_SECTIONS,
+            **VANILLA_SECTIONS_OUT,
+            **VANILLA_PACKAGE_DATA_SECTION,
+            "tool.setuptools.packages.find": {
+                **VANILLA_FIND_EXCLUDE_KEYVAL,
+            },
+        }
+    )
 
     # run pyproject_toml_builder
     pyproject_toml_builder.work(
@@ -418,39 +421,41 @@ def test_10_keywords(directory: str, requests_mock: Any) -> None:
     with open(pyproject_toml_path, "w") as f:
         toml.dump(VANILLA_SECTIONS_IN, f)
 
-    pyproject_toml_expected = {
-        "project": {
-            "name": "wipac-mock-package",
-            **VANILLA_PROJECT_KEYVALS,
-            "keywords": [
-                "python",
-                "REST",
-                "tools",
-                "REST tools",
-                "utilities",
-                "OpenTelemetry",
-                "tracing",
-                "telemetry",
-                "3+ word string keywords",
-            ],
-            "classifiers": [
-                "Development Status :: 5 - Production/Stable",
-                "License :: OSI Approved :: MIT License",
-                "Programming Language :: Python :: 3.6",
-                "Programming Language :: Python :: 3.7",
-                "Programming Language :: Python :: 3.8",
-                "Programming Language :: Python :: 3.9",
-                "Programming Language :: Python :: 3.10",
-                "Programming Language :: Python :: 3.11",
-            ],
-        },
-        **VANILLA_SEMANTIC_RELEASE_SECTIONS,
-        **VANILLA_SECTIONS_OUT,
-        **VANILLA_PACKAGE_DATA_SECTION,
-        "tool.setuptools.packages.find": {
-            **VANILLA_FIND_EXCLUDE_KEYVAL,
-        },
-    }
+    pyproject_toml_expected = pyproject_toml_builder.NoDotsDict(
+        {
+            "project": {
+                "name": "wipac-mock-package",
+                **VANILLA_PROJECT_KEYVALS,
+                "keywords": [
+                    "python",
+                    "REST",
+                    "tools",
+                    "REST tools",
+                    "utilities",
+                    "OpenTelemetry",
+                    "tracing",
+                    "telemetry",
+                    "3+ word string keywords",
+                ],
+                "classifiers": [
+                    "Development Status :: 5 - Production/Stable",
+                    "License :: OSI Approved :: MIT License",
+                    "Programming Language :: Python :: 3.6",
+                    "Programming Language :: Python :: 3.7",
+                    "Programming Language :: Python :: 3.8",
+                    "Programming Language :: Python :: 3.9",
+                    "Programming Language :: Python :: 3.10",
+                    "Programming Language :: Python :: 3.11",
+                ],
+            },
+            **VANILLA_SEMANTIC_RELEASE_SECTIONS,
+            **VANILLA_SECTIONS_OUT,
+            **VANILLA_PACKAGE_DATA_SECTION,
+            "tool.setuptools.packages.find": {
+                **VANILLA_FIND_EXCLUDE_KEYVAL,
+            },
+        }
+    )
 
     # run pyproject_toml_builder
     pyproject_toml_builder.work(
@@ -492,36 +497,38 @@ def test_20_python_max(directory: str, requests_mock: Any) -> None:
     with open(pyproject_toml_path, "w") as f:
         toml.dump(VANILLA_SECTIONS_IN, f)
 
-    pyproject_toml_expected = {
-        "project": {
-            "name": "wipac-mock-package",
-            **VANILLA_PROJECT_KEYVALS,
-            "requires-python": ">=3.6, <3.10",  # override VANILLA_PROJECT_KEYVALS
-            "keywords": [
-                "python",
-                "REST",
-                "tools",
-                "utilities",
-                "OpenTelemetry",
-                "tracing",
-                "telemetry",
-            ],
-            "classifiers": [
-                "Development Status :: 5 - Production/Stable",
-                "License :: OSI Approved :: MIT License",
-                "Programming Language :: Python :: 3.6",
-                "Programming Language :: Python :: 3.7",
-                "Programming Language :: Python :: 3.8",
-                "Programming Language :: Python :: 3.9",
-            ],
-        },
-        **VANILLA_SEMANTIC_RELEASE_SECTIONS,
-        **VANILLA_SECTIONS_OUT,
-        **VANILLA_PACKAGE_DATA_SECTION,
-        "tool.setuptools.packages.find": {
-            **VANILLA_FIND_EXCLUDE_KEYVAL,
-        },
-    }
+    pyproject_toml_expected = pyproject_toml_builder.NoDotsDict(
+        {
+            "project": {
+                "name": "wipac-mock-package",
+                **VANILLA_PROJECT_KEYVALS,
+                "requires-python": ">=3.6, <3.10",  # override VANILLA_PROJECT_KEYVALS
+                "keywords": [
+                    "python",
+                    "REST",
+                    "tools",
+                    "utilities",
+                    "OpenTelemetry",
+                    "tracing",
+                    "telemetry",
+                ],
+                "classifiers": [
+                    "Development Status :: 5 - Production/Stable",
+                    "License :: OSI Approved :: MIT License",
+                    "Programming Language :: Python :: 3.6",
+                    "Programming Language :: Python :: 3.7",
+                    "Programming Language :: Python :: 3.8",
+                    "Programming Language :: Python :: 3.9",
+                ],
+            },
+            **VANILLA_SEMANTIC_RELEASE_SECTIONS,
+            **VANILLA_SECTIONS_OUT,
+            **VANILLA_PACKAGE_DATA_SECTION,
+            "tool.setuptools.packages.find": {
+                **VANILLA_FIND_EXCLUDE_KEYVAL,
+            },
+        }
+    )
 
     # run pyproject_toml_builder
     pyproject_toml_builder.work(
@@ -563,38 +570,40 @@ def test_30_package_dirs__single(directory: str, requests_mock: Any) -> None:
     with open(pyproject_toml_path, "w") as f:
         toml.dump(VANILLA_SECTIONS_IN, f)
 
-    pyproject_toml_expected = {
-        "project": {
-            "name": "wipac-mock-package",
-            **VANILLA_PROJECT_KEYVALS,
-            "keywords": [
-                "python",
-                "REST",
-                "tools",
-                "utilities",
-                "OpenTelemetry",
-                "tracing",
-                "telemetry",
-            ],
-            "classifiers": [
-                "Development Status :: 5 - Production/Stable",
-                "License :: OSI Approved :: MIT License",
-                "Programming Language :: Python :: 3.6",
-                "Programming Language :: Python :: 3.7",
-                "Programming Language :: Python :: 3.8",
-                "Programming Language :: Python :: 3.9",
-                "Programming Language :: Python :: 3.10",
-                "Programming Language :: Python :: 3.11",
-            ],
-        },
-        **VANILLA_SEMANTIC_RELEASE_SECTIONS,
-        **VANILLA_SECTIONS_OUT,
-        **VANILLA_PACKAGE_DATA_SECTION,
-        "tool.setuptools.packages.find": {
-            "include": ["mock_package", "mock_package.*"],
-            **VANILLA_FIND_EXCLUDE_KEYVAL,
-        },
-    }
+    pyproject_toml_expected = pyproject_toml_builder.NoDotsDict(
+        {
+            "project": {
+                "name": "wipac-mock-package",
+                **VANILLA_PROJECT_KEYVALS,
+                "keywords": [
+                    "python",
+                    "REST",
+                    "tools",
+                    "utilities",
+                    "OpenTelemetry",
+                    "tracing",
+                    "telemetry",
+                ],
+                "classifiers": [
+                    "Development Status :: 5 - Production/Stable",
+                    "License :: OSI Approved :: MIT License",
+                    "Programming Language :: Python :: 3.6",
+                    "Programming Language :: Python :: 3.7",
+                    "Programming Language :: Python :: 3.8",
+                    "Programming Language :: Python :: 3.9",
+                    "Programming Language :: Python :: 3.10",
+                    "Programming Language :: Python :: 3.11",
+                ],
+            },
+            **VANILLA_SEMANTIC_RELEASE_SECTIONS,
+            **VANILLA_SECTIONS_OUT,
+            **VANILLA_PACKAGE_DATA_SECTION,
+            "tool.setuptools.packages.find": {
+                "include": ["mock_package", "mock_package.*"],
+                **VANILLA_FIND_EXCLUDE_KEYVAL,
+            },
+        }
+    )
 
     # make an extra package *not* to be included
     os.mkdir(f"{directory}/mock_package_test")
@@ -641,35 +650,37 @@ def test_34_package_dirs__multi_autoname__no_pypi(
     with open(pyproject_toml_path, "w") as f:
         toml.dump(VANILLA_SECTIONS_IN, f)
 
-    pyproject_toml_expected = {
-        "project": {
-            "name": "mock-package-another-one",
-            **NO_PYPI_VANILLA_PROJECT_KEYVALS,  # the true minimum is more vanilla than vanilla
-            "author": AUTHOR,
-            "author_email": AUTHOR_EMAIL,
-            "keywords": [
-                "python",
-                "REST",
-                "tools",
-                "utilities",
-                "OpenTelemetry",
-                "tracing",
-                "telemetry",
-            ],
-        },
-        **VANILLA_SEMANTIC_RELEASE_SECTIONS,
-        **NO_PYPI_VANILLA_SECTIONS_OUT,  # see above comment on vanilla-ness
-        **VANILLA_PACKAGE_DATA_SECTION,
-        "tool.setuptools.packages.find": {
-            "include": [
-                "mock_package",
-                "another_one",
-                "mock_package.*",
-                "another_one.*",
-            ],
-            **VANILLA_FIND_EXCLUDE_KEYVAL,
-        },
-    }
+    pyproject_toml_expected = pyproject_toml_builder.NoDotsDict(
+        {
+            "project": {
+                "name": "mock-package-another-one",
+                **NO_PYPI_VANILLA_PROJECT_KEYVALS,  # the true minimum is more vanilla than vanilla
+                "author": AUTHOR,
+                "author_email": AUTHOR_EMAIL,
+                "keywords": [
+                    "python",
+                    "REST",
+                    "tools",
+                    "utilities",
+                    "OpenTelemetry",
+                    "tracing",
+                    "telemetry",
+                ],
+            },
+            **VANILLA_SEMANTIC_RELEASE_SECTIONS,
+            **NO_PYPI_VANILLA_SECTIONS_OUT,  # see above comment on vanilla-ness
+            **VANILLA_PACKAGE_DATA_SECTION,
+            "tool.setuptools.packages.find": {
+                "include": [
+                    "mock_package",
+                    "another_one",
+                    "mock_package.*",
+                    "another_one.*",
+                ],
+                **VANILLA_FIND_EXCLUDE_KEYVAL,
+            },
+        }
+    )
 
     # make an extra package *not* to be included
     os.mkdir(f"{directory}/mock_package_test")
@@ -721,43 +732,45 @@ def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
     with open(pyproject_toml_path, "w") as f:
         toml.dump(VANILLA_SECTIONS_IN, f)
 
-    pyproject_toml_expected = {
-        "project": {
-            "name": "wipac-mock-package",
-            **VANILLA_PROJECT_KEYVALS,
-            "keywords": [
-                "python",
-                "REST",
-                "tools",
-                "utilities",
-                "OpenTelemetry",
-                "tracing",
-                "telemetry",
-            ],
-            "classifiers": [
-                "Development Status :: 5 - Production/Stable",
-                "License :: OSI Approved :: MIT License",
-                "Programming Language :: Python :: 3.6",
-                "Programming Language :: Python :: 3.7",
-                "Programming Language :: Python :: 3.8",
-                "Programming Language :: Python :: 3.9",
-                "Programming Language :: Python :: 3.10",
-                "Programming Language :: Python :: 3.11",
-            ],
-        },
-        **VANILLA_SEMANTIC_RELEASE_SECTIONS,
-        **VANILLA_SECTIONS_OUT,
-        **VANILLA_PACKAGE_DATA_SECTION,
-        "tool.setuptools.packages.find": {
-            "include": [
-                "mock_package",
-                "another_one",
-                "mock_package.*",
-                "another_one.*",
-            ],
-            **VANILLA_FIND_EXCLUDE_KEYVAL,
-        },
-    }
+    pyproject_toml_expected = pyproject_toml_builder.NoDotsDict(
+        {
+            "project": {
+                "name": "wipac-mock-package",
+                **VANILLA_PROJECT_KEYVALS,
+                "keywords": [
+                    "python",
+                    "REST",
+                    "tools",
+                    "utilities",
+                    "OpenTelemetry",
+                    "tracing",
+                    "telemetry",
+                ],
+                "classifiers": [
+                    "Development Status :: 5 - Production/Stable",
+                    "License :: OSI Approved :: MIT License",
+                    "Programming Language :: Python :: 3.6",
+                    "Programming Language :: Python :: 3.7",
+                    "Programming Language :: Python :: 3.8",
+                    "Programming Language :: Python :: 3.9",
+                    "Programming Language :: Python :: 3.10",
+                    "Programming Language :: Python :: 3.11",
+                ],
+            },
+            **VANILLA_SEMANTIC_RELEASE_SECTIONS,
+            **VANILLA_SECTIONS_OUT,
+            **VANILLA_PACKAGE_DATA_SECTION,
+            "tool.setuptools.packages.find": {
+                "include": [
+                    "mock_package",
+                    "another_one",
+                    "mock_package.*",
+                    "another_one.*",
+                ],
+                **VANILLA_FIND_EXCLUDE_KEYVAL,
+            },
+        }
+    )
 
     # make an extra package *not* to be included
     os.mkdir(f"{directory}/mock_package_test")
@@ -969,42 +982,44 @@ def test_40_extra_stuff(directory: str, requests_mock: Any) -> None:
         extra_stuff["foo.bar"] = {"b": 22}
         toml.dump(extra_stuff, f)
 
-    pyproject_toml_expected = {
-        "project": {
-            "nickname": "the best python package around",
-            "grocery_list": ["apple", "banana", "pumpkin"],
-            "name": "wipac-mock-package",
-            **VANILLA_PROJECT_KEYVALS,
-            "keywords": [
-                "python",
-                "REST",
-                "tools",
-                "utilities",
-                "OpenTelemetry",
-                "tracing",
-                "telemetry",
-            ],
-            "classifiers": [
-                "Development Status :: 5 - Production/Stable",
-                "License :: OSI Approved :: MIT License",
-                "Programming Language :: Python :: 3.6",
-                "Programming Language :: Python :: 3.7",
-                "Programming Language :: Python :: 3.8",
-                "Programming Language :: Python :: 3.9",
-                "Programming Language :: Python :: 3.10",
-                "Programming Language :: Python :: 3.11",
-            ],
-        },
-        **VANILLA_SEMANTIC_RELEASE_SECTIONS,
-        **VANILLA_SECTIONS_OUT,
-        **VANILLA_PACKAGE_DATA_SECTION,
-        "tool.setuptools.packages.find": {
-            **VANILLA_FIND_EXCLUDE_KEYVAL,
-        },
-        # the extra sections
-        "baz": extra_stuff["baz"],
-        "foo.bar": extra_stuff["foo.bar"],
-    }
+    pyproject_toml_expected = pyproject_toml_builder.NoDotsDict(
+        {
+            "project": {
+                "nickname": "the best python package around",
+                "grocery_list": ["apple", "banana", "pumpkin"],
+                "name": "wipac-mock-package",
+                **VANILLA_PROJECT_KEYVALS,
+                "keywords": [
+                    "python",
+                    "REST",
+                    "tools",
+                    "utilities",
+                    "OpenTelemetry",
+                    "tracing",
+                    "telemetry",
+                ],
+                "classifiers": [
+                    "Development Status :: 5 - Production/Stable",
+                    "License :: OSI Approved :: MIT License",
+                    "Programming Language :: Python :: 3.6",
+                    "Programming Language :: Python :: 3.7",
+                    "Programming Language :: Python :: 3.8",
+                    "Programming Language :: Python :: 3.9",
+                    "Programming Language :: Python :: 3.10",
+                    "Programming Language :: Python :: 3.11",
+                ],
+            },
+            **VANILLA_SEMANTIC_RELEASE_SECTIONS,
+            **VANILLA_SECTIONS_OUT,
+            **VANILLA_PACKAGE_DATA_SECTION,
+            "tool.setuptools.packages.find": {
+                **VANILLA_FIND_EXCLUDE_KEYVAL,
+            },
+            # the extra sections
+            "baz": extra_stuff["baz"],
+            "foo.bar": extra_stuff["foo.bar"],
+        }
+    )
 
     # run pyproject_toml_builder
     pyproject_toml_builder.work(
@@ -1106,36 +1121,38 @@ def test_50_bumping(
     with open(pyproject_toml_path, "w") as f:
         toml.dump(VANILLA_SECTIONS_IN, f)
 
-    pyproject_toml_expected = {
-        "project": {
-            "name": "wipac-mock-package",
-            **VANILLA_PROJECT_KEYVALS,
-            "keywords": ["WIPAC", "IceCube"],
-            "classifiers": [
-                classifier,
-                "License :: OSI Approved :: MIT License",
-                "Programming Language :: Python :: 3.6",
-                "Programming Language :: Python :: 3.7",
-                "Programming Language :: Python :: 3.8",
-                "Programming Language :: Python :: 3.9",
-                "Programming Language :: Python :: 3.10",
-                "Programming Language :: Python :: 3.11",
-            ],
-        },
-        **{
-            k: v
-            for k, v in (
-                VANILLA_SEMANTIC_RELEASE_SECTIONS
-                if patch_without_tag
-                else SEMANTIC_RELEASE_SECTIONS_NO_PATCH
-            ).items()
-        },
-        **VANILLA_SECTIONS_OUT,
-        **VANILLA_PACKAGE_DATA_SECTION,
-        "tool.setuptools.packages.find": {
-            **VANILLA_FIND_EXCLUDE_KEYVAL,
-        },
-    }
+    pyproject_toml_expected = pyproject_toml_builder.NoDotsDict(
+        {
+            "project": {
+                "name": "wipac-mock-package",
+                **VANILLA_PROJECT_KEYVALS,
+                "keywords": ["WIPAC", "IceCube"],
+                "classifiers": [
+                    classifier,
+                    "License :: OSI Approved :: MIT License",
+                    "Programming Language :: Python :: 3.6",
+                    "Programming Language :: Python :: 3.7",
+                    "Programming Language :: Python :: 3.8",
+                    "Programming Language :: Python :: 3.9",
+                    "Programming Language :: Python :: 3.10",
+                    "Programming Language :: Python :: 3.11",
+                ],
+            },
+            **{
+                k: v
+                for k, v in (
+                    VANILLA_SEMANTIC_RELEASE_SECTIONS
+                    if patch_without_tag
+                    else SEMANTIC_RELEASE_SECTIONS_NO_PATCH
+                ).items()
+            },
+            **VANILLA_SECTIONS_OUT,
+            **VANILLA_PACKAGE_DATA_SECTION,
+            "tool.setuptools.packages.find": {
+                **VANILLA_FIND_EXCLUDE_KEYVAL,
+            },
+        }
+    )
 
     # run pyproject_toml_builder
     pyproject_toml_builder.work(
