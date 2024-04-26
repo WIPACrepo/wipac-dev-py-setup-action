@@ -9,6 +9,7 @@ import logging
 import os
 import re
 import subprocess
+from collections import OrderedDict
 from pathlib import Path
 from typing import cast
 
@@ -505,7 +506,7 @@ def write_toml(
 
     with open(toml_file, "w") as f:
         toml.dump(
-            {k: v for k, v in sorted(toml_dict.items())},  # sort by key
+            OrderedDict(sorted(toml_dict.items())),  # sort by key
             f,
         )
 
