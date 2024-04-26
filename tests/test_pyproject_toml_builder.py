@@ -59,33 +59,40 @@ VANILLA_SECTIONS_IN = {
             "tornado",
             "wipac-dev-tools",
         ],
-    },
-    "project.optional-dependencies": {
-        "telemetry": [
-            "wipac-telemetry",
-        ]
+        "optional-dependencies": {
+            "telemetry": [
+                "wipac-telemetry",
+            ]
+        },
     },
 }
 
-VANILLA_SECTIONS_OUT = {
-    "build-system": {
-        "requires": ["setuptools>=61.0"],
-        "build-backend": "setuptools.build_meta",
-    },
-    "project.optional-dependencies": {
-        "telemetry": [
-            "wipac-telemetry",
-        ]
-    },
-    "project.urls": {
-        "Homepage": "https://pypi.org/project/wipac-mock-package/",
-        "Tracker": "https://github.com/foobarbaz-org/foobarbaz-repo/issues",
-        "Source": "https://github.com/foobarbaz-org/foobarbaz-repo",
-    },
-}
-NO_PYPI_VANILLA_SECTIONS_OUT = {  # even MORE vanilla than vanilla
-    k: v for k, v in VANILLA_SECTIONS_OUT.items() if k not in ["project.urls"]
-}
+
+def _vanilla_section_out(with_urls: bool):
+    if with_urls:
+        urls = {
+            "urls": {
+                "Homepage": "https://pypi.org/project/wipac-mock-package/",
+                "Tracker": "https://github.com/foobarbaz-org/foobarbaz-repo/issues",
+                "Source": "https://github.com/foobarbaz-org/foobarbaz-repo",
+            },
+        }
+    else:
+        urls = {}
+    return {
+        "build-system": {
+            "requires": ["setuptools>=61.0"],
+            "build-backend": "setuptools.build_meta",
+        },
+        "project": {
+            **VANILLA_SECTIONS_IN["project"],
+            **urls,
+        },
+    }
+
+
+VANILLA_SECTIONS_OUT = _vanilla_section_out(True)
+NO_PYPI_VANILLA_SECTIONS_OUT = _vanilla_section_out(False)
 
 # allow patch releases without specified commit tags (patch_without_tag=True)
 PATCH_WITHOUT_TAG_WORKAROUND = [
@@ -121,7 +128,7 @@ NO_PYPI_VANILLA_PROJECT_KEYVALS = {  # even MORE vanilla than vanilla
 
 def _make_vanilla_semantic_release_section(patch_without_tag_workaround: bool):
     return {
-        "tool.semantic_release": {
+        "semantic_release": {
             "version_toml": ["pyproject.toml:project.version"],
             "commit_parser": "emoji",
             "commit_parser_options": {
@@ -136,15 +143,9 @@ def _make_vanilla_semantic_release_section(patch_without_tag_workaround: bool):
     }
 
 
-VANILLA_SEMANTIC_RELEASE_SECTIONS = _make_vanilla_semantic_release_section(True)
-SEMANTIC_RELEASE_SECTIONS_NO_PATCH = _make_vanilla_semantic_release_section(False)
-assert VANILLA_SEMANTIC_RELEASE_SECTIONS != SEMANTIC_RELEASE_SECTIONS_NO_PATCH
-
-VANILLA_PACKAGE_DATA_SECTION = {
-    "tool.setuptools.package-data": {
-        "*": ["py.typed"],
-    },
-}
+VANILLA_SEMANTIC_RELEASE_SUBSECTIONS = _make_vanilla_semantic_release_section(True)
+SEMANTIC_RELEASE_SUBSECTIONS__NO_PATCH = _make_vanilla_semantic_release_section(False)
+assert VANILLA_SEMANTIC_RELEASE_SUBSECTIONS != SEMANTIC_RELEASE_SUBSECTIONS__NO_PATCH
 
 VANILLA_FIND_EXCLUDE_KEYVAL = {"exclude": EXCLUDE_DIRS}
 
@@ -319,12 +320,14 @@ def test_00_minimum_input(directory: str, requests_mock: Any) -> None:
             "name": "mock-package",
             **NO_PYPI_VANILLA_PROJECT_KEYVALS,  # the true minimum is more vanilla than vanilla)
         },
-        **VANILLA_SEMANTIC_RELEASE_SECTIONS,
-        **NO_PYPI_VANILLA_SECTIONS_OUT,  # see above comment on vanilla-ness
-        **VANILLA_PACKAGE_DATA_SECTION,
-        "tool.setuptools.packages.find": {
-            **VANILLA_FIND_EXCLUDE_KEYVAL,
+        "tool": {
+            **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
+            "setuptools": {
+                "package-data": {"*": ["py.typed"]},
+                "packages": {"find": {**VANILLA_FIND_EXCLUDE_KEYVAL}},
+            },
         },
+        **NO_PYPI_VANILLA_SECTIONS_OUT,  # see above comment on vanilla-ness
     }
 
     # run pyproject_toml_builder
@@ -374,12 +377,14 @@ def test_01_minimum_input_w_pypi(directory: str, requests_mock: Any) -> None:
                 "Programming Language :: Python :: 3.11",
             ],
         },
-        **VANILLA_SEMANTIC_RELEASE_SECTIONS,
-        **VANILLA_SECTIONS_OUT,
-        **VANILLA_PACKAGE_DATA_SECTION,
-        "tool.setuptools.packages.find": {
-            **VANILLA_FIND_EXCLUDE_KEYVAL,
+        "tool": {
+            **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
+            "setuptools": {
+                "package-data": {"*": ["py.typed"]},
+                "packages": {"find": {**VANILLA_FIND_EXCLUDE_KEYVAL}},
+            },
         },
+        **VANILLA_SECTIONS_OUT,
     }
 
     # run pyproject_toml_builder
@@ -449,12 +454,14 @@ def test_10_keywords(directory: str, requests_mock: Any) -> None:
                 "Programming Language :: Python :: 3.11",
             ],
         },
-        **VANILLA_SEMANTIC_RELEASE_SECTIONS,
-        **VANILLA_SECTIONS_OUT,
-        **VANILLA_PACKAGE_DATA_SECTION,
-        "tool.setuptools.packages.find": {
-            **VANILLA_FIND_EXCLUDE_KEYVAL,
+        "tool": {
+            **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
+            "setuptools": {
+                "package-data": {"*": ["py.typed"]},
+                "packages": {"find": {**VANILLA_FIND_EXCLUDE_KEYVAL}},
+            },
         },
+        **VANILLA_SECTIONS_OUT,
     }
 
     # run pyproject_toml_builder
@@ -520,12 +527,14 @@ def test_20_python_max(directory: str, requests_mock: Any) -> None:
                 "Programming Language :: Python :: 3.9",
             ],
         },
-        **VANILLA_SEMANTIC_RELEASE_SECTIONS,
-        **VANILLA_SECTIONS_OUT,
-        **VANILLA_PACKAGE_DATA_SECTION,
-        "tool.setuptools.packages.find": {
-            **VANILLA_FIND_EXCLUDE_KEYVAL,
+        "tool": {
+            **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
+            "setuptools": {
+                "package-data": {"*": ["py.typed"]},
+                "packages": {"find": {**VANILLA_FIND_EXCLUDE_KEYVAL}},
+            },
         },
+        **VANILLA_SECTIONS_OUT,
     }
 
     # run pyproject_toml_builder
@@ -592,13 +601,19 @@ def test_30_package_dirs__single(directory: str, requests_mock: Any) -> None:
                 "Programming Language :: Python :: 3.11",
             ],
         },
-        **VANILLA_SEMANTIC_RELEASE_SECTIONS,
-        **VANILLA_SECTIONS_OUT,
-        **VANILLA_PACKAGE_DATA_SECTION,
-        "tool.setuptools.packages.find": {
-            "include": ["mock_package", "mock_package.*"],
-            **VANILLA_FIND_EXCLUDE_KEYVAL,
+        "tool": {
+            **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
+            "setuptools": {
+                "package-data": {"*": ["py.typed"]},
+                "packages": {
+                    "find": {
+                        "include": ["mock_package", "mock_package.*"],
+                        **VANILLA_FIND_EXCLUDE_KEYVAL,
+                    },
+                },
+            },
         },
+        **VANILLA_SECTIONS_OUT,
     }
 
     # make an extra package *not* to be included
@@ -662,18 +677,24 @@ def test_34_package_dirs__multi_autoname__no_pypi(
                 "telemetry",
             ],
         },
-        **VANILLA_SEMANTIC_RELEASE_SECTIONS,
-        **NO_PYPI_VANILLA_SECTIONS_OUT,  # see above comment on vanilla-ness
-        **VANILLA_PACKAGE_DATA_SECTION,
-        "tool.setuptools.packages.find": {
-            "include": [
-                "mock_package",
-                "another_one",
-                "mock_package.*",
-                "another_one.*",
-            ],
-            **VANILLA_FIND_EXCLUDE_KEYVAL,
+        "tool": {
+            **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
+            "setuptools": {
+                "package-data": {"*": ["py.typed"]},
+                "packages": {
+                    "find": {
+                        "include": [
+                            "mock_package",
+                            "another_one",
+                            "mock_package.*",
+                            "another_one.*",
+                        ],
+                        **VANILLA_FIND_EXCLUDE_KEYVAL,
+                    },
+                },
+            },
         },
+        **NO_PYPI_VANILLA_SECTIONS_OUT,  # see above comment on vanilla-ness
     }
 
     # make an extra package *not* to be included
@@ -750,18 +771,24 @@ def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
                 "Programming Language :: Python :: 3.11",
             ],
         },
-        **VANILLA_SEMANTIC_RELEASE_SECTIONS,
-        **VANILLA_SECTIONS_OUT,
-        **VANILLA_PACKAGE_DATA_SECTION,
-        "tool.setuptools.packages.find": {
-            "include": [
-                "mock_package",
-                "another_one",
-                "mock_package.*",
-                "another_one.*",
-            ],
-            **VANILLA_FIND_EXCLUDE_KEYVAL,
+        "tool": {
+            **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
+            "setuptools": {
+                "package-data": {"*": ["py.typed"]},
+                "packages": {
+                    "find": {
+                        "include": [
+                            "mock_package",
+                            "another_one",
+                            "mock_package.*",
+                            "another_one.*",
+                        ],
+                        **VANILLA_FIND_EXCLUDE_KEYVAL,
+                    },
+                },
+            },
         },
+        **VANILLA_SECTIONS_OUT,
     }
 
     # make an extra package *not* to be included
@@ -971,7 +998,7 @@ def test_40_extra_stuff(directory: str, requests_mock: Any) -> None:
         extra_stuff["project"]["grocery_list"] = ["apple", "banana", "pumpkin"]
         # extra sections
         extra_stuff["baz"] = {"a": 11}
-        extra_stuff["foo.bar"] = {"b": 22}
+        extra_stuff["foo"] = {"bar": {"b": 22}}
         toml.dump(extra_stuff, f)
 
     pyproject_toml_expected = {
@@ -1000,15 +1027,17 @@ def test_40_extra_stuff(directory: str, requests_mock: Any) -> None:
                 "Programming Language :: Python :: 3.11",
             ],
         },
-        **VANILLA_SEMANTIC_RELEASE_SECTIONS,
-        **VANILLA_SECTIONS_OUT,
-        **VANILLA_PACKAGE_DATA_SECTION,
-        "tool.setuptools.packages.find": {
-            **VANILLA_FIND_EXCLUDE_KEYVAL,
+        "tool": {
+            **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
+            "setuptools": {
+                "package-data": {"*": ["py.typed"]},
+                "packages": {"find": {**VANILLA_FIND_EXCLUDE_KEYVAL}},
+            },
         },
+        **VANILLA_SECTIONS_OUT,
         # the extra sections
         "baz": extra_stuff["baz"],
-        "foo.bar": extra_stuff["foo.bar"],
+        "foo": extra_stuff["foo"],
     }
 
     # run pyproject_toml_builder
@@ -1127,19 +1156,21 @@ def test_50_bumping(
                 "Programming Language :: Python :: 3.11",
             ],
         },
-        **{
-            k: v
-            for k, v in (
-                VANILLA_SEMANTIC_RELEASE_SECTIONS
-                if patch_without_tag
-                else SEMANTIC_RELEASE_SECTIONS_NO_PATCH
-            ).items()
+        "tool": {
+            **{
+                k: v
+                for k, v in (
+                    VANILLA_SEMANTIC_RELEASE_SUBSECTIONS
+                    if patch_without_tag
+                    else SEMANTIC_RELEASE_SUBSECTIONS__NO_PATCH
+                ).items()
+            },
+            "setuptools": {
+                "package-data": {"*": ["py.typed"]},
+                "packages": {"find": {**VANILLA_FIND_EXCLUDE_KEYVAL}},
+            },
         },
         **VANILLA_SECTIONS_OUT,
-        **VANILLA_PACKAGE_DATA_SECTION,
-        "tool.setuptools.packages.find": {
-            **VANILLA_FIND_EXCLUDE_KEYVAL,
-        },
     }
 
     # run pyproject_toml_builder
