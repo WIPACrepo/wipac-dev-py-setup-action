@@ -67,32 +67,20 @@ VANILLA_SECTIONS_IN = {
     },
 }
 
+BUILD_SYSTEM_SECTION = {
+    "build-system": {
+        "requires": ["setuptools>=61.0"],
+        "build-backend": "setuptools.build_meta",
+    },
+}
 
-def _vanilla_section_out(with_urls: bool):
-    if with_urls:
-        urls = {
-            "urls": {
-                "Homepage": "https://pypi.org/project/wipac-mock-package/",
-                "Tracker": "https://github.com/foobarbaz-org/foobarbaz-repo/issues",
-                "Source": "https://github.com/foobarbaz-org/foobarbaz-repo",
-            },
-        }
-    else:
-        urls = {}
-    return {
-        "build-system": {
-            "requires": ["setuptools>=61.0"],
-            "build-backend": "setuptools.build_meta",
-        },
-        "project": {
-            **VANILLA_SECTIONS_IN["project"],
-            **urls,
-        },
+PYPI_URLS_KEYVALS = {
+    "urls": {
+        "Homepage": "https://pypi.org/project/wipac-mock-package/",
+        "Tracker": "https://github.com/foobarbaz-org/foobarbaz-repo/issues",
+        "Source": "https://github.com/foobarbaz-org/foobarbaz-repo",
     }
-
-
-VANILLA_SECTIONS_OUT = _vanilla_section_out(True)
-NO_PYPI_VANILLA_SECTIONS_OUT = _vanilla_section_out(False)
+}
 
 # allow patch releases without specified commit tags (patch_without_tag=True)
 PATCH_WITHOUT_TAG_WORKAROUND = [
@@ -316,6 +304,7 @@ def test_00_minimum_input(directory: str, requests_mock: Any) -> None:
         toml.dump(VANILLA_SECTIONS_IN, f)
 
     pyproject_toml_expected = {
+        **BUILD_SYSTEM_SECTION,
         "project": {
             "name": "mock-package",
             **NO_PYPI_VANILLA_PROJECT_KEYVALS,  # the true minimum is more vanilla than vanilla)
@@ -327,7 +316,6 @@ def test_00_minimum_input(directory: str, requests_mock: Any) -> None:
                 "packages": {"find": {**VANILLA_FIND_EXCLUDE_KEYVAL}},
             },
         },
-        **NO_PYPI_VANILLA_SECTIONS_OUT,  # see above comment on vanilla-ness
     }
 
     # run pyproject_toml_builder
@@ -362,6 +350,7 @@ def test_01_minimum_input_w_pypi(directory: str, requests_mock: Any) -> None:
         toml.dump(VANILLA_SECTIONS_IN, f)
 
     pyproject_toml_expected = {
+        **BUILD_SYSTEM_SECTION,
         "project": {
             "name": "wipac-mock-package",
             **VANILLA_PROJECT_KEYVALS,
@@ -376,6 +365,7 @@ def test_01_minimum_input_w_pypi(directory: str, requests_mock: Any) -> None:
                 "Programming Language :: Python :: 3.10",
                 "Programming Language :: Python :: 3.11",
             ],
+            **PYPI_URLS_KEYVALS,
         },
         "tool": {
             **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
@@ -384,7 +374,6 @@ def test_01_minimum_input_w_pypi(directory: str, requests_mock: Any) -> None:
                 "packages": {"find": {**VANILLA_FIND_EXCLUDE_KEYVAL}},
             },
         },
-        **VANILLA_SECTIONS_OUT,
     }
 
     # run pyproject_toml_builder
@@ -429,6 +418,7 @@ def test_10_keywords(directory: str, requests_mock: Any) -> None:
         toml.dump(VANILLA_SECTIONS_IN, f)
 
     pyproject_toml_expected = {
+        **BUILD_SYSTEM_SECTION,
         "project": {
             "name": "wipac-mock-package",
             **VANILLA_PROJECT_KEYVALS,
@@ -453,6 +443,7 @@ def test_10_keywords(directory: str, requests_mock: Any) -> None:
                 "Programming Language :: Python :: 3.10",
                 "Programming Language :: Python :: 3.11",
             ],
+            **PYPI_URLS_KEYVALS,
         },
         "tool": {
             **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
@@ -461,7 +452,6 @@ def test_10_keywords(directory: str, requests_mock: Any) -> None:
                 "packages": {"find": {**VANILLA_FIND_EXCLUDE_KEYVAL}},
             },
         },
-        **VANILLA_SECTIONS_OUT,
     }
 
     # run pyproject_toml_builder
@@ -505,6 +495,7 @@ def test_20_python_max(directory: str, requests_mock: Any) -> None:
         toml.dump(VANILLA_SECTIONS_IN, f)
 
     pyproject_toml_expected = {
+        **BUILD_SYSTEM_SECTION,
         "project": {
             "name": "wipac-mock-package",
             **VANILLA_PROJECT_KEYVALS,
@@ -526,6 +517,7 @@ def test_20_python_max(directory: str, requests_mock: Any) -> None:
                 "Programming Language :: Python :: 3.8",
                 "Programming Language :: Python :: 3.9",
             ],
+            **PYPI_URLS_KEYVALS,
         },
         "tool": {
             **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
@@ -534,7 +526,6 @@ def test_20_python_max(directory: str, requests_mock: Any) -> None:
                 "packages": {"find": {**VANILLA_FIND_EXCLUDE_KEYVAL}},
             },
         },
-        **VANILLA_SECTIONS_OUT,
     }
 
     # run pyproject_toml_builder
@@ -578,6 +569,7 @@ def test_30_package_dirs__single(directory: str, requests_mock: Any) -> None:
         toml.dump(VANILLA_SECTIONS_IN, f)
 
     pyproject_toml_expected = {
+        **BUILD_SYSTEM_SECTION,
         "project": {
             "name": "wipac-mock-package",
             **VANILLA_PROJECT_KEYVALS,
@@ -600,6 +592,7 @@ def test_30_package_dirs__single(directory: str, requests_mock: Any) -> None:
                 "Programming Language :: Python :: 3.10",
                 "Programming Language :: Python :: 3.11",
             ],
+            **PYPI_URLS_KEYVALS,
         },
         "tool": {
             **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
@@ -613,7 +606,6 @@ def test_30_package_dirs__single(directory: str, requests_mock: Any) -> None:
                 },
             },
         },
-        **VANILLA_SECTIONS_OUT,
     }
 
     # make an extra package *not* to be included
@@ -662,6 +654,7 @@ def test_34_package_dirs__multi_autoname__no_pypi(
         toml.dump(VANILLA_SECTIONS_IN, f)
 
     pyproject_toml_expected = {
+        **BUILD_SYSTEM_SECTION,
         "project": {
             "name": "mock-package-another-one",
             **NO_PYPI_VANILLA_PROJECT_KEYVALS,  # the true minimum is more vanilla than vanilla
@@ -694,7 +687,6 @@ def test_34_package_dirs__multi_autoname__no_pypi(
                 },
             },
         },
-        **NO_PYPI_VANILLA_SECTIONS_OUT,  # see above comment on vanilla-ness
     }
 
     # make an extra package *not* to be included
@@ -748,6 +740,7 @@ def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
         toml.dump(VANILLA_SECTIONS_IN, f)
 
     pyproject_toml_expected = {
+        **BUILD_SYSTEM_SECTION,
         "project": {
             "name": "wipac-mock-package",
             **VANILLA_PROJECT_KEYVALS,
@@ -785,10 +778,10 @@ def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
                         ],
                         **VANILLA_FIND_EXCLUDE_KEYVAL,
                     },
+                    **PYPI_URLS_KEYVALS,
                 },
             },
         },
-        **VANILLA_SECTIONS_OUT,
     }
 
     # make an extra package *not* to be included
@@ -1002,6 +995,7 @@ def test_40_extra_stuff(directory: str, requests_mock: Any) -> None:
         toml.dump(extra_stuff, f)
 
     pyproject_toml_expected = {
+        **BUILD_SYSTEM_SECTION,
         "project": {
             "nickname": "the best python package around",
             "grocery_list": ["apple", "banana", "pumpkin"],
@@ -1026,6 +1020,7 @@ def test_40_extra_stuff(directory: str, requests_mock: Any) -> None:
                 "Programming Language :: Python :: 3.10",
                 "Programming Language :: Python :: 3.11",
             ],
+            **PYPI_URLS_KEYVALS,
         },
         "tool": {
             **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
@@ -1034,7 +1029,6 @@ def test_40_extra_stuff(directory: str, requests_mock: Any) -> None:
                 "packages": {"find": {**VANILLA_FIND_EXCLUDE_KEYVAL}},
             },
         },
-        **VANILLA_SECTIONS_OUT,
         # the extra sections
         "baz": extra_stuff["baz"],
         "foo": extra_stuff["foo"],
@@ -1141,6 +1135,7 @@ def test_50_bumping(
         toml.dump(VANILLA_SECTIONS_IN, f)
 
     pyproject_toml_expected = {
+        **BUILD_SYSTEM_SECTION,
         "project": {
             "name": "wipac-mock-package",
             **VANILLA_PROJECT_KEYVALS,
@@ -1155,6 +1150,7 @@ def test_50_bumping(
                 "Programming Language :: Python :: 3.10",
                 "Programming Language :: Python :: 3.11",
             ],
+            **PYPI_URLS_KEYVALS,
         },
         "tool": {
             **{
@@ -1170,7 +1166,6 @@ def test_50_bumping(
                 "packages": {"find": {**VANILLA_FIND_EXCLUDE_KEYVAL}},
             },
         },
-        **VANILLA_SECTIONS_OUT,
     }
 
     # run pyproject_toml_builder
