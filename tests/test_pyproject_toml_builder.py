@@ -763,6 +763,7 @@ def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
                 "Programming Language :: Python :: 3.10",
                 "Programming Language :: Python :: 3.11",
             ],
+            **PYPI_URLS_KEYVALS,
         },
         "tool": {
             **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
@@ -778,7 +779,6 @@ def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
                         ],
                         **VANILLA_FIND_EXCLUDE_KEYVAL,
                     },
-                    **PYPI_URLS_KEYVALS,
                 },
             },
         },
