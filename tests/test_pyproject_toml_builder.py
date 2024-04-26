@@ -121,23 +121,26 @@ NO_PYPI_VANILLA_PROJECT_KEYVALS = {  # even MORE vanilla than vanilla
     if k in ["dependencies", "find", "version"]
 }
 
-VANILLA_SEMANTIC_RELEASE_SECTIONS = {
-    "tool.semantic_release": {
-        "version_toml": ["pyproject.toml:project.version"],
-        "commit_parser": "emoji",
-        "commit_parser_options": {
-            "major_tags": ["[major]"],
-            "minor_tags": ["[minor]", "[feature]"],
-            "patch_tags": ["[patch]", "[fix]"] + sorted(PATCH_WITHOUT_TAG_WORKAROUND),
-        },
-    }
-}
 
-SEMANTIC_RELEASE_SECTIONS_NO_PATCH = copy.deepcopy(VANILLA_SEMANTIC_RELEASE_SECTIONS)
-for tag in PATCH_WITHOUT_TAG_WORKAROUND:
-    # fmt: off
-    SEMANTIC_RELEASE_SECTIONS_NO_PATCH["tool.semantic_release"]["commit_parser_options"]["patch_tags"].remove(tag)  # type: ignore[index]
-    # fmt: on
+def _make_vanilla_semantic_release_section(patch_without_tag_workaround: bool):
+    return {
+        "tool.semantic_release": {
+            "version_toml": ["pyproject.toml:project.version"],
+            "commit_parser": "emoji",
+            "commit_parser_options": {
+                "major_tags": ["[major]"],
+                "minor_tags": ["[minor]", "[feature]"],
+                "patch_tags": ["[patch]", "[fix]"]
+                + sorted(
+                    PATCH_WITHOUT_TAG_WORKAROUND if patch_without_tag_workaround else []
+                ),
+            },
+        }
+    }
+
+
+VANILLA_SEMANTIC_RELEASE_SECTIONS = _make_vanilla_semantic_release_section(True)
+SEMANTIC_RELEASE_SECTIONS_NO_PATCH = _make_vanilla_semantic_release_section(False)
 assert VANILLA_SEMANTIC_RELEASE_SECTIONS != SEMANTIC_RELEASE_SECTIONS_NO_PATCH
 
 VANILLA_PACKAGE_DATA_SECTION = {
