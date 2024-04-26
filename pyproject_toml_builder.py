@@ -47,7 +47,16 @@ PythonMinMax = tuple[tuple[int, int], tuple[int, int]]
 
 
 class NoDotsDict(dict):
-    """A custom dictionary class that disallows keys with dots ('.')."""
+    """A custom dictionary class that disallows keys with dots ('.').
+
+    Dots have a special meaning in TOML, so a key like `[a.b.c]` in a
+    `dict` would be dict["a"]["b"]["c"] but NOT dict["a.b.c"]. To avoid
+    this pitfall, we can disallow dots all together.
+
+    There are situations where a dotted key could be useful, like
+    `["127.0.0.1"] = "value"`. In this case, this the dict key is "127.0.0.1"
+    (and is not a nesting of subdicts).
+    """
 
     def __setitem__(self, key, value):
         if "." in key:

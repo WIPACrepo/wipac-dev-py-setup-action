@@ -158,7 +158,12 @@ def assert_outputted_pyproject_toml(
     pyproject_toml_path: Path, expected: dict[str, Any]
 ) -> None:
     """Compare each's contents casted to a dict."""
-    pyproject_toml_builder.NoDotsDict(expected)  # test that we aren't using dots
+
+    # test that we aren't using dots
+    no_dots = pyproject_toml_builder.NoDotsDict()
+    for key, value in expected.items():
+        no_dots[key] = value
+
     print()
     print("EXPECTED TOML OUTPUT:")
     print(expected)
