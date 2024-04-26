@@ -504,7 +504,10 @@ def write_toml(
     )
 
     with open(toml_file, "w") as f:
-        toml.dump(toml_dict, f)
+        toml.dump(
+            {k: v for k, v in sorted(toml_dict.items())},  # sort by key
+            f,
+        )
 
     return readme_mgr
 
