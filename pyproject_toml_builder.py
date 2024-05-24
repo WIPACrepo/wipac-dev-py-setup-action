@@ -465,7 +465,7 @@ def _build_out_sections(
         ),
     )
 
-    def tool_setuptools_packages_find():
+    def tool_setuptools_packages_find() -> dict:
         if gha_input.package_dirs:
             return dict(
                 include=gha_input.package_dirs
@@ -474,12 +474,17 @@ def _build_out_sections(
         if gha_input.exclude_dirs:
             return dict(exclude=gha_input.exclude_dirs)
 
-    def tool_setuptools_packagedata_star():
-        # add py.typed to "*" (if there)
+    def tool_setuptools_packagedata_star() -> list[str]:
+        """Add py.typed to "*"."""
         try:
-            return toml_dict["tool"]["setuptools"]["package-data"]["*"] + ["py.typed"]
+            current = set(toml_dict["tool"]["setuptools"]["package-data"]["*"])
         except KeyError:
             return ["py.typed"]
+
+        if "py.typed" in current:
+            return list(current)
+        else:
+            return list(current) + ["py.typed"]
 
     # [tool.setuptools]
     if not toml_dict["tool"].get("setuptools"):
