@@ -128,8 +128,6 @@ VANILLA_SEMANTIC_RELEASE_SUBSECTIONS = _make_vanilla_semantic_release_section(Tr
 SEMANTIC_RELEASE_SUBSECTIONS__NO_PATCH = _make_vanilla_semantic_release_section(False)
 assert VANILLA_SEMANTIC_RELEASE_SUBSECTIONS != SEMANTIC_RELEASE_SUBSECTIONS__NO_PATCH
 
-VANILLA_FIND_EXCLUDE_KEYVAL = {"exclude": EXCLUDE_DIRS}
-
 
 ################################################################################
 # HELPER FUNCTIONS
@@ -306,7 +304,7 @@ def test_00_minimum_input(directory: str, requests_mock: Any) -> None:
             **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {"find": {**VANILLA_FIND_EXCLUDE_KEYVAL}},
+                "packages": {"find": {"exclude": EXCLUDE_DIRS}},
             },
         },
     }
@@ -364,7 +362,7 @@ def test_01_minimum_input_w_pypi(directory: str, requests_mock: Any) -> None:
             **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {"find": {**VANILLA_FIND_EXCLUDE_KEYVAL}},
+                "packages": {"find": {"exclude": EXCLUDE_DIRS}},
             },
         },
     }
@@ -442,7 +440,7 @@ def test_10_keywords(directory: str, requests_mock: Any) -> None:
             **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {"find": {**VANILLA_FIND_EXCLUDE_KEYVAL}},
+                "packages": {"find": {"exclude": EXCLUDE_DIRS}},
             },
         },
     }
@@ -516,7 +514,7 @@ def test_20_python_max(directory: str, requests_mock: Any) -> None:
             **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {"find": {**VANILLA_FIND_EXCLUDE_KEYVAL}},
+                "packages": {"find": {"exclude": EXCLUDE_DIRS}},
             },
         },
     }
@@ -592,10 +590,7 @@ def test_30_package_dirs__single(directory: str, requests_mock: Any) -> None:
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {
-                    "find": {
-                        "include": ["mock_package", "mock_package.*"],
-                        **VANILLA_FIND_EXCLUDE_KEYVAL,
-                    },
+                    "find": {"include": ["mock_package", "mock_package.*"]},
                 },
             },
         },
@@ -674,8 +669,7 @@ def test_34_package_dirs__multi_autoname__no_pypi(
                             "another_one",
                             "mock_package.*",
                             "another_one.*",
-                        ],
-                        **VANILLA_FIND_EXCLUDE_KEYVAL,
+                        ]
                     },
                 },
             },
@@ -769,8 +763,7 @@ def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
                             "another_one",
                             "mock_package.*",
                             "another_one.*",
-                        ],
-                        **VANILLA_FIND_EXCLUDE_KEYVAL,
+                        ]
                     },
                 },
             },
@@ -1019,7 +1012,7 @@ def test_40_extra_stuff(directory: str, requests_mock: Any) -> None:
             **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {"find": {**VANILLA_FIND_EXCLUDE_KEYVAL}},
+                "packages": {"find": {"exclude": EXCLUDE_DIRS}},
             },
         },
         # the extra sections
@@ -1156,7 +1149,7 @@ def test_50_bumping(
             },
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {"find": {**VANILLA_FIND_EXCLUDE_KEYVAL}},
+                "packages": {"find": {"exclude": EXCLUDE_DIRS}},
             },
         },
     }
