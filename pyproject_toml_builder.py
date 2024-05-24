@@ -113,7 +113,6 @@ class GHAInput:
     keywords: list[str] = dataclasses.field(default_factory=list)
     author: str = ""
     author_email: str = ""
-    license: str = "MIT"
 
     # def __post_init__(self) -> None:
     #     if self.pypi_name:
@@ -135,7 +134,7 @@ class GHAInput:
     #                 f"Python-release automation ('{attr_name}') does not work for python 4+."
     #             )
 
-    def python_requires(self) -> str:
+    def get_requires_python(self) -> str:
         """Get a `[project]/python_requires` string from `self.python_range`.
 
         Ex: "">=3.6, <3.10" (cannot do "<=3.9" because 3.9.1 > 3.9)
@@ -429,14 +428,12 @@ def _build_out_sections(
                 "author_email": gha_input.author_email,
                 "description": gh_api.description,
                 "readme": ffile.readme_path.name,
-                "license": gha_input.license,
+                "license": {"file": "LICENSE"},
                 "keywords": gha_input.keywords,
-                "classifiers": [
-                    ffile.development_status,
-                    "License :: OSI Approved :: MIT License",
-                ]
-                + gha_input.python_classifiers(),
-                "requires-python": gha_input.python_requires(),
+                "classifiers": (
+                    [ffile.development_status] + gha_input.python_classifiers()
+                ),
+                "requires-python": gha_input.get_requires_python(),
             }
         )
         # [project.urls]

@@ -38,7 +38,6 @@ EXCLUDE_DIRS = [
     "example",
     "examples",
 ]
-LICENSE = "MIT"
 TOKEN = "token"
 
 NONBUMPING_COMMIT_MESSAGE = "foo bar baz"
@@ -96,7 +95,7 @@ VANILLA_PROJECT_KEYVALS = {
     "author_email": AUTHOR_EMAIL,
     "description": "Ceci n’est pas une pipe",
     "readme": "README.md",
-    "license": "MIT",
+    "license": {"file": "LICENSE"},
     "requires-python": ">=3.6, <3.12",
     "find": {"namespaces": False},
 }
@@ -348,7 +347,6 @@ def test_01_minimum_input_w_pypi(directory: str, requests_mock: Any) -> None:
             "keywords": ["WIPAC", "IceCube"],
             "classifiers": [
                 "Development Status :: 5 - Production/Stable",
-                "License :: OSI Approved :: MIT License",
                 "Programming Language :: Python :: 3.6",
                 "Programming Language :: Python :: 3.7",
                 "Programming Language :: Python :: 3.8",
@@ -426,7 +424,6 @@ def test_10_keywords(directory: str, requests_mock: Any) -> None:
             ],
             "classifiers": [
                 "Development Status :: 5 - Production/Stable",
-                "License :: OSI Approved :: MIT License",
                 "Programming Language :: Python :: 3.6",
                 "Programming Language :: Python :: 3.7",
                 "Programming Language :: Python :: 3.8",
@@ -502,7 +499,6 @@ def test_20_python_max(directory: str, requests_mock: Any) -> None:
             ],
             "classifiers": [
                 "Development Status :: 5 - Production/Stable",
-                "License :: OSI Approved :: MIT License",
                 "Programming Language :: Python :: 3.6",
                 "Programming Language :: Python :: 3.7",
                 "Programming Language :: Python :: 3.8",
@@ -575,7 +571,6 @@ def test_30_package_dirs__single(directory: str, requests_mock: Any) -> None:
             ],
             "classifiers": [
                 "Development Status :: 5 - Production/Stable",
-                "License :: OSI Approved :: MIT License",
                 "Programming Language :: Python :: 3.6",
                 "Programming Language :: Python :: 3.7",
                 "Programming Language :: Python :: 3.8",
@@ -742,7 +737,6 @@ def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
             ],
             "classifiers": [
                 "Development Status :: 5 - Production/Stable",
-                "License :: OSI Approved :: MIT License",
                 "Programming Language :: Python :: 3.6",
                 "Programming Language :: Python :: 3.7",
                 "Programming Language :: Python :: 3.8",
@@ -998,7 +992,6 @@ def test_40_extra_stuff(directory: str, requests_mock: Any) -> None:
             ],
             "classifiers": [
                 "Development Status :: 5 - Production/Stable",
-                "License :: OSI Approved :: MIT License",
                 "Programming Language :: Python :: 3.6",
                 "Programming Language :: Python :: 3.7",
                 "Programming Language :: Python :: 3.8",
@@ -1128,7 +1121,6 @@ def test_50_bumping(
             "keywords": ["WIPAC", "IceCube"],
             "classifiers": [
                 classifier,
-                "License :: OSI Approved :: MIT License",
                 "Programming Language :: Python :: 3.6",
                 "Programming Language :: Python :: 3.7",
                 "Programming Language :: Python :: 3.8",
