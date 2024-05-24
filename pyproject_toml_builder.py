@@ -473,6 +473,9 @@ def _build_out_sections(
             )
         if gha_input.exclude_dirs:
             return dict(exclude=gha_input.exclude_dirs)
+        raise Exception(
+            """Cannot assemble [tool.setuptools.packages.find]; package_dirs or exclude_dirs must be provided."""
+        )
 
     def tool_setuptools_packagedata_star() -> list[str]:
         """Add py.typed to "*"."""
