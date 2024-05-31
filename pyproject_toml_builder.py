@@ -531,7 +531,10 @@ def write_toml(
     toml_file = toml_file.resolve()
     if toml_file.exists():
         with open(toml_file, "r") as f:
-            toml_dict = NoDotsDict(toml.load(f))
+            try:
+                toml_dict = NoDotsDict(toml.load(f))
+            except toml.decoder.TomlDecodeError as e:
+                raise Exception(f"user's {toml_file} has invalid toml syntax") from e
     else:
         toml_dict = NoDotsDict()
 
