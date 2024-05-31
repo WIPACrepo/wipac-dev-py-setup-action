@@ -43,6 +43,10 @@ DEV_STATUS_ALPHA_0_0_Z = "Development Status :: 3 - Alpha"
 DEV_STATUS_BETA_0_Y_Z = "Development Status :: 4 - Beta"
 DEV_STATUS_PROD_X_Y_Z = "Development Status :: 5 - Production/Stable"
 
+DYNAMIC_DUNDER_VERSION = (
+    "__version__ = importlib.metadata.version(__package__ or __name__)"
+)
+
 PythonMinMax = tuple[tuple[int, int], tuple[int, int]]
 
 
@@ -217,24 +221,24 @@ class FromFiles:
                 return Path(fname)
         raise FileNotFoundError(f"No README file found in '{self.root}'")
 
-    def has_dunder_version(self) -> bool:
-        """Find the package's `__version__` string(s).
+    def has_hardcoded_dunder_version(self) -> bool:
+        """Find the package's `__version__` string(s) and return whether it is hardcoded.
 
         `__version__` needs to be parsed as plain text due to potential
         race condition, see:
         https://stackoverflow.com/a/2073599/13156561
         """
 
-        def _path_has_dunder_version(ppath: Path) -> bool:
+        def _has_it(ppath: Path) -> bool:
             with open(ppath / "__init__.py") as f:
                 for line in f.readlines():
-                    if "__version__" in line:
-                        # grab "X.Y.Z" from `__version__ = 'X.Y.Z'`
-                        # - quote-style insensitive
+                    if line.startswith("__version__") and not line.startswith(
+                        DYNAMIC_DUNDER_VERSION
+                    ):
                         return True
             return False
 
-        return any(_path_has_dunder_version(p) for p in self._pkg_paths)
+        return any(_has_it(p) for p in self._pkg_paths)
 
 
 def get_development_status(
@@ -495,9 +499,10 @@ class PyProjectTomlBuilder:
         ffile: FromFiles,
     ) -> None:
         # can't have __version__ (must have one source of truth)
-        if ffile.has_dunder_version():
+        if ffile.has_hardcoded_dunder_version():
             raise Exception(
-                "Package(s) must not have '__version__' attribute(s) -- migrate to pyproject.toml's 'project.version'"
+                f"Package(s) must not define the version using '__version__' attribute(s) -- "
+                f"migrate string to pyproject.toml's 'project.version' and replace with '{DYNAMIC_DUNDER_VERSION}'"
             )
         # must have these fields...
         try:

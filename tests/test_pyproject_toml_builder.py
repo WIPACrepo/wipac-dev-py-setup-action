@@ -1014,7 +1014,8 @@ def test_60__has_dunder_version__error(directory: str, requests_mock: Any) -> No
     with pytest.raises(
         Exception,
         match=re.escape(
-            "Package(s) must not have '__version__' attribute(s) -- migrate to pyproject.toml's 'project.version'"
+            f"Package(s) must not define the version using '__version__' attribute(s) -- "
+            f"migrate string to pyproject.toml's 'project.version' and replace with '{pyproject_toml_builder.DYNAMIC_DUNDER_VERSION}'"
         ),
     ):
         pyproject_toml_builder.work(
