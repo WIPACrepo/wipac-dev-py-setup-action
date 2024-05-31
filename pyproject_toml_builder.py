@@ -365,113 +365,148 @@ class READMEMarkdownManager:
         ]
 
 
-def _build_out_sections(
-    toml_dict: NoDotsDict,
-    root_path: Path,
-    github_full_repo: str,
-    token: str,
-    commit_message: str,
-    gha_input: GHAInput,
-) -> READMEMarkdownManager | None:
+class PyProjectTomlBuilder:
     """Build out the `[project]`, `[semantic_release]`, and `[options]` sections in `toml_dict`.
 
-    Return a 'READMEMarkdownManager' instance to write out. If, necessary.
+    Create a 'READMEMarkdownManager' instance to write out, if needed.
     """
-    ffile = FromFiles(  # things requiring reading files
-        root_path,
-        gha_input,
-        commit_message,
-    )
-    gh_api = GitHubAPI(github_full_repo, oauth_token=token)
 
-    # first, validate already provided fields
-    # must already have these fields
-    if ffile.has_dunder_version():
-        raise RuntimeError(
-            "Package(s) must not have '__version__' attributes -- migrate these to pyproject.toml's 'project.version'"
+    def __init__(
+        self,
+        toml_dict: NoDotsDict,
+        root_path: Path,
+        github_full_repo: str,
+        token: str,
+        commit_message: str,
+        gha_input: GHAInput,
+    ):
+        ffile = FromFiles(  # things requiring reading files
+            root_path,
+            gha_input,
+            commit_message,
         )
-    else:
+        gh_api = GitHubAPI(github_full_repo, oauth_token=token)
+        self._validate_repo_initial_state(toml_dict, ffile)
+
+        # [build-system]
+        toml_dict["build-system"] = {
+            "requires": ["setuptools>=61.0"],
+            "build-backend": "setuptools.build_meta",
+        }
+
+        # [project]
+        # if we DON'T want PyPI stuff:
+        if not gha_input.pypi_name:
+            toml_dict["project"]["name"] = "_".join(ffile.packages).replace("_", "-")
+            # add the following if they were given:
+            if gha_input.author or gha_input.author_email:
+                toml_dict["project"]["authors"] = [{}]
+                if gha_input.author:
+                    toml_dict["project"]["authors"][0].update(
+                        {"name": gha_input.author}
+                    )
+                if gha_input.author_email:
+                    toml_dict["project"]["authors"][0].update(
+                        {"email": gha_input.author_email}
+                    )
+            if gha_input.keywords:
+                toml_dict["project"]["keywords"] = gha_input.keywords
+        # if we DO want PyPI, then include everything:
+        else:
+            toml_dict["project"].update(
+                {
+                    "name": gha_input.pypi_name,
+                    "authors": [
+                        {
+                            "name": gha_input.author,
+                            "email": gha_input.author_email,
+                        }
+                    ],
+                    "description": gh_api.description,
+                    "readme": ffile.readme_path.name,
+                    "license": {"file": "LICENSE"},
+                    "keywords": gha_input.keywords,
+                    "classifiers": (
+                        [
+                            get_development_status(
+                                toml_dict["project"]["version"],
+                                gha_input.patch_without_tag,
+                                commit_message,
+                            )
+                        ]
+                        + gha_input.python_classifiers()
+                    ),
+                    "requires-python": gha_input.get_requires_python(),
+                }
+            )
+            # [project.urls]
+            toml_dict["project"]["urls"] = {
+                "Homepage": f"https://pypi.org/project/{gha_input.pypi_name}/",
+                "Tracker": f"{gh_api.url}/issues",
+                "Source": gh_api.url,
+            }
+
+        # [tool]
+        if not toml_dict.get("tool"):
+            toml_dict["tool"] = {}
+
+        # [tool.semantic_release] -- will be completely overridden
+        toml_dict["tool"]["semantic_release"] = {
+            "version_toml": ["pyproject.toml:project.version"],
+            "commit_parser": "emoji",
+            "commit_parser_options": {
+                "major_tags": SEMANTIC_RELEASE_MAJOR,
+                "minor_tags": SEMANTIC_RELEASE_MINOR,
+                "patch_tags": (
+                    SEMANTIC_RELEASE_PATCH
+                    if not gha_input.patch_without_tag
+                    else SEMANTIC_RELEASE_PATCH + sorted(PATCH_WITHOUT_TAG_WORKAROUND)
+                ),
+            },
+        }
+
+        # [tool.setuptools]
+        if not toml_dict["tool"].get("setuptools"):
+            toml_dict["tool"]["setuptools"] = {}
+        toml_dict["tool"]["setuptools"].update(
+            {
+                "packages": {
+                    "find": self._tool_setuptools_packages_find(gha_input),
+                },
+                "package-data": {
+                    **toml_dict["tool"].get("setuptools", {}).get("package-data", {}),
+                    "*": self._tool_setuptools_packagedata_star(toml_dict),
+                },
+            }
+        )
+
+        # Automate some README stuff
+        self.readme_mgr: READMEMarkdownManager | None
+        if ffile.readme_path.suffix == ".md":
+            self.readme_mgr = READMEMarkdownManager(
+                ffile, github_full_repo, gha_input, gh_api
+            )
+        else:
+            self.readme_mgr = None
+
+    @staticmethod
+    def _validate_repo_initial_state(
+        toml_dict: NoDotsDict,
+        ffile: FromFiles,
+    ) -> None:
+        # can't have __version__ (must have one source of truth)
+        if ffile.has_dunder_version():
+            raise RuntimeError(
+                "Package(s) must not have '__version__' attributes -- migrate these to pyproject.toml's 'project.version'"
+            )
+        # must have these fields...
         try:
             toml_dict["project"]["version"]
         except KeyError:
             RuntimeError("pyproject.toml must have 'project.version'")
 
-    # [build-system]
-    toml_dict["build-system"] = {
-        "requires": ["setuptools>=61.0"],
-        "build-backend": "setuptools.build_meta",
-    }
-
-    # [project]
-    # if we DON'T want PyPI stuff:
-    if not gha_input.pypi_name:
-        toml_dict["project"]["name"] = "_".join(ffile.packages).replace("_", "-")
-        # add the following if they were given:
-        if gha_input.author or gha_input.author_email:
-            toml_dict["project"]["authors"] = [{}]
-            if gha_input.author:
-                toml_dict["project"]["authors"][0].update({"name": gha_input.author})
-            if gha_input.author_email:
-                toml_dict["project"]["authors"][0].update(
-                    {"email": gha_input.author_email}
-                )
-        if gha_input.keywords:
-            toml_dict["project"]["keywords"] = gha_input.keywords
-    # if we DO want PyPI, then include everything:
-    else:
-        toml_dict["project"].update(
-            {
-                "name": gha_input.pypi_name,
-                "authors": [
-                    {
-                        "name": gha_input.author,
-                        "email": gha_input.author_email,
-                    }
-                ],
-                "description": gh_api.description,
-                "readme": ffile.readme_path.name,
-                "license": {"file": "LICENSE"},
-                "keywords": gha_input.keywords,
-                "classifiers": (
-                    [
-                        get_development_status(
-                            toml_dict["project"]["version"],
-                            gha_input.patch_without_tag,
-                            commit_message,
-                        )
-                    ]
-                    + gha_input.python_classifiers()
-                ),
-                "requires-python": gha_input.get_requires_python(),
-            }
-        )
-        # [project.urls]
-        toml_dict["project"]["urls"] = {
-            "Homepage": f"https://pypi.org/project/{gha_input.pypi_name}/",
-            "Tracker": f"{gh_api.url}/issues",
-            "Source": gh_api.url,
-        }
-
-    # [tool]
-    if not toml_dict.get("tool"):
-        toml_dict["tool"] = {}
-
-    # [tool.semantic_release] -- will be completely overridden
-    toml_dict["tool"]["semantic_release"] = {
-        "version_toml": ["pyproject.toml:project.version"],
-        "commit_parser": "emoji",
-        "commit_parser_options": {
-            "major_tags": SEMANTIC_RELEASE_MAJOR,
-            "minor_tags": SEMANTIC_RELEASE_MINOR,
-            "patch_tags": (
-                SEMANTIC_RELEASE_PATCH
-                if not gha_input.patch_without_tag
-                else SEMANTIC_RELEASE_PATCH + sorted(PATCH_WITHOUT_TAG_WORKAROUND)
-            ),
-        },
-    }
-
-    def tool_setuptools_packages_find() -> dict[str, Any]:
+    @staticmethod
+    def _tool_setuptools_packages_find(gha_input: GHAInput) -> dict[str, Any]:
         # only allow these...
         if gha_input.package_dirs:
             return {
@@ -484,7 +519,8 @@ def _build_out_sections(
             dicto.update({"exclude": gha_input.exclude_dirs})
         return dicto
 
-    def tool_setuptools_packagedata_star() -> list[str]:
+    @staticmethod
+    def _tool_setuptools_packagedata_star(toml_dict: NoDotsDict) -> list[str]:
         """Add py.typed to "*"."""
         try:
             current = set(toml_dict["tool"]["setuptools"]["package-data"]["*"])
@@ -495,26 +531,6 @@ def _build_out_sections(
             return list(current)
         else:
             return list(current) + ["py.typed"]
-
-    # [tool.setuptools]
-    if not toml_dict["tool"].get("setuptools"):
-        toml_dict["tool"]["setuptools"] = {}
-    toml_dict["tool"]["setuptools"].update(
-        {
-            "packages": {
-                "find": tool_setuptools_packages_find(),
-            },
-            "package-data": {
-                **toml_dict["tool"].get("setuptools", {}).get("package-data", {}),
-                "*": tool_setuptools_packagedata_star(),
-            },
-        }
-    )
-
-    # Automate some README stuff
-    if ffile.readme_path.suffix == ".md":
-        return READMEMarkdownManager(ffile, github_full_repo, gha_input, gh_api)
-    return None
 
 
 def write_toml(
@@ -538,8 +554,8 @@ def write_toml(
     else:
         toml_dict = NoDotsDict()
 
-    readme_mgr = _build_out_sections(
-        toml_dict,
+    builder = PyProjectTomlBuilder(
+        toml_dict,  # updates this
         toml_file.parent,
         github_full_repo,
         token,
@@ -550,7 +566,7 @@ def write_toml(
     with open(toml_file, "w") as f:
         toml.dump(dict(toml_dict), f)
 
-    return readme_mgr
+    return builder.readme_mgr
 
 
 def work(
