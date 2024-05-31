@@ -430,7 +430,6 @@ def _build_out_sections(
         toml_dict["project"].update(
             {
                 "name": gha_input.pypi_name,
-                "url": gh_api.url,
                 "authors": [
                     {
                         "name": gha_input.author,
