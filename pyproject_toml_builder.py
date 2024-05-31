@@ -415,13 +415,14 @@ def _build_out_sections(
     if not gha_input.pypi_name:
         toml_dict["project"]["name"] = "_".join(ffile.packages).replace("_", "-")
         # add the following if they were given:
-        if gha_input.author and gha_input.author_email:
-            toml_dict["project"]["authors"] = [
-                {
-                    "name": gha_input.author,
-                    "email": gha_input.author_email,
-                }
-            ]
+        if gha_input.author or gha_input.author_email:
+            toml_dict["project"]["authors"] = [{}]
+            if gha_input.author:
+                toml_dict["project"]["authors"][0].update({"name": gha_input.author})
+            if gha_input.author_email:
+                toml_dict["project"]["authors"][0].update(
+                    {"email": gha_input.author_email}
+                )
         if gha_input.keywords:
             toml_dict["project"]["keywords"] = gha_input.keywords
     # if we DO want PyPI, then include everything:
@@ -430,8 +431,12 @@ def _build_out_sections(
             {
                 "name": gha_input.pypi_name,
                 "url": gh_api.url,
-                "author": gha_input.author,
-                "author_email": gha_input.author_email,
+                "authors": [
+                    {
+                        "name": gha_input.author,
+                        "email": gha_input.author_email,
+                    }
+                ],
                 "description": gh_api.description,
                 "readme": ffile.readme_path.name,
                 "license": {"file": "LICENSE"},
