@@ -85,7 +85,7 @@ PYPI_URLS_KEYVALS = {
 PATCH_WITHOUT_TAG_WORKAROUND = [
     chr(i)
     for i in range(32, 127)
-    if chr(i) not in ['"', ","]  # else upsets toml syntax
+    if chr(i) not in ['"', ",", "\\"]  # else upsets toml syntax
 ]
 
 VANILLA_PROJECT_KEYVALS = {
