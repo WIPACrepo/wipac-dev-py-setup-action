@@ -43,6 +43,7 @@ DEV_STATUS_ALPHA_0_0_Z = "Development Status :: 3 - Alpha"
 DEV_STATUS_BETA_0_Y_Z = "Development Status :: 4 - Beta"
 DEV_STATUS_PROD_X_Y_Z = "Development Status :: 5 - Production/Stable"
 
+# https://stackoverflow.com/a/71126828/13156561
 DYNAMIC_DUNDER_VERSION = (
     "__version__ = importlib.metadata.version(__package__ or __name__)"
 )
