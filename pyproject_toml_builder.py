@@ -168,13 +168,9 @@ class FromFiles:
             raise NotADirectoryError(root)
         self.gha_input = gha_input
         self.root = root.resolve()
-
-        pkg_paths = self._get_package_paths(self.gha_input.exclude_dirs)
-        self.packages = [p.name for p in pkg_paths]
-        self.version = self._get_version(pkg_paths)
-
+        self._pkg_paths = self._get_package_paths(self.gha_input.exclude_dirs)
+        self.packages = [p.name for p in self._pkg_paths]
         self.readme_path = self._get_readme_path()
-        self.development_status = self._get_development_status(commit_message)
 
     def _get_package_paths(self, dirs_exclude: list[str]) -> list[Path]:
         """Find the package path(s)."""
@@ -221,88 +217,81 @@ class FromFiles:
                 return Path(fname)
         raise FileNotFoundError(f"No README file found in '{self.root}'")
 
-    @staticmethod
-    def _get_version(pkg_paths: list[Path]) -> str:
-        """Get the package's `__version__` string.
-
-        This is essentially [project]'s `version = attr: <module-path to __version__>`.
+    def has_dunder_version(self) -> bool:
+        """Find the package's `__version__` string(s).
 
         `__version__` needs to be parsed as plain text due to potential
         race condition, see:
         https://stackoverflow.com/a/2073599/13156561
         """
 
-        def version(ppath: Path) -> str:
+        def _path_has_dunder_version(ppath: Path) -> bool:
             with open(ppath / "__init__.py") as f:
                 for line in f.readlines():
                     if "__version__" in line:
                         # grab "X.Y.Z" from `__version__ = 'X.Y.Z'`
                         # - quote-style insensitive
-                        return line.replace('"', "'").split("=")[-1].split("'")[1]
+                        return True
+            return False
 
-            raise Exception(f"Cannot find __version__ in {ppath}/__init__.py")
+        return any(_path_has_dunder_version(p) for p in self._pkg_paths)
 
-        pkg_versions = {p: version(p) for p in pkg_paths}
-        if len(set(pkg_versions.values())) != 1:
-            raise Exception(
-                f"Version mismatch between packages: {pkg_versions}. "
-                f"All __version__ tuples must be the same."
-            )
-        return list(pkg_versions.values())[0]
 
-    def _get_development_status(self, commit_message: str) -> str:
-        """Detect the development status from the package's version.
+def get_development_status(
+    version: str,
+    patch_without_tag: bool,
+    commit_message: str,
+) -> str:
+    """Detect the development status from the package's version.
 
-        Known Statuses (**not all are supported**):
-            `"Development Status :: 1 - Planning"`
-            `"Development Status :: 2 - Pre-Alpha"`
-            `"Development Status :: 3 - Alpha"`
-            `"Development Status :: 4 - Beta"`
-            `"Development Status :: 5 - Production/Stable"`
-            `"Development Status :: 6 - Mature"`
-            `"Development Status :: 7 - Inactive"`
-        """
+    Known Statuses (**not all are supported**):
+        `"Development Status :: 1 - Planning"`
+        `"Development Status :: 2 - Pre-Alpha"`
+        `"Development Status :: 3 - Alpha"`
+        `"Development Status :: 4 - Beta"`
+        `"Development Status :: 5 - Production/Stable"`
+        `"Development Status :: 6 - Mature"`
+        `"Development Status :: 7 - Inactive"`
+    """
 
-        # detect version threshold crossing
-        pending_major_bump = any(k in commit_message for k in SEMANTIC_RELEASE_MAJOR)
-        pending_minor_bump = any(k in commit_message for k in SEMANTIC_RELEASE_MINOR)
-        pending_patch_bump = self.gha_input.patch_without_tag or any(
-            k in commit_message for k in SEMANTIC_RELEASE_PATCH
-        )
+    # detect version threshold crossing
+    pending_major_bump = any(k in commit_message for k in SEMANTIC_RELEASE_MAJOR)
+    pending_minor_bump = any(k in commit_message for k in SEMANTIC_RELEASE_MINOR)
+    pending_patch_bump = patch_without_tag or any(
+        k in commit_message for k in SEMANTIC_RELEASE_PATCH
+    )
 
-        # NOTE - if someday we abandon python-semantic-release, this is a starting place to detect the next version -- in this case, we'd change the version number before merging to main
+    # NOTE - if someday we abandon python-semantic-release, this is a starting place to detect the next version -- in this case, we'd change the version number before merging to main
 
-        if self.version == "0.0.0":
-            if pending_major_bump:
-                return DEV_STATUS_PROD_X_Y_Z  # MAJOR-BUMPPING STRAIGHT TO PROD
-            elif pending_minor_bump:
-                return DEV_STATUS_BETA_0_Y_Z  # MINOR-BUMPPING STRAIGHT TO BETA
-            elif pending_patch_bump:
-                return DEV_STATUS_ALPHA_0_0_Z  # PATCH-BUMPPING STRAIGHT TO ALPHA
-            else:
-                return DEV_STATUS_PREALPHA_0_0_0  # staying at pre-alpha
-
-        elif self.version.startswith("0.0."):
-            if pending_major_bump:
-                return DEV_STATUS_PROD_X_Y_Z  # MAJOR-BUMPPING STRAIGHT TO PROD
-            elif pending_minor_bump:
-                return DEV_STATUS_BETA_0_Y_Z  # MINOR-BUMPPING STRAIGHT TO BETA
-            else:
-                return DEV_STATUS_ALPHA_0_0_Z  # staying at alpha
-
-        elif self.version.startswith("0."):
-            if pending_major_bump:
-                return DEV_STATUS_PROD_X_Y_Z  # MAJOR-BUMPPING STRAIGHT TO PROD
-            else:
-                return DEV_STATUS_BETA_0_Y_Z  # staying at beta
-
-        elif int(self.version.split(".")[0]) >= 1:
-            return DEV_STATUS_PROD_X_Y_Z
-
+    if version == "0.0.0":
+        if pending_major_bump:
+            return DEV_STATUS_PROD_X_Y_Z  # MAJOR-BUMPPING STRAIGHT TO PROD
+        elif pending_minor_bump:
+            return DEV_STATUS_BETA_0_Y_Z  # MINOR-BUMPPING STRAIGHT TO BETA
+        elif pending_patch_bump:
+            return DEV_STATUS_ALPHA_0_0_Z  # PATCH-BUMPPING STRAIGHT TO ALPHA
         else:
-            raise Exception(
-                f"Could not figure 'Development Status' for version: {self.version}"
-            )
+            return DEV_STATUS_PREALPHA_0_0_0  # staying at pre-alpha
+
+    elif version.startswith("0.0."):
+        if pending_major_bump:
+            return DEV_STATUS_PROD_X_Y_Z  # MAJOR-BUMPPING STRAIGHT TO PROD
+        elif pending_minor_bump:
+            return DEV_STATUS_BETA_0_Y_Z  # MINOR-BUMPPING STRAIGHT TO BETA
+        else:
+            return DEV_STATUS_ALPHA_0_0_Z  # staying at alpha
+
+    elif version.startswith("0."):
+        if pending_major_bump:
+            return DEV_STATUS_PROD_X_Y_Z  # MAJOR-BUMPPING STRAIGHT TO PROD
+        else:
+            return DEV_STATUS_BETA_0_Y_Z  # staying at beta
+
+    elif int(version.split(".")[0]) >= 1:
+        return DEV_STATUS_PROD_X_Y_Z
+
+    else:
+        raise Exception(f"Could not figure 'Development Status' for version: {version}")
 
 
 class READMEMarkdownManager:
@@ -402,14 +391,6 @@ def _build_out_sections(
     }
 
     # [project]
-    if not toml_dict.get("project"):
-        toml_dict["project"] = {}
-    # always add these fields
-    toml_dict["project"].update(
-        {
-            "version": toml_dict.get("project", {}).get("version", "0.0.0"),
-        }
-    )
     # if we DON'T want PyPI stuff:
     if not gha_input.pypi_name:
         toml_dict["project"]["name"] = "_".join(ffile.packages).replace("_", "-")
@@ -440,7 +421,14 @@ def _build_out_sections(
                 "license": {"file": "LICENSE"},
                 "keywords": gha_input.keywords,
                 "classifiers": (
-                    [ffile.development_status] + gha_input.python_classifiers()
+                    [
+                        get_development_status(
+                            toml_dict["project"]["version"],
+                            gha_input.patch_without_tag,
+                            commit_message,
+                        )
+                    ]
+                    + gha_input.python_classifiers()
                 ),
                 "requires-python": gha_input.get_requires_python(),
             }
