@@ -1078,13 +1078,16 @@ def test_50_bumping(
 
     # write the original pyproject.toml
     with open(pyproject_toml_path, "w") as f:
-        toml.dump(VANILLA_SECTIONS_IN, f)
+        sections_in = copy.deepcopy(VANILLA_SECTIONS_IN)
+        sections_in["project"]["version"] = version
+        toml.dump(sections_in, f)
 
     pyproject_toml_expected = {
         **BUILD_SYSTEM_SECTION,
         "project": {
             "name": "wipac-mock-package",
             **VANILLA_PROJECT_KEYVALS,
+            "version": version,
             "keywords": ["WIPAC", "IceCube"],
             "classifiers": [
                 classifier,
