@@ -503,7 +503,7 @@ class PyProjectTomlBuilder:
         try:
             toml_dict["project"]["version"]
         except KeyError:
-            Exception("pyproject.toml must have 'project.version'")
+            raise Exception("pyproject.toml must have 'project.version'")
 
     @staticmethod
     def _tool_setuptools_packages_find(gha_input: GHAInput) -> dict[str, Any]:

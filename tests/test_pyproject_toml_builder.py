@@ -1008,7 +1008,7 @@ def test_60__has_dunder_version__error(directory: str, requests_mock: Any) -> No
     # make an extra package
     os.mkdir(f"{directory}/another_one")
     with open(f"{directory}/another_one/__init__.py", "w") as f:
-        f.write(f"__version__ = '4.5.6'\n")
+        f.write("__version__ = '4.5.6'\n")
 
     # run pyproject_toml_builder
     with pytest.raises(
