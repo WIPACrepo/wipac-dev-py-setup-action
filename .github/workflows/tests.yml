@@ -20,6 +20,34 @@ jobs:
           python-version: '3.12'  # NOTE: update, someday.
       - uses: WIPACrepo/wipac-dev-mypy-action@v1.2
 
+  code-format:
+    runs-on: ubuntu-latest
+    steps:
+      - if: github.actor != 'dependabot[bot]'
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}  # fyi, dependabot can't access normal secrets
+      - if: github.actor != 'dependabot[bot]'
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          
+          # check git status
+          git fetch
+          if [[ $(git status -sb | grep behind) ]]; then
+            echo "this commit is not the most recent on this branch -- rest of action will be skipped"
+            exit 0
+          fi
+          
+          # use literal collection syntax, see https://docs.astral.sh/ruff/rules/unnecessary-collection-call/
+          pip install ruff
+          ruff check --select C408 --fix . --unsafe-fixes
+          
+          # push
+          git add . || true
+          git commit -m "<bot> auto code format file(s)" || true
+          git push || true
+
   test:
     runs-on: ubuntu-latest
     steps:
