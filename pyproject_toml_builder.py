@@ -496,14 +496,14 @@ class PyProjectTomlBuilder:
     ) -> None:
         # can't have __version__ (must have one source of truth)
         if ffile.has_dunder_version():
-            raise RuntimeError(
+            raise Exception(
                 "Package(s) must not have '__version__' attribute(s) -- migrate to pyproject.toml's 'project.version'"
             )
         # must have these fields...
         try:
             toml_dict["project"]["version"]
         except KeyError:
-            RuntimeError("pyproject.toml must have 'project.version'")
+            Exception("pyproject.toml must have 'project.version'")
 
     @staticmethod
     def _tool_setuptools_packages_find(gha_input: GHAInput) -> dict[str, Any]:
