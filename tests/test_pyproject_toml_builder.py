@@ -91,8 +91,7 @@ PATCH_WITHOUT_TAG_WORKAROUND = [
 VANILLA_PROJECT_KEYVALS = {
     **VANILLA_SECTIONS_IN["project"],
     "url": "https://github.com/foobarbaz-org/foobarbaz-repo",
-    "author": AUTHOR,
-    "author_email": AUTHOR_EMAIL,
+    "authors": [{"name": AUTHOR, "email": AUTHOR_EMAIL}],
     "description": "Ceci n’est pas une pipe",
     "readme": "README.md",
     "license": {"file": "LICENSE"},
@@ -641,8 +640,7 @@ def test_34_package_dirs__multi_autoname__no_pypi(
         "project": {
             "name": "mock-package-another-one",
             **NO_PYPI_VANILLA_PROJECT_KEYVALS,  # the true minimum is more vanilla than vanilla
-            "author": AUTHOR,
-            "author_email": AUTHOR_EMAIL,
+            "authors": [{"name": AUTHOR, "email": AUTHOR_EMAIL}],
             "keywords": [
                 "python",
                 "REST",

@@ -114,25 +114,28 @@ class GHAInput:
     author: str = ""
     author_email: str = ""
 
-    # def __post_init__(self) -> None:
-    #     if self.pypi_name:
-    #         if not self.keywords or not self.author or not self.author_email:
-    #             raise Exception(
-    #                 "'keywords', 'author', and 'author_email' must be provided when "
-    #                 "'pypi_name' is `True`"
-    #             )
-    #     for major, attr_name in [
-    #         (self.python_min[0], "python_min"),
-    #         (self.python_max[0], "python_max"),
-    #     ]:
-    #         if major < 3:
-    #             raise Exception(
-    #                 f"Python-release automation ('{attr_name}') does not work for python <3."
-    #             )
-    #         elif major >= 4:
-    #             raise Exception(
-    #                 f"Python-release automation ('{attr_name}') does not work for python 4+."
-    #             )
+    def __post_init__(self) -> None:
+        # pypi-related metadata
+        if self.pypi_name:
+            if not self.keywords or not self.author or not self.author_email:
+                raise Exception(
+                    "'keywords', 'author', and 'author_email' must be provided when "
+                    "'pypi_name' is `True`"
+                )
+
+        # validate python min/max
+        for major, attr_name in [
+            (self.python_min[0], "python_min"),
+            (self.python_max[0], "python_max"),
+        ]:
+            if major < 3:
+                raise Exception(
+                    f"Python-release automation ('{attr_name}') does not work for python <3."
+                )
+            elif major >= 4:
+                raise Exception(
+                    f"Python-release automation ('{attr_name}') does not work for python 4+."
+                )
 
     def get_requires_python(self) -> str:
         """Get a `[project]/python_requires` string from `self.python_range`.
@@ -412,10 +415,13 @@ def _build_out_sections(
     if not gha_input.pypi_name:
         toml_dict["project"]["name"] = "_".join(ffile.packages).replace("_", "-")
         # add the following if they were given:
-        if gha_input.author:
-            toml_dict["project"]["author"] = gha_input.author
-        if gha_input.author_email:
-            toml_dict["project"]["author_email"] = gha_input.author_email
+        if gha_input.author and gha_input.author_email:
+            toml_dict["project"]["authors"] = [
+                {
+                    "name": gha_input.author,
+                    "email": gha_input.author_email,
+                }
+            ]
         if gha_input.keywords:
             toml_dict["project"]["keywords"] = gha_input.keywords
     # if we DO want PyPI, then include everything:
