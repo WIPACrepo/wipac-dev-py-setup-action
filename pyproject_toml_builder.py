@@ -384,6 +384,18 @@ def _build_out_sections(
     )
     gh_api = GitHubAPI(github_full_repo, oauth_token=token)
 
+    # first, validate already provided fields
+    # must already have these fields
+    if ffile.has_dunder_version():
+        raise RuntimeError(
+            "Package(s) must not have '__version__' attributes -- migrate these to pyproject.toml's 'project.version'"
+        )
+    else:
+        try:
+            toml_dict["project"]["version"]
+        except KeyError:
+            RuntimeError("pyproject.toml must have 'project.version'")
+
     # [build-system]
     toml_dict["build-system"] = {
         "requires": ["setuptools>=61.0"],
