@@ -95,12 +95,11 @@ VANILLA_PROJECT_KEYVALS = {
     "readme": "README.md",
     "license": {"file": "LICENSE"},
     "requires-python": ">=3.6, <3.12",
-    "find": {"namespaces": False},
 }
 NO_PYPI_VANILLA_PROJECT_KEYVALS = {  # even MORE vanilla than vanilla
     k: v
     for k, v in VANILLA_PROJECT_KEYVALS.items()
-    if k in ["dependencies", "find", "version", "optional-dependencies"]
+    if k in ["dependencies", "version", "optional-dependencies"]
 }
 
 
@@ -301,7 +300,7 @@ def test_00_minimum_input(directory: str, requests_mock: Any) -> None:
             **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {"find": {"exclude": EXCLUDE_DIRS}},
+                "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
             },
         },
     }
@@ -358,7 +357,7 @@ def test_01_minimum_input_w_pypi(directory: str, requests_mock: Any) -> None:
             **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {"find": {"exclude": EXCLUDE_DIRS}},
+                "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
             },
         },
     }
@@ -435,7 +434,7 @@ def test_10_keywords(directory: str, requests_mock: Any) -> None:
             **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {"find": {"exclude": EXCLUDE_DIRS}},
+                "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
             },
         },
     }
@@ -508,7 +507,7 @@ def test_20_python_max(directory: str, requests_mock: Any) -> None:
             **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {"find": {"exclude": EXCLUDE_DIRS}},
+                "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
             },
         },
     }
@@ -1002,7 +1001,7 @@ def test_40_extra_stuff(directory: str, requests_mock: Any) -> None:
             **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {"find": {"exclude": EXCLUDE_DIRS}},
+                "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
             },
         },
         # the extra sections
@@ -1138,7 +1137,7 @@ def test_50_bumping(
             },
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {"find": {"exclude": EXCLUDE_DIRS}},
+                "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
             },
         },
     }

@@ -10,7 +10,7 @@ import os
 import re
 import subprocess
 from pathlib import Path
-from typing import cast
+from typing import cast, Any
 
 import requests
 import toml
@@ -407,7 +407,6 @@ def _build_out_sections(
     # always add these fields
     toml_dict["project"].update(
         {
-            "find": {"namespaces": False},
             "version": toml_dict.get("project", {}).get("version", "0.0.0"),
         }
     )
@@ -472,17 +471,18 @@ def _build_out_sections(
         },
     }
 
-    def tool_setuptools_packages_find() -> dict:
+    def tool_setuptools_packages_find() -> dict[str, Any]:
+        # only allow these...
         if gha_input.package_dirs:
             return {
                 "include": gha_input.package_dirs
                 + [f"{p}.*" for p in gha_input.package_dirs]
             }
+        # disallow these...
+        dicto: dict[str, Any] = {"namespaces": False}
         if gha_input.exclude_dirs:
-            return {"exclude": gha_input.exclude_dirs}
-        raise Exception(
-            """Cannot assemble [tool.setuptools.packages.find]; package_dirs or exclude_dirs must be provided."""
-        )
+            dicto.update({"exclude": gha_input.exclude_dirs})
+        return dicto
 
     def tool_setuptools_packagedata_star() -> list[str]:
         """Add py.typed to "*"."""
