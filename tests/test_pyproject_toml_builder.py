@@ -169,6 +169,7 @@ def directory() -> str:
         f.write("# This is a test package, it's not real\n")
 
     os.mkdir(f"{_dir}/mock_package")
+    Path(f"{_dir}/mock_package/__init__.py").touch()
 
     os.mkdir(f"{_dir}/.circleci")
     Path(f"{_dir}/.circleci/config.yml").touch()
