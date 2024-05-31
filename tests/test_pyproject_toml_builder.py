@@ -159,7 +159,9 @@ def assert_outputted_pyproject_toml(
 ################################################################################
 
 
-def _directory(version: str) -> str:
+@pytest.fixture
+def directory() -> str:
+    """Get path to pyproject.toml in a random testing directory."""
     _dir = f"test-dir-{uuid.uuid1()}"
 
     os.mkdir(_dir)
@@ -167,38 +169,12 @@ def _directory(version: str) -> str:
         f.write("# This is a test package, it's not real\n")
 
     os.mkdir(f"{_dir}/mock_package")
-    with open(f"{_dir}/mock_package/__init__.py", "w") as f:
-        f.write(f"__version__ = '{version}'\n")
 
     os.mkdir(f"{_dir}/.circleci")
     Path(f"{_dir}/.circleci/config.yml").touch()
 
     print(_dir)
     return _dir
-
-
-@pytest.fixture
-def directory() -> str:
-    """Get path to pyproject.toml in a random testing directory."""
-    return _directory("1.2.3")
-
-
-@pytest.fixture
-def directory_0_0_0() -> str:
-    """Get path to pyproject.toml in a random testing directory."""
-    return _directory("0.0.0")
-
-
-@pytest.fixture
-def directory_0_0_Z() -> str:
-    """Get path to pyproject.toml in a random testing directory."""
-    return _directory("0.0.42")
-
-
-@pytest.fixture
-def directory_0_Y_Z() -> str:
-    """Get path to pyproject.toml in a random testing directory."""
-    return _directory("0.45.6")
 
 
 def mock_many_requests(requests_mock: Any) -> None:
@@ -674,8 +650,6 @@ def test_34_package_dirs__multi_autoname__no_pypi(
     # make an extra package *TO BE* included
     os.mkdir(f"{directory}/another_one")
     Path(f"{directory}/another_one/__init__.py").touch()
-    with open(f"{directory}/another_one/__init__.py", "w") as f:
-        f.write("__version__ = '1.2.3'\n")
 
     # run pyproject_toml_builder
     pyproject_toml_builder.work(
@@ -767,8 +741,6 @@ def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
     # make an extra package *TO BE* included
     os.mkdir(f"{directory}/another_one")
     Path(f"{directory}/another_one/__init__.py").touch()
-    with open(f"{directory}/another_one/__init__.py", "w") as f:
-        f.write("__version__ = '1.2.3'\n")
 
     # run pyproject_toml_builder
     pyproject_toml_builder.work(
@@ -923,8 +895,6 @@ def test_38_package_dirs__multi_mismatch_version__error(
     # make an extra package *TO BE* included
     os.mkdir(f"{directory}/another_one")
     Path(f"{directory}/another_one/__init__.py").touch()
-    with open(f"{directory}/another_one/__init__.py", "w") as f:
-        f.write("__version__ = '3.4.5'\n")
 
     # run pyproject_toml_builder
     with pytest.raises(Exception, match=r"Version mismatch between packages*"):
@@ -1084,6 +1054,7 @@ CLASSIFIER_X_Y_Z = "Development Status :: 5 - Production/Stable"
     ],
 )
 def test_50_bumping(
+    directory: str,
     version: str,
     commit_message: str,
     patch_without_tag: bool,
@@ -1093,7 +1064,7 @@ def test_50_bumping(
     """Test bumping configurations ."""
     mock_many_requests(requests_mock)
 
-    pyproject_toml_path = Path(f"{_directory(version)}/pyproject.toml")
+    pyproject_toml_path = Path(f"{directory}/pyproject.toml")
 
     gha_input = pyproject_toml_builder.GHAInput(
         pypi_name="wipac-mock-package",
