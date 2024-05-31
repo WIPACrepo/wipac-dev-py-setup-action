@@ -35,7 +35,7 @@ SEMANTIC_RELEASE_PATCH = ["[patch]", "[fix]"]
 PATCH_WITHOUT_TAG_WORKAROUND = [
     chr(i)
     for i in range(32, 127)
-    if chr(i) not in ['"', ","]  # else upsets toml syntax
+    if chr(i) not in ['"', ",", "\\"]  # else upsets toml syntax
 ]
 
 DEV_STATUS_PREALPHA_0_0_0 = "Development Status :: 2 - Pre-Alpha"
