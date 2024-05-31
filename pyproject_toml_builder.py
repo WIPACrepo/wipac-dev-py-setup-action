@@ -447,39 +447,39 @@ def _build_out_sections(
             }
         )
         # [project.urls]
-        toml_dict["project"]["urls"] = dict(
-            Homepage=f"https://pypi.org/project/{gha_input.pypi_name}/",
-            Tracker=f"{gh_api.url}/issues",
-            Source=gh_api.url,
-        )
+        toml_dict["project"]["urls"] = {
+            "Homepage": f"https://pypi.org/project/{gha_input.pypi_name}/",
+            "Tracker": f"{gh_api.url}/issues",
+            "Source": gh_api.url,
+        }
 
     # [tool]
     if not toml_dict.get("tool"):
         toml_dict["tool"] = {}
 
     # [tool.semantic_release] -- will be completely overridden
-    toml_dict["tool"]["semantic_release"] = dict(
-        version_toml=["pyproject.toml:project.version"],
-        commit_parser="emoji",
-        commit_parser_options=dict(
-            major_tags=SEMANTIC_RELEASE_MAJOR,
-            minor_tags=SEMANTIC_RELEASE_MINOR,
-            patch_tags=(
+    toml_dict["tool"]["semantic_release"] = {
+        "version_toml": ["pyproject.toml:project.version"],
+        "commit_parser": "emoji",
+        "commit_parser_options": {
+            "major_tags": SEMANTIC_RELEASE_MAJOR,
+            "minor_tags": SEMANTIC_RELEASE_MINOR,
+            "patch_tags": (
                 SEMANTIC_RELEASE_PATCH
                 if not gha_input.patch_without_tag
                 else SEMANTIC_RELEASE_PATCH + sorted(PATCH_WITHOUT_TAG_WORKAROUND)
             ),
-        ),
-    )
+        },
+    }
 
     def tool_setuptools_packages_find() -> dict:
         if gha_input.package_dirs:
-            return dict(
-                include=gha_input.package_dirs
+            return {
+                "include": gha_input.package_dirs
                 + [f"{p}.*" for p in gha_input.package_dirs]
-            )
+            }
         if gha_input.exclude_dirs:
-            return dict(exclude=gha_input.exclude_dirs)
+            return {"exclude": gha_input.exclude_dirs}
         raise Exception(
             """Cannot assemble [tool.setuptools.packages.find]; package_dirs or exclude_dirs must be provided."""
         )
