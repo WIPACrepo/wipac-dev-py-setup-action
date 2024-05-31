@@ -43,6 +43,11 @@ DEV_STATUS_ALPHA_0_0_Z = "Development Status :: 3 - Alpha"
 DEV_STATUS_BETA_0_Y_Z = "Development Status :: 4 - Beta"
 DEV_STATUS_PROD_X_Y_Z = "Development Status :: 5 - Production/Stable"
 
+# https://stackoverflow.com/a/71126828/13156561
+DYNAMIC_DUNDER_VERSION = (
+    "__version__ = importlib_metadata.version(__package__ or __name__)"
+)
+
 PythonMinMax = tuple[tuple[int, int], tuple[int, int]]
 
 
@@ -168,13 +173,9 @@ class FromFiles:
             raise NotADirectoryError(root)
         self.gha_input = gha_input
         self.root = root.resolve()
-
-        pkg_paths = self._get_package_paths(self.gha_input.exclude_dirs)
-        self.packages = [p.name for p in pkg_paths]
-        self.version = self._get_version(pkg_paths)
-
+        self._pkg_paths = self._get_package_paths(self.gha_input.exclude_dirs)
+        self.packages = [p.name for p in self._pkg_paths]
         self.readme_path = self._get_readme_path()
-        self.development_status = self._get_development_status(commit_message)
 
     def _get_package_paths(self, dirs_exclude: list[str]) -> list[Path]:
         """Find the package path(s)."""
@@ -221,88 +222,81 @@ class FromFiles:
                 return Path(fname)
         raise FileNotFoundError(f"No README file found in '{self.root}'")
 
-    @staticmethod
-    def _get_version(pkg_paths: list[Path]) -> str:
-        """Get the package's `__version__` string.
-
-        This is essentially [project]'s `version = attr: <module-path to __version__>`.
+    def has_hardcoded_dunder_version(self) -> bool:
+        """Find the package's `__version__` string(s) and return whether it is hardcoded.
 
         `__version__` needs to be parsed as plain text due to potential
         race condition, see:
         https://stackoverflow.com/a/2073599/13156561
         """
 
-        def version(ppath: Path) -> str:
+        def _has_it(ppath: Path) -> bool:
             with open(ppath / "__init__.py") as f:
                 for line in f.readlines():
-                    if "__version__" in line:
-                        # grab "X.Y.Z" from `__version__ = 'X.Y.Z'`
-                        # - quote-style insensitive
-                        return line.replace('"', "'").split("=")[-1].split("'")[1]
+                    if line.startswith("__version__") and not line.startswith(
+                        DYNAMIC_DUNDER_VERSION
+                    ):
+                        return True
+            return False
 
-            raise Exception(f"Cannot find __version__ in {ppath}/__init__.py")
+        return any(_has_it(p) for p in self._pkg_paths)
 
-        pkg_versions = {p: version(p) for p in pkg_paths}
-        if len(set(pkg_versions.values())) != 1:
-            raise Exception(
-                f"Version mismatch between packages: {pkg_versions}. "
-                f"All __version__ tuples must be the same."
-            )
-        return list(pkg_versions.values())[0]
 
-    def _get_development_status(self, commit_message: str) -> str:
-        """Detect the development status from the package's version.
+def get_development_status(
+    version: str,
+    patch_without_tag: bool,
+    commit_message: str,
+) -> str:
+    """Detect the development status from the package's version.
 
-        Known Statuses (**not all are supported**):
-            `"Development Status :: 1 - Planning"`
-            `"Development Status :: 2 - Pre-Alpha"`
-            `"Development Status :: 3 - Alpha"`
-            `"Development Status :: 4 - Beta"`
-            `"Development Status :: 5 - Production/Stable"`
-            `"Development Status :: 6 - Mature"`
-            `"Development Status :: 7 - Inactive"`
-        """
+    Known Statuses (**not all are supported**):
+        `"Development Status :: 1 - Planning"`
+        `"Development Status :: 2 - Pre-Alpha"`
+        `"Development Status :: 3 - Alpha"`
+        `"Development Status :: 4 - Beta"`
+        `"Development Status :: 5 - Production/Stable"`
+        `"Development Status :: 6 - Mature"`
+        `"Development Status :: 7 - Inactive"`
+    """
 
-        # detect version threshold crossing
-        pending_major_bump = any(k in commit_message for k in SEMANTIC_RELEASE_MAJOR)
-        pending_minor_bump = any(k in commit_message for k in SEMANTIC_RELEASE_MINOR)
-        pending_patch_bump = self.gha_input.patch_without_tag or any(
-            k in commit_message for k in SEMANTIC_RELEASE_PATCH
-        )
+    # detect version threshold crossing
+    pending_major_bump = any(k in commit_message for k in SEMANTIC_RELEASE_MAJOR)
+    pending_minor_bump = any(k in commit_message for k in SEMANTIC_RELEASE_MINOR)
+    pending_patch_bump = patch_without_tag or any(
+        k in commit_message for k in SEMANTIC_RELEASE_PATCH
+    )
 
-        # NOTE - if someday we abandon python-semantic-release, this is a starting place to detect the next version -- in this case, we'd change the version number before merging to main
+    # NOTE - if someday we abandon python-semantic-release, this is a starting place to detect the next version -- in this case, we'd change the version number before merging to main
 
-        if self.version == "0.0.0":
-            if pending_major_bump:
-                return DEV_STATUS_PROD_X_Y_Z  # MAJOR-BUMPPING STRAIGHT TO PROD
-            elif pending_minor_bump:
-                return DEV_STATUS_BETA_0_Y_Z  # MINOR-BUMPPING STRAIGHT TO BETA
-            elif pending_patch_bump:
-                return DEV_STATUS_ALPHA_0_0_Z  # PATCH-BUMPPING STRAIGHT TO ALPHA
-            else:
-                return DEV_STATUS_PREALPHA_0_0_0  # staying at pre-alpha
-
-        elif self.version.startswith("0.0."):
-            if pending_major_bump:
-                return DEV_STATUS_PROD_X_Y_Z  # MAJOR-BUMPPING STRAIGHT TO PROD
-            elif pending_minor_bump:
-                return DEV_STATUS_BETA_0_Y_Z  # MINOR-BUMPPING STRAIGHT TO BETA
-            else:
-                return DEV_STATUS_ALPHA_0_0_Z  # staying at alpha
-
-        elif self.version.startswith("0."):
-            if pending_major_bump:
-                return DEV_STATUS_PROD_X_Y_Z  # MAJOR-BUMPPING STRAIGHT TO PROD
-            else:
-                return DEV_STATUS_BETA_0_Y_Z  # staying at beta
-
-        elif int(self.version.split(".")[0]) >= 1:
-            return DEV_STATUS_PROD_X_Y_Z
-
+    if version == "0.0.0":
+        if pending_major_bump:
+            return DEV_STATUS_PROD_X_Y_Z  # MAJOR-BUMPPING STRAIGHT TO PROD
+        elif pending_minor_bump:
+            return DEV_STATUS_BETA_0_Y_Z  # MINOR-BUMPPING STRAIGHT TO BETA
+        elif pending_patch_bump:
+            return DEV_STATUS_ALPHA_0_0_Z  # PATCH-BUMPPING STRAIGHT TO ALPHA
         else:
-            raise Exception(
-                f"Could not figure 'Development Status' for version: {self.version}"
-            )
+            return DEV_STATUS_PREALPHA_0_0_0  # staying at pre-alpha
+
+    elif version.startswith("0.0."):
+        if pending_major_bump:
+            return DEV_STATUS_PROD_X_Y_Z  # MAJOR-BUMPPING STRAIGHT TO PROD
+        elif pending_minor_bump:
+            return DEV_STATUS_BETA_0_Y_Z  # MINOR-BUMPPING STRAIGHT TO BETA
+        else:
+            return DEV_STATUS_ALPHA_0_0_Z  # staying at alpha
+
+    elif version.startswith("0."):
+        if pending_major_bump:
+            return DEV_STATUS_PROD_X_Y_Z  # MAJOR-BUMPPING STRAIGHT TO PROD
+        else:
+            return DEV_STATUS_BETA_0_Y_Z  # staying at beta
+
+    elif int(version.split(".")[0]) >= 1:
+        return DEV_STATUS_PROD_X_Y_Z
+
+    else:
+        raise Exception(f"Could not figure 'Development Status' for version: {version}")
 
 
 class READMEMarkdownManager:
@@ -376,102 +370,149 @@ class READMEMarkdownManager:
         ]
 
 
-def _build_out_sections(
-    toml_dict: NoDotsDict,
-    root_path: Path,
-    github_full_repo: str,
-    token: str,
-    commit_message: str,
-    gha_input: GHAInput,
-) -> READMEMarkdownManager | None:
+class PyProjectTomlBuilder:
     """Build out the `[project]`, `[semantic_release]`, and `[options]` sections in `toml_dict`.
 
-    Return a 'READMEMarkdownManager' instance to write out. If, necessary.
+    Create a 'READMEMarkdownManager' instance to write out, if needed.
     """
-    ffile = FromFiles(  # things requiring reading files
-        root_path,
-        gha_input,
-        commit_message,
-    )
-    gh_api = GitHubAPI(github_full_repo, oauth_token=token)
 
-    # [build-system]
-    toml_dict["build-system"] = {
-        "requires": ["setuptools>=61.0"],
-        "build-backend": "setuptools.build_meta",
-    }
+    def __init__(
+        self,
+        toml_dict: NoDotsDict,
+        root_path: Path,
+        github_full_repo: str,
+        token: str,
+        commit_message: str,
+        gha_input: GHAInput,
+    ):
+        ffile = FromFiles(  # things requiring reading files
+            root_path,
+            gha_input,
+            commit_message,
+        )
+        gh_api = GitHubAPI(github_full_repo, oauth_token=token)
+        self._validate_repo_initial_state(toml_dict, ffile)
 
-    # [project]
-    if not toml_dict.get("project"):
-        toml_dict["project"] = {}
-    # always add these fields
-    toml_dict["project"].update(
-        {
-            "version": toml_dict.get("project", {}).get("version", "0.0.0"),
+        # [build-system]
+        toml_dict["build-system"] = {
+            "requires": ["setuptools>=61.0"],
+            "build-backend": "setuptools.build_meta",
         }
-    )
-    # if we DON'T want PyPI stuff:
-    if not gha_input.pypi_name:
-        toml_dict["project"]["name"] = "_".join(ffile.packages).replace("_", "-")
-        # add the following if they were given:
-        if gha_input.author or gha_input.author_email:
-            toml_dict["project"]["authors"] = [{}]
-            if gha_input.author:
-                toml_dict["project"]["authors"][0].update({"name": gha_input.author})
-            if gha_input.author_email:
-                toml_dict["project"]["authors"][0].update(
-                    {"email": gha_input.author_email}
-                )
-        if gha_input.keywords:
-            toml_dict["project"]["keywords"] = gha_input.keywords
-    # if we DO want PyPI, then include everything:
-    else:
-        toml_dict["project"].update(
-            {
-                "name": gha_input.pypi_name,
-                "authors": [
-                    {
-                        "name": gha_input.author,
-                        "email": gha_input.author_email,
-                    }
-                ],
-                "description": gh_api.description,
-                "readme": ffile.readme_path.name,
-                "license": {"file": "LICENSE"},
-                "keywords": gha_input.keywords,
-                "classifiers": (
-                    [ffile.development_status] + gha_input.python_classifiers()
+
+        # [project]
+        # if we DON'T want PyPI stuff:
+        if not gha_input.pypi_name:
+            toml_dict["project"]["name"] = "_".join(ffile.packages).replace("_", "-")
+            # add the following if they were given:
+            if gha_input.author or gha_input.author_email:
+                toml_dict["project"]["authors"] = [{}]
+                if gha_input.author:
+                    toml_dict["project"]["authors"][0].update(
+                        {"name": gha_input.author}
+                    )
+                if gha_input.author_email:
+                    toml_dict["project"]["authors"][0].update(
+                        {"email": gha_input.author_email}
+                    )
+            if gha_input.keywords:
+                toml_dict["project"]["keywords"] = gha_input.keywords
+        # if we DO want PyPI, then include everything:
+        else:
+            toml_dict["project"].update(
+                {
+                    "name": gha_input.pypi_name,
+                    "authors": [
+                        {
+                            "name": gha_input.author,
+                            "email": gha_input.author_email,
+                        }
+                    ],
+                    "description": gh_api.description,
+                    "readme": ffile.readme_path.name,
+                    "license": {"file": "LICENSE"},
+                    "keywords": gha_input.keywords,
+                    "classifiers": (
+                        [
+                            get_development_status(
+                                toml_dict["project"]["version"],
+                                gha_input.patch_without_tag,
+                                commit_message,
+                            )
+                        ]
+                        + gha_input.python_classifiers()
+                    ),
+                    "requires-python": gha_input.get_requires_python(),
+                }
+            )
+            # [project.urls]
+            toml_dict["project"]["urls"] = {
+                "Homepage": f"https://pypi.org/project/{gha_input.pypi_name}/",
+                "Tracker": f"{gh_api.url}/issues",
+                "Source": gh_api.url,
+            }
+
+        # [tool]
+        if not toml_dict.get("tool"):
+            toml_dict["tool"] = {}
+
+        # [tool.semantic_release] -- will be completely overridden
+        toml_dict["tool"]["semantic_release"] = {
+            "version_toml": ["pyproject.toml:project.version"],
+            "commit_parser": "emoji",
+            "commit_parser_options": {
+                "major_tags": SEMANTIC_RELEASE_MAJOR,
+                "minor_tags": SEMANTIC_RELEASE_MINOR,
+                "patch_tags": (
+                    SEMANTIC_RELEASE_PATCH
+                    if not gha_input.patch_without_tag
+                    else SEMANTIC_RELEASE_PATCH + sorted(PATCH_WITHOUT_TAG_WORKAROUND)
                 ),
-                "requires-python": gha_input.get_requires_python(),
+            },
+        }
+
+        # [tool.setuptools]
+        if not toml_dict["tool"].get("setuptools"):
+            toml_dict["tool"]["setuptools"] = {}
+        toml_dict["tool"]["setuptools"].update(
+            {
+                "packages": {
+                    "find": self._tool_setuptools_packages_find(gha_input),
+                },
+                "package-data": {
+                    **toml_dict["tool"].get("setuptools", {}).get("package-data", {}),
+                    "*": self._tool_setuptools_packagedata_star(toml_dict),
+                },
             }
         )
-        # [project.urls]
-        toml_dict["project"]["urls"] = {
-            "Homepage": f"https://pypi.org/project/{gha_input.pypi_name}/",
-            "Tracker": f"{gh_api.url}/issues",
-            "Source": gh_api.url,
-        }
 
-    # [tool]
-    if not toml_dict.get("tool"):
-        toml_dict["tool"] = {}
+        # Automate some README stuff
+        self.readme_mgr: READMEMarkdownManager | None
+        if ffile.readme_path.suffix == ".md":
+            self.readme_mgr = READMEMarkdownManager(
+                ffile, github_full_repo, gha_input, gh_api
+            )
+        else:
+            self.readme_mgr = None
 
-    # [tool.semantic_release] -- will be completely overridden
-    toml_dict["tool"]["semantic_release"] = {
-        "version_toml": ["pyproject.toml:project.version"],
-        "commit_parser": "emoji",
-        "commit_parser_options": {
-            "major_tags": SEMANTIC_RELEASE_MAJOR,
-            "minor_tags": SEMANTIC_RELEASE_MINOR,
-            "patch_tags": (
-                SEMANTIC_RELEASE_PATCH
-                if not gha_input.patch_without_tag
-                else SEMANTIC_RELEASE_PATCH + sorted(PATCH_WITHOUT_TAG_WORKAROUND)
-            ),
-        },
-    }
+    @staticmethod
+    def _validate_repo_initial_state(
+        toml_dict: NoDotsDict,
+        ffile: FromFiles,
+    ) -> None:
+        # can't have __version__ (must have one source of truth)
+        if ffile.has_hardcoded_dunder_version():
+            raise Exception(
+                f"Package(s) must not define the version using '__version__' attribute(s) -- "
+                f"migrate string to pyproject.toml's 'project.version' and replace with '{DYNAMIC_DUNDER_VERSION}'"
+            )
+        # must have these fields...
+        try:
+            toml_dict["project"]["version"]
+        except KeyError:
+            raise Exception("pyproject.toml must have 'project.version'")
 
-    def tool_setuptools_packages_find() -> dict[str, Any]:
+    @staticmethod
+    def _tool_setuptools_packages_find(gha_input: GHAInput) -> dict[str, Any]:
         # only allow these...
         if gha_input.package_dirs:
             return {
@@ -484,7 +525,8 @@ def _build_out_sections(
             dicto.update({"exclude": gha_input.exclude_dirs})
         return dicto
 
-    def tool_setuptools_packagedata_star() -> list[str]:
+    @staticmethod
+    def _tool_setuptools_packagedata_star(toml_dict: NoDotsDict) -> list[str]:
         """Add py.typed to "*"."""
         try:
             current = set(toml_dict["tool"]["setuptools"]["package-data"]["*"])
@@ -495,26 +537,6 @@ def _build_out_sections(
             return list(current)
         else:
             return list(current) + ["py.typed"]
-
-    # [tool.setuptools]
-    if not toml_dict["tool"].get("setuptools"):
-        toml_dict["tool"]["setuptools"] = {}
-    toml_dict["tool"]["setuptools"].update(
-        {
-            "packages": {
-                "find": tool_setuptools_packages_find(),
-            },
-            "package-data": {
-                **toml_dict["tool"].get("setuptools", {}).get("package-data", {}),
-                "*": tool_setuptools_packagedata_star(),
-            },
-        }
-    )
-
-    # Automate some README stuff
-    if ffile.readme_path.suffix == ".md":
-        return READMEMarkdownManager(ffile, github_full_repo, gha_input, gh_api)
-    return None
 
 
 def write_toml(
@@ -538,8 +560,8 @@ def write_toml(
     else:
         toml_dict = NoDotsDict()
 
-    readme_mgr = _build_out_sections(
-        toml_dict,
+    builder = PyProjectTomlBuilder(
+        toml_dict,  # updates this
         toml_file.parent,
         github_full_repo,
         token,
@@ -550,7 +572,7 @@ def write_toml(
     with open(toml_file, "w") as f:
         toml.dump(dict(toml_dict), f)
 
-    return readme_mgr
+    return builder.readme_mgr
 
 
 def work(
