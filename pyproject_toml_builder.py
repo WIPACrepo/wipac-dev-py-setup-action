@@ -222,7 +222,7 @@ class FromFiles:
                 return Path(fname)
         raise FileNotFoundError(f"No README file found in '{self.root}'")
 
-    def get_dunder_version_inits(self) -> list[Path]:
+    def get_dunder_version_inits(self) -> list[str]:
         """Get the __init__.py file(s) that have a `__version__` string.
 
         Also, check if the retrieved `__version__` strings are equivalent.
@@ -250,7 +250,7 @@ class FromFiles:
                 f"All __version__ tuples must be the same."
             )
 
-        return list(fpath_versions.keys())
+        return [str(p.relative_to(self.root)) for p in fpath_versions.keys()]
 
 
 def get_development_status(
