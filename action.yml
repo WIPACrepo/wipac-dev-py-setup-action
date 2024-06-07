@@ -112,7 +112,7 @@ runs:
         set -e
         sudo apt-get update
         python -m venv action_venv
-        . venv/bin/activate
+        . action_venv/bin/activate
         pip3 install -r ${{ github.action_path }}/requirements.txt
 
         # Build!
