@@ -247,7 +247,7 @@ class FromFiles:
                         else:
                             raise Exception(
                                 f"'__version__' must be in the semantic version format: "
-                                f"{Path(f.name).relative_to(self.root)}/ -> '{line.strip()}'"
+                                f"{ppath.name}/__init__.py -> '{line.strip()}'"
                             )
                 return Path(f.name), None
 
