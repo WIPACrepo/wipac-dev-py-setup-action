@@ -138,6 +138,9 @@ runs:
         toml-sort --in-place --ignore-case pyproject.toml
         
         cat pyproject.toml
+        
+        rm -rf action_venv
+        
         # Commits
         git add pyproject.toml
         git commit -m "<bot> update pyproject.toml" || true
