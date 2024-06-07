@@ -244,7 +244,7 @@ class FromFiles:
         fpath_versions = {p: version(p) for p in self._pkg_paths}
         fpath_versions = {k: v for k, v in fpath_versions.items() if v is not None}
 
-        if len(set(fpath_versions.values())) != 1:
+        if len(set(fpath_versions.values())) > 1:
             raise Exception(
                 f"Version mismatch between packages: {fpath_versions}. "
                 f"All __version__ tuples must be the same."
