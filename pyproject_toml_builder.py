@@ -468,7 +468,7 @@ class PyProjectTomlBuilder:
                     else SEMANTIC_RELEASE_PATCH + sorted(PATCH_WITHOUT_TAG_WORKAROUND)
                 ),
             },
-            "build_command": "pip install poetry && poetry build",
+            "build_command": "pip install build && python -m build",
         }
 
         # [tool.setuptools]

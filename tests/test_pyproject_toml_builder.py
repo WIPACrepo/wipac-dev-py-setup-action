@@ -116,7 +116,7 @@ def _make_vanilla_semantic_release_section(patch_without_tag_workaround: bool):
                     PATCH_WITHOUT_TAG_WORKAROUND if patch_without_tag_workaround else []
                 ),
             },
-            "build_command": "pip install poetry && poetry build",
+            "build_command": "pip install build && python -m build",
         }
     }
 
