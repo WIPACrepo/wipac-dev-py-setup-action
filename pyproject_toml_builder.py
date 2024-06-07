@@ -222,7 +222,7 @@ class FromFiles:
                 return Path(fname)
         raise FileNotFoundError(f"No README file found in '{self.root}'")
 
-    def get_dunder_version_inits(self) -> list[str]:
+    def get_dunder_version_inits(self, version_from_toml: str) -> list[str]:
         """Get the __init__.py file(s) that have a `__version__` string.
 
         Also, check if the retrieved `__version__` strings are equivalent.
@@ -232,26 +232,36 @@ class FromFiles:
         https://stackoverflow.com/a/2073599/13156561
         """
 
-        def init_version(ppath: Path) -> tuple[Path, str | None]:
+        def get_init_version(ppath: Path) -> tuple[Path, str | None]:
             with open(ppath / "__init__.py") as f:
                 for line in f.readlines():
-                    if "__version__" in line:
+                    if line.startswith("__version__ ="):
                         # grab "X.Y.Z" from `__version__ = 'X.Y.Z'`
+                        # or     foo() from `__version__ = foo()`
                         # - quote-style insensitive
-                        return (
-                            Path(f.name),
-                            line.replace('"', "'").split("=")[-1].split("'")[1],
-                        )
+                        if m := re.match(
+                            r"^__version__ = [\"\'](?P<version>\w+\.\w+\.\w+)[\"\']",
+                            line,
+                        ):
+                            return Path(f.name), m.group("version")
+                        else:
+                            raise Exception(
+                                f"'__version__' must be in the semantic version format: "
+                                f"{Path(f.name).relative_to(self.root)}/ -> '{line.strip()}'"
+                            )
                 return Path(f.name), None
 
-        fpath_versions = dict(init_version(p) for p in self._pkg_paths)
+        fpath_versions = dict(get_init_version(p) for p in self._pkg_paths)
         fpath_versions = {k: v for k, v in fpath_versions.items() if v is not None}
 
-        if len(set(fpath_versions.values())) > 1:
-            raise Exception(
-                f"Version mismatch between packages: {fpath_versions}. "
-                f"All __version__ tuples must be the same."
-            )
+        if init_versions := set(fpath_versions.values()):
+            if len(init_versions) != 1:
+                raise Exception(f"Version mismatch between packages: {fpath_versions}")
+            if version_from_toml != list(init_versions)[0]:
+                raise Exception(
+                    f"Version mismatch between package(s) ({list(init_versions)[0]}) "
+                    f"and pyproject.toml's 'project.version' ({version_from_toml})"
+                )
 
         return [str(p.relative_to(self.root)) for p in fpath_versions.keys()]
 
@@ -475,7 +485,8 @@ class PyProjectTomlBuilder:
             # "wipac_dev_tools/__init__.py:__version__"
             # "wipac_dev_tools/__init__.py:__version__,wipac_foo_tools/__init__.py:__version__"
             "version_variables": [
-                f"{p}:__version__" for p in ffile.get_dunder_version_inits()
+                f"{p}:__version__"
+                for p in ffile.get_dunder_version_inits(toml_dict["project"]["version"])
             ],
             # the emoji parser is the simplest parser and does not require angular-style commits
             "commit_parser": "emoji",
