@@ -222,24 +222,48 @@ class FromFiles:
                 return Path(fname)
         raise FileNotFoundError(f"No README file found in '{self.root}'")
 
-    def has_hardcoded_dunder_version(self) -> bool:
-        """Find the package's `__version__` string(s) and return whether it is hardcoded.
+    def get_dunder_version_inits(self, version_from_toml: str) -> list[str]:
+        """Get the __init__.py file(s) that have a `__version__` string.
+
+        Also, check if the retrieved `__version__` strings are equivalent.
 
         `__version__` needs to be parsed as plain text due to potential
         race condition, see:
         https://stackoverflow.com/a/2073599/13156561
         """
 
-        def _has_it(ppath: Path) -> bool:
+        def get_init_version(ppath: Path) -> tuple[Path, str | None]:
             with open(ppath / "__init__.py") as f:
                 for line in f.readlines():
-                    if line.startswith("__version__") and not line.startswith(
-                        DYNAMIC_DUNDER_VERSION
-                    ):
-                        return True
-            return False
+                    if line.startswith("__version__ ="):
+                        # grab "X.Y.Z" from `__version__ = 'X.Y.Z'`
+                        # or     foo() from `__version__ = foo()`
+                        # - quote-style insensitive
+                        if m := re.match(
+                            r"^__version__ = [\"\'](?P<version>\w+\.\w+\.\w+)[\"\']",
+                            line,
+                        ):
+                            return Path(f.name), m.group("version")
+                        else:
+                            raise Exception(
+                                f"'__version__' must be in the semantic version format: "
+                                f"{ppath.name}/__init__.py -> '{line.strip()}'"
+                            )
+                return Path(f.name), None
 
-        return any(_has_it(p) for p in self._pkg_paths)
+        fpath_versions = dict(get_init_version(p) for p in self._pkg_paths)
+        fpath_versions = {k: v for k, v in fpath_versions.items() if v is not None}
+
+        if init_versions := set(fpath_versions.values()):
+            if len(init_versions) != 1:
+                raise Exception(f"Version mismatch between packages: {fpath_versions}")
+            if version_from_toml != list(init_versions)[0]:
+                raise Exception(
+                    f"Version mismatch between package(s) ({list(init_versions)[0]}) "
+                    f"and pyproject.toml's 'project.version' ({version_from_toml})"
+                )
+
+        return [str(p.relative_to(self.root)) for p in fpath_versions.keys()]
 
 
 def get_development_status(
@@ -391,7 +415,7 @@ class PyProjectTomlBuilder:
             commit_message,
         )
         gh_api = GitHubAPI(github_full_repo, oauth_token=token)
-        self._validate_repo_initial_state(toml_dict, ffile)
+        self._validate_repo_initial_state(toml_dict)
 
         # [build-system]
         toml_dict["build-system"] = {
@@ -458,6 +482,13 @@ class PyProjectTomlBuilder:
         # [tool.semantic_release] -- will be completely overridden
         toml_dict["tool"]["semantic_release"] = {
             "version_toml": ["pyproject.toml:project.version"],
+            # "wipac_dev_tools/__init__.py:__version__"
+            # "wipac_dev_tools/__init__.py:__version__,wipac_foo_tools/__init__.py:__version__"
+            "version_variables": [
+                f"{p}:__version__"
+                for p in ffile.get_dunder_version_inits(toml_dict["project"]["version"])
+            ],
+            # the emoji parser is the simplest parser and does not require angular-style commits
             "commit_parser": "emoji",
             "commit_parser_options": {
                 "major_tags": SEMANTIC_RELEASE_MAJOR,
@@ -468,6 +499,8 @@ class PyProjectTomlBuilder:
                     else SEMANTIC_RELEASE_PATCH + sorted(PATCH_WITHOUT_TAG_WORKAROUND)
                 ),
             },
+            # this is required fo the package to be pushed to pypi (by the pypa GHA)
+            "build_command": "pip install build && python -m build",
         }
 
         # [tool.setuptools]
@@ -495,16 +528,7 @@ class PyProjectTomlBuilder:
             self.readme_mgr = None
 
     @staticmethod
-    def _validate_repo_initial_state(
-        toml_dict: NoDotsDict,
-        ffile: FromFiles,
-    ) -> None:
-        # can't have __version__ (must have one source of truth)
-        if ffile.has_hardcoded_dunder_version():
-            raise Exception(
-                f"Package(s) must not define the version using '__version__' attribute(s) -- "
-                f"migrate string to pyproject.toml's 'project.version' and replace with '{DYNAMIC_DUNDER_VERSION}'"
-            )
+    def _validate_repo_initial_state(toml_dict: NoDotsDict) -> None:
         # must have these fields...
         try:
             toml_dict["project"]["version"]

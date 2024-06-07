@@ -106,6 +106,7 @@ NO_PYPI_VANILLA_PROJECT_KEYVALS = {  # even MORE vanilla than vanilla
 def _make_vanilla_semantic_release_section(patch_without_tag_workaround: bool):
     return {
         "semantic_release": {
+            "version_variables": ["mock_package/__init__.py:__version__"],
             "version_toml": ["pyproject.toml:project.version"],
             "commit_parser": "emoji",
             "commit_parser_options": {
@@ -116,6 +117,7 @@ def _make_vanilla_semantic_release_section(patch_without_tag_workaround: bool):
                     PATCH_WITHOUT_TAG_WORKAROUND if patch_without_tag_workaround else []
                 ),
             },
+            "build_command": "pip install build && python -m build",
         }
     }
 
@@ -159,8 +161,7 @@ def assert_outputted_pyproject_toml(
 ################################################################################
 
 
-@pytest.fixture
-def directory() -> str:
+def _directory(version: str) -> str:
     """Get path to pyproject.toml in a random testing directory."""
     _dir = f"test-dir-{uuid.uuid1()}"
 
@@ -169,13 +170,20 @@ def directory() -> str:
         f.write("# This is a test package, it's not real\n")
 
     os.mkdir(f"{_dir}/mock_package")
-    Path(f"{_dir}/mock_package/__init__.py").touch()
+    with open(f"{_dir}/mock_package/__init__.py", "w") as f:
+        f.write(f"__version__ = '{version}'\n")
 
     os.mkdir(f"{_dir}/.circleci")
     Path(f"{_dir}/.circleci/config.yml").touch()
 
     print(_dir)
     return _dir
+
+
+@pytest.fixture
+def directory() -> str:
+    """Get path to pyproject.toml in a random testing directory."""
+    return _directory("1.2.3")
 
 
 def mock_many_requests(requests_mock: Any) -> None:
@@ -503,7 +511,7 @@ def test_20_python_max(directory: str, requests_mock: Any) -> None:
 
 
 def test_30_package_dirs__single(directory: str, requests_mock: Any) -> None:
-    """Test using  `package_dirs` & a single desired package."""
+    """Test using `package_dirs` & a single desired package."""
     mock_many_requests(requests_mock)
 
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
@@ -585,7 +593,7 @@ def test_30_package_dirs__single(directory: str, requests_mock: Any) -> None:
 def test_34_package_dirs__multi_autoname__no_pypi(
     directory: str, requests_mock: Any
 ) -> None:
-    """Test using  `package_dirs` & multiple desired packages."""
+    """Test using `package_dirs` & multiple desired packages."""
     mock_many_requests(requests_mock)
 
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
@@ -627,7 +635,9 @@ def test_34_package_dirs__multi_autoname__no_pypi(
             ],
         },
         "tool": {
-            **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
+            **copy.deepcopy(  # copied so we can change it, see below
+                VANILLA_SEMANTIC_RELEASE_SUBSECTIONS
+            ),
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {
@@ -643,6 +653,9 @@ def test_34_package_dirs__multi_autoname__no_pypi(
             },
         },
     }
+    pyproject_toml_expected["tool"]["semantic_release"]["version_variables"].append(  # type: ignore
+        "another_one/__init__.py:__version__"
+    )
 
     # make an extra package *not* to be included
     os.mkdir(f"{directory}/mock_package_test")
@@ -651,6 +664,8 @@ def test_34_package_dirs__multi_autoname__no_pypi(
     # make an extra package *TO BE* included
     os.mkdir(f"{directory}/another_one")
     Path(f"{directory}/another_one/__init__.py").touch()
+    with open(f"{directory}/another_one/__init__.py", "w") as f:
+        f.write("__version__ = '1.2.3'\n")
 
     # run pyproject_toml_builder
     pyproject_toml_builder.work(
@@ -666,7 +681,7 @@ def test_34_package_dirs__multi_autoname__no_pypi(
 
 
 def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
-    """Test using  `package_dirs` & multiple desired packages."""
+    """Test using `package_dirs` & multiple desired packages."""
     mock_many_requests(requests_mock)
 
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
@@ -718,7 +733,9 @@ def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
             **PYPI_URLS_KEYVALS,
         },
         "tool": {
-            **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
+            **copy.deepcopy(  # copied so we can change it, see below
+                VANILLA_SEMANTIC_RELEASE_SUBSECTIONS
+            ),
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {
@@ -734,6 +751,9 @@ def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
             },
         },
     }
+    pyproject_toml_expected["tool"]["semantic_release"]["version_variables"].append(  # type: ignore
+        "another_one/__init__.py:__version__"
+    )
 
     # make an extra package *not* to be included
     os.mkdir(f"{directory}/mock_package_test")
@@ -742,6 +762,8 @@ def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
     # make an extra package *TO BE* included
     os.mkdir(f"{directory}/another_one")
     Path(f"{directory}/another_one/__init__.py").touch()
+    with open(f"{directory}/another_one/__init__.py", "w") as f:
+        f.write("__version__ = '1.2.3'\n")
 
     # run pyproject_toml_builder
     pyproject_toml_builder.work(
@@ -754,6 +776,59 @@ def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
 
     # assert outputted pyproject.toml
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
+
+
+def test_36_package_dirs__multi_missing_init__error(
+    directory: str, requests_mock: Any
+) -> None:
+    """Test using `package_dirs` & multiple desired packages."""
+    mock_many_requests(requests_mock)
+
+    pyproject_toml_path = Path(f"{directory}/pyproject.toml")
+
+    gha_input = pyproject_toml_builder.GHAInput(
+        pypi_name="wipac-mock-package",
+        python_min=(3, 6),
+        author=AUTHOR,
+        author_email=AUTHOR_EMAIL,
+        package_dirs=["mock_package", "another_one"],
+        keywords=[
+            "python",
+            "REST",
+            "tools",
+            "utilities",
+            "OpenTelemetry",
+            "tracing",
+            "telemetry",
+        ],
+    )
+
+    # write the original pyproject.toml
+    with open(pyproject_toml_path, "w") as f:
+        toml.dump(VANILLA_SECTIONS_IN, f)
+
+    # make an extra package *not* to be included
+    os.mkdir(f"{directory}/mock_package_test")
+    Path(f"{directory}/mock_package_test/__init__.py").touch()
+
+    # make an extra package *TO BE* included
+    os.mkdir(f"{directory}/another_one")
+
+    # run pyproject_toml_builder
+    with pytest.raises(
+        Exception,
+        match=re.escape(
+            "Package directory not found: another_one (defined in pyproject.toml). "
+            "Is the directory missing an __init__.py?"
+        ),
+    ):
+        pyproject_toml_builder.work(
+            pyproject_toml_path,
+            GITHUB_FULL_REPO,
+            TOKEN,
+            NONBUMPING_COMMIT_MESSAGE,
+            gha_input,
+        )
 
 
 def test_40_extra_stuff(directory: str, requests_mock: Any) -> None:
@@ -903,7 +978,6 @@ CLASSIFIER_X_Y_Z = "Development Status :: 5 - Production/Stable"
     ],
 )
 def test_50_bumping(
-    directory: str,
     version: str,
     commit_message: str,
     patch_without_tag: bool,
@@ -913,7 +987,7 @@ def test_50_bumping(
     """Test bumping configurations ."""
     mock_many_requests(requests_mock)
 
-    pyproject_toml_path = Path(f"{directory}/pyproject.toml")
+    pyproject_toml_path = Path(f"{_directory(version)}/pyproject.toml")
 
     gha_input = pyproject_toml_builder.GHAInput(
         pypi_name="wipac-mock-package",
@@ -957,7 +1031,7 @@ def test_50_bumping(
                     if patch_without_tag
                     else SEMANTIC_RELEASE_SUBSECTIONS__NO_PATCH
                 ).items()
-            },
+            },  # see below
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
@@ -978,8 +1052,8 @@ def test_50_bumping(
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
 
 
-def test_60__has_dunder_version__error(directory: str, requests_mock: Any) -> None:
-    """Test when there is a __version__ in a package's __init__.py."""
+def test_60_multi_version__one_missing__ok(directory: str, requests_mock: Any) -> None:
+    """Test situation with multiple version sources."""
     mock_many_requests(requests_mock)
 
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
@@ -1005,17 +1079,215 @@ def test_60__has_dunder_version__error(directory: str, requests_mock: Any) -> No
     with open(pyproject_toml_path, "w") as f:
         toml.dump(VANILLA_SECTIONS_IN, f)
 
-    # make an extra package
+    pyproject_toml_expected = {
+        **BUILD_SYSTEM_SECTION,
+        "project": {
+            "name": "wipac-mock-package",
+            **VANILLA_PROJECT_KEYVALS,
+            "keywords": [
+                "python",
+                "REST",
+                "tools",
+                "utilities",
+                "OpenTelemetry",
+                "tracing",
+                "telemetry",
+            ],
+            "classifiers": [
+                "Development Status :: 5 - Production/Stable",
+                "Programming Language :: Python :: 3.6",
+                "Programming Language :: Python :: 3.7",
+                "Programming Language :: Python :: 3.8",
+                "Programming Language :: Python :: 3.9",
+                "Programming Language :: Python :: 3.10",
+                "Programming Language :: Python :: 3.11",
+            ],
+            **PYPI_URLS_KEYVALS,
+        },
+        "tool": {
+            **copy.deepcopy(  # copied so we can change it, see below
+                VANILLA_SEMANTIC_RELEASE_SUBSECTIONS
+            ),
+            "setuptools": {
+                "package-data": {"*": ["py.typed"]},
+                "packages": {
+                    "find": {
+                        "include": [
+                            "mock_package",
+                            "another_one",
+                            "mock_package.*",
+                            "another_one.*",
+                        ]
+                    },
+                },
+            },
+        },
+    }
+
+    # make an extra package *not* to be included
+    os.mkdir(f"{directory}/mock_package_test")
+    Path(f"{directory}/mock_package_test/__init__.py").touch()
+
+    # make an extra package *TO BE* included -- but file won't be in 'version_variables'
     os.mkdir(f"{directory}/another_one")
+    Path(f"{directory}/another_one/__init__.py").touch()
+    # don't make the __version__, that's the point of this test
+    # with open(f"{directory}/another_one/__init__.py", "w") as f:
+    #     f.write("__version__ = '7.8.9'\n")
+
+    # run pyproject_toml_builder
+    pyproject_toml_builder.work(
+        pyproject_toml_path,
+        GITHUB_FULL_REPO,
+        TOKEN,
+        NONBUMPING_COMMIT_MESSAGE,
+        gha_input,
+    )
+
+    # assert outputted pyproject.toml
+    assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
+
+
+def test_61_multi_version__mismatch_w_inits__error(
+    directory: str, requests_mock: Any
+) -> None:
+    """Test situation with multiple version sources."""
+    mock_many_requests(requests_mock)
+
+    pyproject_toml_path = Path(f"{directory}/pyproject.toml")
+
+    gha_input = pyproject_toml_builder.GHAInput(
+        pypi_name="wipac-mock-package",
+        python_min=(3, 6),
+        author=AUTHOR,
+        author_email=AUTHOR_EMAIL,
+        package_dirs=["mock_package", "another_one"],
+        keywords=[
+            "python",
+            "REST",
+            "tools",
+            "utilities",
+            "OpenTelemetry",
+            "tracing",
+            "telemetry",
+        ],
+    )
+
+    # write the original pyproject.toml
+    with open(pyproject_toml_path, "w") as f:
+        toml.dump(VANILLA_SECTIONS_IN, f)
+
+    # make an extra package *not* to be included
+    os.mkdir(f"{directory}/mock_package_test")
+    Path(f"{directory}/mock_package_test/__init__.py").touch()
+
+    # make an extra package *TO BE* included
+    os.mkdir(f"{directory}/another_one")
+    Path(f"{directory}/another_one/__init__.py").touch()
     with open(f"{directory}/another_one/__init__.py", "w") as f:
-        f.write("__version__ = '4.5.6'\n")
+        f.write("__version__ = '3.4.5'\n")
+
+    # run pyproject_toml_builder
+    with pytest.raises(Exception, match=r"Version mismatch between packages"):
+        pyproject_toml_builder.work(
+            pyproject_toml_path,
+            GITHUB_FULL_REPO,
+            TOKEN,
+            NONBUMPING_COMMIT_MESSAGE,
+            gha_input,
+        )
+
+
+def test_62_multi_version__mismatch_w_toml__error(
+    directory: str, requests_mock: Any
+) -> None:
+    """Test situation with multiple version sources."""
+    mock_many_requests(requests_mock)
+
+    pyproject_toml_path = Path(f"{directory}/pyproject.toml")
+
+    gha_input = pyproject_toml_builder.GHAInput(
+        pypi_name="wipac-mock-package",
+        python_min=(3, 6),
+        author=AUTHOR,
+        author_email=AUTHOR_EMAIL,
+        keywords=[
+            "python",
+            "REST",
+            "tools",
+            "utilities",
+            "OpenTelemetry",
+            "tracing",
+            "telemetry",
+        ],
+    )
+
+    # write the original pyproject.toml
+    with open(pyproject_toml_path, "w") as f:
+        toml_sections_in = copy.deepcopy(VANILLA_SECTIONS_IN)
+        toml_sections_in["project"]["version"] = "7.8.9"
+        toml.dump(toml_sections_in, f)
 
     # run pyproject_toml_builder
     with pytest.raises(
         Exception,
         match=re.escape(
-            f"Package(s) must not define the version using '__version__' attribute(s) -- "
-            f"migrate string to pyproject.toml's 'project.version' and replace with '{pyproject_toml_builder.DYNAMIC_DUNDER_VERSION}'"
+            "Version mismatch between package(s) (1.2.3) and pyproject.toml's 'project.version' (7.8.9)"
+        ),
+    ):
+        pyproject_toml_builder.work(
+            pyproject_toml_path,
+            GITHUB_FULL_REPO,
+            TOKEN,
+            NONBUMPING_COMMIT_MESSAGE,
+            gha_input,
+        )
+
+
+def test_63_multi_version__bad_init_format__error(
+    directory: str, requests_mock: Any
+) -> None:
+    """Test situation with multiple version sources."""
+    mock_many_requests(requests_mock)
+
+    pyproject_toml_path = Path(f"{directory}/pyproject.toml")
+
+    gha_input = pyproject_toml_builder.GHAInput(
+        pypi_name="wipac-mock-package",
+        python_min=(3, 6),
+        author=AUTHOR,
+        author_email=AUTHOR_EMAIL,
+        package_dirs=["mock_package", "another_one"],
+        keywords=[
+            "python",
+            "REST",
+            "tools",
+            "utilities",
+            "OpenTelemetry",
+            "tracing",
+            "telemetry",
+        ],
+    )
+
+    # write the original pyproject.toml
+    with open(pyproject_toml_path, "w") as f:
+        toml.dump(VANILLA_SECTIONS_IN, f)
+
+    # make an extra package *not* to be included
+    os.mkdir(f"{directory}/mock_package_test")
+    Path(f"{directory}/mock_package_test/__init__.py").touch()
+
+    # make an extra package *TO BE* included
+    os.mkdir(f"{directory}/another_one")
+    Path(f"{directory}/another_one/__init__.py").touch()
+    with open(f"{directory}/another_one/__init__.py", "w") as f:
+        f.write("__version__ = a_var\n")
+
+    # run pyproject_toml_builder
+    with pytest.raises(
+        Exception,
+        match=re.escape(
+            "'__version__' must be in the semantic version format: another_one/__init__.py -> '__version__ = a_var'"
         ),
     ):
         pyproject_toml_builder.work(
@@ -1059,6 +1331,8 @@ def test_70__has_no_projectversion__error(directory: str, requests_mock: Any) ->
     # make an extra package
     os.mkdir(f"{directory}/another_one")
     Path(f"{directory}/another_one/__init__.py").touch()
+    with open(f"{directory}/another_one/__init__.py", "w") as f:
+        f.write("__version__ = '1.2.3'\n")
 
     # run pyproject_toml_builder
     with pytest.raises(

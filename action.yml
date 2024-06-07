@@ -111,6 +111,8 @@ runs:
       run: |
         set -e
         sudo apt-get update
+        python -m venv action_venv
+        . action_venv/bin/activate
         pip3 install -r ${{ github.action_path }}/requirements.txt
 
         # Build!
@@ -136,6 +138,9 @@ runs:
         toml-sort --in-place --ignore-case pyproject.toml
         
         cat pyproject.toml
+        
+        rm -rf action_venv
+        
         # Commits
         git add pyproject.toml
         git commit -m "<bot> update pyproject.toml" || true

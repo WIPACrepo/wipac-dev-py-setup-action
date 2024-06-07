@@ -1,3 +1,5 @@
 wipac-dev-tools[semver]
 toml
 coloredlogs
+requests
+typing-extensions
