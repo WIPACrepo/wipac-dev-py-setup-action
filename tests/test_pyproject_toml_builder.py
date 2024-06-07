@@ -635,7 +635,9 @@ def test_34_package_dirs__multi_autoname__no_pypi(
             ],
         },
         "tool": {
-            **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,  # see below
+            **copy.deepcopy(  # copied so we can change it, see below
+                VANILLA_SEMANTIC_RELEASE_SUBSECTIONS
+            ),
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {
@@ -731,7 +733,9 @@ def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
             **PYPI_URLS_KEYVALS,
         },
         "tool": {
-            **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,  # see below
+            **copy.deepcopy(  # copied so we can change it, see below
+                VANILLA_SEMANTIC_RELEASE_SUBSECTIONS
+            ),
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {
