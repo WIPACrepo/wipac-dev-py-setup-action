@@ -912,10 +912,9 @@ def test_37_package_dirs__multi_missing_version__ok(
     # make an extra package *TO BE* included -- but file won't be in 'version_variables'
     os.mkdir(f"{directory}/another_one")
     Path(f"{directory}/another_one/__init__.py").touch()
-    with open(f"{directory}/another_one/__init__.py", "w") as f:
-        f.write(
-            "__version__ = some_fancy_func_to_get_version_number_thats_not_recommended_but_possible()\n"
-        )
+    # don't make the __version__, that's the point of this test
+    # with open(f"{directory}/another_one/__init__.py", "w") as f:
+    #     f.write("__version__ = '7.8.9'\n")
 
     # run pyproject_toml_builder
     pyproject_toml_builder.work(
