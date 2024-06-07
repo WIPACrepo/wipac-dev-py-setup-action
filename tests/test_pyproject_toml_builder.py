@@ -106,6 +106,7 @@ NO_PYPI_VANILLA_PROJECT_KEYVALS = {  # even MORE vanilla than vanilla
 def _make_vanilla_semantic_release_section(patch_without_tag_workaround: bool):
     return {
         "semantic_release": {
+            "version_variables": ["mock_package/__init__.py:__version__"],
             "version_toml": ["pyproject.toml:project.version"],
             "commit_parser": "emoji",
             "commit_parser_options": {
@@ -634,7 +635,7 @@ def test_34_package_dirs__multi_autoname__no_pypi(
             ],
         },
         "tool": {
-            **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
+            **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,  # see below
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {
@@ -650,6 +651,9 @@ def test_34_package_dirs__multi_autoname__no_pypi(
             },
         },
     }
+    pyproject_toml_expected["tool"]["semantic_release"]["version_variables"].append(  # type: ignore
+        "another_one/__init__.py:__version__"
+    )
 
     # make an extra package *not* to be included
     os.mkdir(f"{directory}/mock_package_test")
@@ -727,7 +731,7 @@ def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
             **PYPI_URLS_KEYVALS,
         },
         "tool": {
-            **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
+            **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,  # see below
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {
@@ -743,6 +747,9 @@ def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
             },
         },
     }
+    pyproject_toml_expected["tool"]["semantic_release"]["version_variables"].append(  # type: ignore
+        "another_one/__init__.py:__version__"
+    )
 
     # make an extra package *not* to be included
     os.mkdir(f"{directory}/mock_package_test")
@@ -856,6 +863,8 @@ def test_37_package_dirs__multi_missing_version__error(
     # make an extra package *TO BE* included
     os.mkdir(f"{directory}/another_one")
     Path(f"{directory}/another_one/__init__.py").touch()
+    with open(f"{directory}/another_one/__init__.py", "w") as f:
+        f.write("__version__ = '7.8.9'\n")
 
     # run pyproject_toml_builder
     with pytest.raises(
@@ -1121,7 +1130,7 @@ def test_50_bumping(
                     if patch_without_tag
                     else SEMANTIC_RELEASE_SUBSECTIONS__NO_PATCH
                 ).items()
-            },
+            },  # see below
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},

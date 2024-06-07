@@ -232,16 +232,19 @@ class FromFiles:
         https://stackoverflow.com/a/2073599/13156561
         """
 
-        def version(ppath: Path) -> str | None:
+        def init_version(ppath: Path) -> tuple[Path, str | None]:
             with open(ppath / "__init__.py") as f:
                 for line in f.readlines():
                     if "__version__" in line:
                         # grab "X.Y.Z" from `__version__ = 'X.Y.Z'`
                         # - quote-style insensitive
-                        return line.replace('"', "'").split("=")[-1].split("'")[1]
-            return None
+                        return (
+                            Path(f.name),
+                            line.replace('"', "'").split("=")[-1].split("'")[1],
+                        )
+                return Path(f.name), None
 
-        fpath_versions = {p: version(p) for p in self._pkg_paths}
+        fpath_versions = dict(init_version(p) for p in self._pkg_paths)
         fpath_versions = {k: v for k, v in fpath_versions.items() if v is not None}
 
         if len(set(fpath_versions.values())) > 1:
