@@ -867,8 +867,9 @@ def test_37_package_dirs__multi_missing_version__error(
     # make an extra package *TO BE* included
     os.mkdir(f"{directory}/another_one")
     Path(f"{directory}/another_one/__init__.py").touch()
-    with open(f"{directory}/another_one/__init__.py", "w") as f:
-        f.write("__version__ = '7.8.9'\n")
+    # don't make the __version__, that's the point of this test
+    # with open(f"{directory}/another_one/__init__.py", "w") as f:
+    #     f.write("__version__ = '7.8.9'\n")
 
     # run pyproject_toml_builder
     with pytest.raises(
