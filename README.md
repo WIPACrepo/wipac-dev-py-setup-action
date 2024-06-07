@@ -33,8 +33,9 @@ In order to use the action, a few files need to have the following:
 
         setup()
         ```
-    - a `pyproject.toml` file with a `[project].version` attribute (hardcoding `__version__` strings in `__init__.py`
-      files is disallowed). Other sections and attributes will be auto-inserted. Any conflicting
+    - a `pyproject.toml` file with a `[project].version` attribute (defining `__version__` strings in
+      package `__init__.py`
+      file(s) is allowed). Other sections and attributes will be auto-inserted. Any conflicting
       sections/attributes will be overwritten.
 2. Run as GitHub Action
 3. Source code updates are committed and pushed by the `github-actions` bot (by default)
