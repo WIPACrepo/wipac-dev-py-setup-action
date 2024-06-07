@@ -511,7 +511,7 @@ def test_20_python_max(directory: str, requests_mock: Any) -> None:
 
 
 def test_30_package_dirs__single(directory: str, requests_mock: Any) -> None:
-    """Test using  `package_dirs` & a single desired package."""
+    """Test using `package_dirs` & a single desired package."""
     mock_many_requests(requests_mock)
 
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
@@ -593,7 +593,7 @@ def test_30_package_dirs__single(directory: str, requests_mock: Any) -> None:
 def test_34_package_dirs__multi_autoname__no_pypi(
     directory: str, requests_mock: Any
 ) -> None:
-    """Test using  `package_dirs` & multiple desired packages."""
+    """Test using `package_dirs` & multiple desired packages."""
     mock_many_requests(requests_mock)
 
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
@@ -681,7 +681,7 @@ def test_34_package_dirs__multi_autoname__no_pypi(
 
 
 def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
-    """Test using  `package_dirs` & multiple desired packages."""
+    """Test using `package_dirs` & multiple desired packages."""
     mock_many_requests(requests_mock)
 
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
@@ -781,7 +781,7 @@ def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
 def test_36_package_dirs__multi_missing_init__error(
     directory: str, requests_mock: Any
 ) -> None:
-    """Test using  `package_dirs` & multiple desired packages."""
+    """Test using `package_dirs` & multiple desired packages."""
     mock_many_requests(requests_mock)
 
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
@@ -831,10 +831,10 @@ def test_36_package_dirs__multi_missing_init__error(
         )
 
 
-def test_37_package_dirs__multi_missing_version__error(
+def test_37_package_dirs__multi_missing_version__ok(
     directory: str, requests_mock: Any
 ) -> None:
-    """Test using  `package_dirs` & multiple desired packages."""
+    """Test using `package_dirs` & multiple desired packages."""
     mock_many_requests(requests_mock)
 
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
@@ -860,11 +860,56 @@ def test_37_package_dirs__multi_missing_version__error(
     with open(pyproject_toml_path, "w") as f:
         toml.dump(VANILLA_SECTIONS_IN, f)
 
+    pyproject_toml_expected = {
+        **BUILD_SYSTEM_SECTION,
+        "project": {
+            "name": "wipac-mock-package",
+            **VANILLA_PROJECT_KEYVALS,
+            "keywords": [
+                "python",
+                "REST",
+                "tools",
+                "utilities",
+                "OpenTelemetry",
+                "tracing",
+                "telemetry",
+            ],
+            "classifiers": [
+                "Development Status :: 5 - Production/Stable",
+                "Programming Language :: Python :: 3.6",
+                "Programming Language :: Python :: 3.7",
+                "Programming Language :: Python :: 3.8",
+                "Programming Language :: Python :: 3.9",
+                "Programming Language :: Python :: 3.10",
+                "Programming Language :: Python :: 3.11",
+            ],
+            **PYPI_URLS_KEYVALS,
+        },
+        "tool": {
+            **copy.deepcopy(  # copied so we can change it, see below
+                VANILLA_SEMANTIC_RELEASE_SUBSECTIONS
+            ),
+            "setuptools": {
+                "package-data": {"*": ["py.typed"]},
+                "packages": {
+                    "find": {
+                        "include": [
+                            "mock_package",
+                            "another_one",
+                            "mock_package.*",
+                            "another_one.*",
+                        ]
+                    },
+                },
+            },
+        },
+    }
+
     # make an extra package *not* to be included
     os.mkdir(f"{directory}/mock_package_test")
     Path(f"{directory}/mock_package_test/__init__.py").touch()
 
-    # make an extra package *TO BE* included
+    # make an extra package *TO BE* included -- but file won't be in 'version_variables'
     os.mkdir(f"{directory}/another_one")
     Path(f"{directory}/another_one/__init__.py").touch()
     # don't make the __version__, that's the point of this test
@@ -872,23 +917,22 @@ def test_37_package_dirs__multi_missing_version__error(
     #     f.write("__version__ = '7.8.9'\n")
 
     # run pyproject_toml_builder
-    with pytest.raises(
-        Exception,
-        match=r"Cannot find __version__ in .*/another_one/__init__\.py",
-    ):
-        pyproject_toml_builder.work(
-            pyproject_toml_path,
-            GITHUB_FULL_REPO,
-            TOKEN,
-            NONBUMPING_COMMIT_MESSAGE,
-            gha_input,
-        )
+    pyproject_toml_builder.work(
+        pyproject_toml_path,
+        GITHUB_FULL_REPO,
+        TOKEN,
+        NONBUMPING_COMMIT_MESSAGE,
+        gha_input,
+    )
+
+    # assert outputted pyproject.toml
+    assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
 
 
 def test_38_package_dirs__multi_mismatch_version__error(
     directory: str, requests_mock: Any
 ) -> None:
-    """Test using  `package_dirs` & multiple desired packages."""
+    """Test using `package_dirs` & multiple desired packages."""
     mock_many_requests(requests_mock)
 
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
