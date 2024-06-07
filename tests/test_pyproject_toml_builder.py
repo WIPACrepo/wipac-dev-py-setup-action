@@ -1287,7 +1287,7 @@ def test_63_multi_version__bad_init_format__error(
     with pytest.raises(
         Exception,
         match=re.escape(
-            f"'__version__' must be in the semantic version format: another_one/__init__.py -> '__version__ = a_var'"
+            "'__version__' must be in the semantic version format: another_one/__init__.py -> '__version__ = a_var'"
         ),
     ):
         pyproject_toml_builder.work(
