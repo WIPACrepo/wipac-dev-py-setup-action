@@ -65,19 +65,19 @@ still* trigger GH workflows. The token needs "repo" permissions.
 
 The following are inputted to the GitHub Action package in its `with` block:
 
-| Input                 | Description                                                                                              | Required                      | Default                                                                    |
-|-----------------------|----------------------------------------------------------------------------------------------------------|-------------------------------|----------------------------------------------------------------------------|
-| `python_min`          | Minimum required Python version                                                                          | True                          | -                                                                          |
-| `python_max`          | Maximum supported Python version                                                                         | False                         | the most recent Python release                                             |
-| `package_dirs`        | Space-separated list of directories to package                                                           | False                         | All packages in the repository's root directory                            |
-| `exclude_dirs`        | Space-separated list of directories to exclude from release, relative to the repository's root directory | False                         | `test tests doc docs resource resources example examples`                  |
-| `pypi_name`           | Name of the PyPI package                                                                                 | False                         | N/A -- not providing this will bypass PyPI-related metadata and publishing |
-| `patch_without_tag`   | Whether to make a patch release even if the commit message does not explicitly warrant one               | False                         | `True`                                                                     |
-| `keywords`            | Space-separated list of keywords                                                                         | required if `pypi_name==True` | (see left)                                                                 |
-| `author`              | Author of the package                                                                                    | required if `pypi_name==True` | (see left)                                                                 |
-| `author_email`        | Email of the package's author                                                                            | required if `pypi_name==True` | (see left)                                                                 |
-| `git_committer_name`  | Name used for `git config user.name`                                                                     | False                         | `github-actions`                                                           |
-| `git_committer_email` | Email used for `git config user.email`                                                                   | False                         | `github-actions@github.com`                                                |
+| Input                 | Description                                                                                              | Required                           | Default                                                                    |
+|-----------------------|----------------------------------------------------------------------------------------------------------|------------------------------------|----------------------------------------------------------------------------|
+| `python_min`          | Minimum required Python version                                                                          | *True*                             | -                                                                          |
+| `keywords`            | Space-separated list of keywords                                                                         | _required if `pypi_name` is given_ | (see left)                                                                 |
+| `author`              | Author of the package                                                                                    | _required if `pypi_name` is given_ | (see left)                                                                 |
+| `author_email`        | Email of the package's author                                                                            | _required if `pypi_name` is given_ | (see left)                                                                 |
+| `pypi_name`           | Name of the PyPI package                                                                                 | False                              | N/A -- not providing this will bypass PyPI-related metadata and publishing |
+| `python_max`          | Maximum supported Python version                                                                         | False                              | the most recent Python release                                             |
+| `package_dirs`        | Space-separated list of directories to package                                                           | False                              | All packages in the repository's root directory                            |
+| `exclude_dirs`        | Space-separated list of directories to exclude from release, relative to the repository's root directory | False                              | `test tests doc docs resource resources example examples`                  |
+| `patch_without_tag`   | Whether to make a patch release even if the commit message does not explicitly warrant one               | False                              | `True`                                                                     |
+| `git_committer_name`  | Name used for `git config user.name`                                                                     | False                              | `github-actions`                                                           |
+| `git_committer_email` | Email used for `git config user.email`                                                                   | False                              | `github-actions@github.com`                                                |
 
 ## Configuration Modes
 
