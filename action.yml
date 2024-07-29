@@ -106,6 +106,7 @@ runs:
                 git commit -m "<bot> $msg"
                 git push
                 echo $mgs
+                echo "IS_GIT_BEHIND=true" >> $GITHUB_ENV
                 exit 0
             else
                 echo " "
