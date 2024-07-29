@@ -93,12 +93,19 @@ runs:
       run: |
         if [[ -f setup.cfg ]]; then
             if [[ ! -f pyproject.toml ]]; then
-                # auto-create a blank toml that will be added to in next steps
+                # auto-create a minimal toml
                 # when this action runs on next commit, it will match the 'else' condition below
                 touch pyproject.toml
+                # TODO: update logic when https://github.com/WIPACrepo/wipac-dev-py-setup-action/issues/62
                 # add required fields
                 echo "[project]" >> pyproject.toml
                 echo "version = \"0.0.0\"" >> pyproject.toml
+                # commit, push, exit
+                msg = "added pyproject.toml -- user needs to set 'project.version'"
+                git commit -m "<bot> $msg"
+                git push
+                echo $mgs
+                exit 0
             else
                 echo " "
                 echo "WIPACrepo/wipac-dev-py-setup-action no longer supports 'setup.cfg'"
