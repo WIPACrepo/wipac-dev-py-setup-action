@@ -466,6 +466,7 @@ class PyProjectTomlBuilder:
                         ]
                         + gha_input.python_classifiers()
                     ),
+                    "requires-python": gha_input.get_requires_python(),
                 }
             )
             # [project.urls]
