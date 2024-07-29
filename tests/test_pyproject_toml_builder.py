@@ -99,7 +99,7 @@ VANILLA_PROJECT_KEYVALS = {
 NO_PYPI_VANILLA_PROJECT_KEYVALS = {  # even MORE vanilla than vanilla
     k: v
     for k, v in VANILLA_PROJECT_KEYVALS.items()
-    if k in ["dependencies", "version", "optional-dependencies"]
+    if k in ["dependencies", "version", "optional-dependencies", "requires-python"]
 }
 
 

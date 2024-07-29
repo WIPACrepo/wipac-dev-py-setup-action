@@ -10,7 +10,7 @@ import os
 import re
 import subprocess
 from pathlib import Path
-from typing import cast, Any
+from typing import Any, cast
 
 import requests
 import toml
@@ -373,13 +373,16 @@ class READMEMarkdownManager:
         # GitHub Release badge
         badges_line += f"[![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/{self.github_full_repo}?include_prereleases)]({self.gh_api.url}/) "
 
+        # Python versions
+        if self.bsec.pypi_name:
+            badges_line += f"[![Versions](https://img.shields.io/pypi/pyversions/{self.bsec.pypi_name}.svg)](https://pypi.org/project/{self.bsec.pypi_name}) "
+
         # PYPI License badge
         if self.bsec.pypi_name:
             badges_line += f"[![PyPI - License](https://img.shields.io/pypi/l/{self.bsec.pypi_name})]({self.gh_api.url}/blob/{self.gh_api.default_branch}/LICENSE) "
 
         # Other GitHub badges
         badges_line += (
-            f"[![Lines of code](https://img.shields.io/tokei/lines/github/{self.github_full_repo})]({self.gh_api.url}/) "
             f"[![GitHub issues](https://img.shields.io/github/issues/{self.github_full_repo})]({self.gh_api.url}/issues?q=is%3Aissue+sort%3Aupdated-desc+is%3Aopen) "
             f"[![GitHub pull requests](https://img.shields.io/github/issues-pr/{self.github_full_repo})]({self.gh_api.url}/pulls?q=is%3Apr+sort%3Aupdated-desc+is%3Aopen) "
         )
@@ -427,6 +430,7 @@ class PyProjectTomlBuilder:
         # if we DON'T want PyPI stuff:
         if not gha_input.pypi_name:
             toml_dict["project"]["name"] = "_".join(ffile.packages).replace("_", "-")
+            toml_dict["project"]["requires-python"] = gha_input.get_requires_python()
             # add the following if they were given:
             if gha_input.author or gha_input.author_email:
                 toml_dict["project"]["authors"] = [{}]
