@@ -112,7 +112,7 @@ runs:
                 echo "# foo = []" >> pyproject.toml
                 echo "# bar = []" >> pyproject.toml
                 # commit, push, exit
-                msg="added pyproject.toml -- user needs to set auto-added fields"
+                msg="added pyproject.toml -- user needs to set values for auto-added fields"
                 git add .
                 git commit -m "<bot> $msg"
                 git push
@@ -123,7 +123,7 @@ runs:
                 echo "WIPACrepo/wipac-dev-py-setup-action no longer supports 'setup.cfg'"
                 echo "Migration Steps:"
                 echo "  1. Look at 'pyproject.toml'--this action may have auto-added fields."
-                echo "     Fill out any needed fields."
+                echo "     Fill out any needed values."
                 echo "  2. Manually move attributes from setup.cfg's [wipac:cicd_setup_builder]"
                 echo "     section to WIPACrepo/wipac-dev-py-setup-action's 'with' block."
                 echo "     See https://github.com/WIPACrepo/wipac-dev-py-setup-action#inputs"
