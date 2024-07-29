@@ -96,6 +96,9 @@ runs:
                 # auto-create a blank toml that will be added to in next steps
                 # when this action runs on next commit, it will match the 'else' condition below
                 touch pyproject.toml
+                # add required fields
+                echo "[project]" >> pyproject.toml
+                echo "version = \"0.0.0\"" >> pyproject.toml
             else
                 echo " "
                 echo "WIPACrepo/wipac-dev-py-setup-action no longer supports 'setup.cfg'"
