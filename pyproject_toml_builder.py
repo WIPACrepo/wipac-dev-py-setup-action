@@ -10,7 +10,7 @@ import os
 import re
 import subprocess
 from pathlib import Path
-from typing import cast, Any
+from typing import Any, cast
 
 import requests
 import toml
@@ -427,6 +427,7 @@ class PyProjectTomlBuilder:
         # if we DON'T want PyPI stuff:
         if not gha_input.pypi_name:
             toml_dict["project"]["name"] = "_".join(ffile.packages).replace("_", "-")
+            toml_dict["project"]["requires-python"] = gha_input.get_requires_python()
             # add the following if they were given:
             if gha_input.author or gha_input.author_email:
                 toml_dict["project"]["authors"] = [{}]
@@ -465,7 +466,6 @@ class PyProjectTomlBuilder:
                         ]
                         + gha_input.python_classifiers()
                     ),
-                    "requires-python": gha_input.get_requires_python(),
                 }
             )
             # [project.urls]
