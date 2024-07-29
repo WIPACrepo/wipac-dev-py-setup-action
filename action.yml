@@ -102,7 +102,7 @@ runs:
                 echo "version = \"0.0.0\"" >> pyproject.toml
                 # commit, push, exit
                 msg="added pyproject.toml -- user needs to set 'project.version'"
-                git add
+                git add .
                 git commit -m "<bot> $msg"
                 git push
                 echo $mgs
