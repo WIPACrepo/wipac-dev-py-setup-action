@@ -8,12 +8,13 @@ import dataclasses
 import logging
 import os
 import re
-import requests
 import shlex
 import subprocess
-import toml
 from pathlib import Path
 from typing import Any, cast
+
+import requests
+import toml
 from wipac_dev_tools import (
     argparse_tools,
     logging_tools,
@@ -164,10 +165,10 @@ class FromFiles:
     """Get things that require reading files."""
 
     def __init__(
-            self,
-            root: Path,
-            gha_input: GHAInput,
-            commit_message: str,
+        self,
+        root: Path,
+        gha_input: GHAInput,
+        commit_message: str,
     ) -> None:
         if not os.path.exists(root):
             raise NotADirectoryError(root)
@@ -240,8 +241,8 @@ class FromFiles:
                         # or     foo() from `__version__ = foo()`
                         # - quote-style insensitive
                         if m := re.match(
-                                r"^__version__ = [\"\'](?P<version>\w+\.\w+\.\w+)[\"\']",
-                                line,
+                            r"^__version__ = [\"\'](?P<version>\w+\.\w+\.\w+)[\"\']",
+                            line,
                         ):
                             return Path(f.name), m.group("version")
                         else:
@@ -267,9 +268,9 @@ class FromFiles:
 
 
 def get_development_status(
-        version: str,
-        patch_without_tag: bool,
-        commit_message: str,
+    version: str,
+    patch_without_tag: bool,
+    commit_message: str,
 ) -> str:
     """Detect the development status from the package's version.
 
@@ -327,11 +328,11 @@ class READMEMarkdownManager:
     """Add some automation to README.md."""
 
     def __init__(
-            self,
-            ffile: FromFiles,
-            github_full_repo: str,
-            gha_input: GHAInput,
-            gh_api: GitHubAPI,
+        self,
+        ffile: FromFiles,
+        github_full_repo: str,
+        gha_input: GHAInput,
+        gh_api: GitHubAPI,
     ) -> None:
         self.ffile = ffile
         self.github_full_repo = github_full_repo
@@ -404,13 +405,13 @@ class PyProjectTomlBuilder:
     """
 
     def __init__(
-            self,
-            toml_dict: NoDotsDict,
-            root_path: Path,
-            github_full_repo: str,
-            token: str,
-            commit_message: str,
-            gha_input: GHAInput,
+        self,
+        toml_dict: NoDotsDict,
+        root_path: Path,
+        github_full_repo: str,
+        token: str,
+        commit_message: str,
+        gha_input: GHAInput,
     ):
         ffile = FromFiles(  # things requiring reading files
             root_path,
@@ -460,14 +461,14 @@ class PyProjectTomlBuilder:
                     "license": {"file": "LICENSE"},
                     "keywords": gha_input.keywords,
                     "classifiers": (
-                            [
-                                get_development_status(
-                                    toml_dict["project"]["version"],
-                                    gha_input.patch_without_tag,
-                                    commit_message,
-                                )
-                            ]
-                            + gha_input.python_classifiers()
+                        [
+                            get_development_status(
+                                toml_dict["project"]["version"],
+                                gha_input.patch_without_tag,
+                                commit_message,
+                            )
+                        ]
+                        + gha_input.python_classifiers()
                     ),
                     "requires-python": gha_input.get_requires_python(),
                 }
@@ -545,7 +546,7 @@ class PyProjectTomlBuilder:
         if gha_input.package_dirs:
             return {
                 "include": gha_input.package_dirs
-                           + [f"{p}.*" for p in gha_input.package_dirs]
+                + [f"{p}.*" for p in gha_input.package_dirs]
             }
         # disallow these...
         dicto: dict[str, Any] = {"namespaces": False}
@@ -568,11 +569,11 @@ class PyProjectTomlBuilder:
 
 
 def write_toml(
-        toml_file: Path,
-        github_full_repo: str,
-        token: str,
-        commit_message: str,
-        gha_input: GHAInput,
+    toml_file: Path,
+    github_full_repo: str,
+    token: str,
+    commit_message: str,
+    gha_input: GHAInput,
 ) -> READMEMarkdownManager | None:
     """Build/write the `pyproject.toml` sections according to `BUILDER_SECTION_NAME`.
 
@@ -604,11 +605,11 @@ def write_toml(
 
 
 def work(
-        toml_file: Path,
-        github_full_repo: str,
-        token: str,
-        commit_message: str,
-        gha_input: GHAInput,
+    toml_file: Path,
+    github_full_repo: str,
+    token: str,
+    commit_message: str,
+    gha_input: GHAInput,
 ) -> None:
     """Build & write the pyproject.toml. Write the readme if necessary."""
     readme_mgr = write_toml(
@@ -629,7 +630,7 @@ def main() -> None:
     """Read and write all necessary files."""
     parser = argparse.ArgumentParser(
         description=f"Read/transform 'pyproject.toml' and 'README.md' files. "
-                    f"Builds out 'pyproject.toml' sections according to [{BUILDER_SECTION_NAME}].",
+        f"Builds out 'pyproject.toml' sections according to [{BUILDER_SECTION_NAME}].",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
