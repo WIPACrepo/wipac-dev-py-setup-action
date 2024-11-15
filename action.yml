@@ -143,7 +143,7 @@ runs:
       run: |
         CLEANED_KEYWORDS="${{ inputs.keywords }}"
         # Wrap each line in quotes if not already quoted, then replace newlines with spaces
-        CLEANED_KEYWORDS=$(echo "$CLEANED_KEYWORDS" | sed 's/^[^"].*[^"]$/"&"/' | tr '\n' ' ')
+        CLEANED_KEYWORDS=$(printf "%s" "${{ inputs.keywords }}" | sed 's/^[^"].*[^"]$/"&"/' | tr '\n' ' ')
         echo "$CLEANED_KEYWORDS"
         echo "CLEANED_KEYWORDS=$CLEANED_KEYWORDS" >> $GITHUB_ENV
       shell: bash
