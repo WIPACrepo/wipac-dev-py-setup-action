@@ -8,6 +8,7 @@ import dataclasses
 import logging
 import os
 import re
+import shlex
 import subprocess
 from pathlib import Path
 from typing import Any, cast
@@ -147,7 +148,7 @@ class GHAInput:
 
         Ex: "">=3.6, <3.10" (cannot do "<=3.9" because 3.9.1 > 3.9)
         """
-        return f">={self.python_min[0]}.{self.python_min[1]}, <{self.python_max[0]}.{self.python_max[1]+1}"
+        return f">={self.python_min[0]}.{self.python_min[1]}, <{self.python_max[0]}.{self.python_max[1] + 1}"
 
     def python_classifiers(self) -> list[str]:
         """Get auto-detected `Programming Language :: Python :: *` list.
@@ -714,7 +715,7 @@ def main() -> None:
         "--keywords",
         nargs="*",
         type=str,
-        default=[],
+        default=shlex.split(os.getenv("PYPROJECT_KEYWORDS", "")),
         help="Space-separated list of keywords",
     )
     parser.add_argument(
