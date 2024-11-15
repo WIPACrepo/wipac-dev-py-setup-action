@@ -141,7 +141,6 @@ runs:
     - name: Prepare Keywords
       if: env.IS_GIT_BEHIND != 'true'
       run: |
-        CLEANED_KEYWORDS="${{ inputs.keywords }}"
         # Wrap each line in quotes if not already quoted, then replace newlines with spaces
         CLEANED_KEYWORDS=$(sed 's/^[^"].*[^"]$/"&"/' <<EOF | tr '\n' ' '
         ${{ inputs.keywords }}
