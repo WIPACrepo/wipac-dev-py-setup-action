@@ -110,7 +110,7 @@ runs:
             echo "# foo = []" >> pyproject.toml
             echo "# bar = []" >> pyproject.toml
             # commit, push, exit
-            msg="added pyproject.toml -- user needs to set values for auto-added fields"
+            msg="added pyproject.toml -- ALERT: user needs to set values for auto-added fields"
             git add .
             git commit -m "<bot> $msg"
             git push
