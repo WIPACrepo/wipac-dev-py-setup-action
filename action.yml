@@ -142,13 +142,13 @@ runs:
       if: env.IS_GIT_BEHIND != 'true'
       run: |
         # Wrap each line in quotes if not already quoted, then replace newlines with spaces
-        CLEANED_KEYWORDS=$(sed 's/^[^"].*[^"]$/"&"/' <<EOF | tr '\n' ' '
+        PYPROJECT_KEYWORDS=$(sed 's/^[^"].*[^"]$/"&"/' <<EOF | tr '\n' ' '
         ${{ inputs.keywords }}
         EOF
         )
         echo "keywords in a line:"
-        echo "$CLEANED_KEYWORDS"
-        echo "CLEANED_KEYWORDS=$CLEANED_KEYWORDS" >> $GITHUB_ENV
+        echo "$PYPROJECT_KEYWORDS"
+        echo "PYPROJECT_KEYWORDS=$PYPROJECT_KEYWORDS" >> $GITHUB_ENV
       shell: bash
 
     - name: Build pyproject.toml + README.md (and commit)
@@ -162,13 +162,12 @@ runs:
 
         # Build!
         set -x
-        # NOTE: when an arg is a list, don't quote it
+        export PYPROJECT_KEYWORDS
         python3 ${{ github.action_path }}/pyproject_toml_builder.py \
           --toml pyproject.toml \
           --github-full-repo $GITHUB_REPOSITORY \
           --token ${{ github.token }} \
           --python-min "${{ inputs.python_min }}" \
-          --keywords $CLEANED_KEYWORDS \
           --python-max "${{ inputs.python_max }}" \
           --package-dirs ${{ inputs.package_dirs }} \
           --exclude-dirs ${{ inputs.exclude_dirs }} \
