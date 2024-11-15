@@ -146,6 +146,7 @@ runs:
         ${{ inputs.keywords }}
         EOF
         )
+        echo "keywords in a line:"
         echo "$CLEANED_KEYWORDS"
         echo "CLEANED_KEYWORDS=$CLEANED_KEYWORDS" >> $GITHUB_ENV
       shell: bash
