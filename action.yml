@@ -138,6 +138,16 @@ runs:
       shell: bash
 
 
+    - name: Prepare Keywords
+      if: env.IS_GIT_BEHIND != 'true'
+      run: |
+        CLEANED_KEYWORDS="${{ inputs.keywords }}"
+        # Wrap each line in quotes if not already quoted, then replace newlines with spaces
+        CLEANED_KEYWORDS=$(echo "$CLEANED_KEYWORDS" | sed 's/^[^"].*[^"]$/"&"/' | tr '\n' ' ')
+        echo "$CLEANED_KEYWORDS"
+        echo "CLEANED_KEYWORDS=$CLEANED_KEYWORDS" >> $GITHUB_ENV
+      shell: bash
+
     - name: Build pyproject.toml + README.md (and commit)
       if: env.IS_GIT_BEHIND != 'true'
       run: |
@@ -155,7 +165,7 @@ runs:
           --github-full-repo $GITHUB_REPOSITORY \
           --token ${{ github.token }} \
           --python-min "${{ inputs.python_min }}" \
-          --keywords ${{ inputs.keywords | replace('\n', ' ') }} \
+          --keywords $CLEANED_KEYWORDS \
           --python-max "${{ inputs.python_max }}" \
           --package-dirs ${{ inputs.package_dirs }} \
           --exclude-dirs ${{ inputs.exclude_dirs }} \
