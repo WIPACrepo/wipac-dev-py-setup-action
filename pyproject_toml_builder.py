@@ -5,10 +5,10 @@ Used in CI/CD, used by GH Action.
 
 import argparse
 import dataclasses
+import json
 import logging
 import os
 import re
-import shlex
 import subprocess
 from pathlib import Path
 from typing import Any, cast
@@ -715,8 +715,8 @@ def main() -> None:
         "--keywords",
         nargs="*",
         type=str,
-        default=shlex.split(os.getenv("PYPROJECT_KEYWORDS_JSON", "")),
-        help="Space-separated list of keywords",
+        default=json.loads(os.getenv("PYPROJECT_KEYWORDS_JSON", "[]")),
+        help="keywords",
     )
     parser.add_argument(
         "--author",
@@ -736,7 +736,6 @@ def main() -> None:
         default="",
         help="Repository's license type",
     )
-
     args = parser.parse_args()
     logging_tools.set_level("DEBUG", LOGGER, use_coloredlogs=True)
     logging_tools.log_argparse_args(args, logger=LOGGER)
