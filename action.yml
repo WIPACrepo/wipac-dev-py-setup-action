@@ -62,8 +62,9 @@ runs:
   steps:
     - name: check required inputs
       run: |
+        set -euo pipefail
         if [ -z "${{ inputs.python_min }}" ]; then
-          echo "required input not provided: python_min"
+          echo "::error::required input not provided: python_min"
           exit 1
         fi
       shell: bash
@@ -74,6 +75,7 @@ runs:
 
     - name: Is this most recent commit? It won't be if action was reran
       run: |
+        set -euo pipefail
         git fetch &> /dev/null
         if [[ $(git status -sb | grep behind) ]]; then
           echo "IS_GIT_BEHIND=true" >> $GITHUB_ENV
@@ -84,6 +86,7 @@ runs:
     - name: Git config
       if: env.IS_GIT_BEHIND != 'true'
       run: |
+        set -euo pipefail
         git config user.name ${{ inputs.git_committer_name }}
         git config user.email ${{ inputs.git_committer_email }}
       shell: bash
@@ -91,6 +94,7 @@ runs:
     - name: Check pyproject.toml for project migration
       if: env.IS_GIT_BEHIND != 'true'
       run: |
+        set -euo pipefail
         # if needed: auto-create a minimal pyproject.toml
         if [[ ! -f pyproject.toml ]]; then
             touch pyproject.toml
@@ -137,23 +141,28 @@ runs:
         fi
       shell: bash
 
-
     - name: Prepare Keywords
       if: env.IS_GIT_BEHIND != 'true'
       run: |
-        # Wrap each line in quotes if not already quoted, then replace newlines with spaces
-        PYPROJECT_KEYWORDS=$(sed 's/^[^"].*[^"]$/"&"/' <<EOF | tr '\n' ' '
-        ${{ inputs.keywords }}
-        EOF
-        )
-        echo "keywords in a line:"
-        echo "$PYPROJECT_KEYWORDS"
-        echo "PYPROJECT_KEYWORDS=$PYPROJECT_KEYWORDS" >> $GITHUB_ENV
+        set -euo pipefail
+        PYPROJECT_KEYWORDS_JSON="${{ inputs.keywords }}"
+        
+        # Check if input is a valid JSON array containing only strings
+        if echo "$PYPROJECT_KEYWORDS_JSON" | jq -e 'if type == "array" then all(.[]; type == "string") else false end' >/dev/null 2>&1; then
+            echo "Valid JSON list of strings"
+        else
+            echo "::error::'keywords' is invalid: must be a JSON-formatted list of strings"
+            exit 1
+        fi
+        
+        echo "$PYPROJECT_KEYWORDS_JSON"
+        echo "PYPROJECT_KEYWORDS_JSON=$PYPROJECT_KEYWORDS_JSON" >> $GITHUB_ENV
       shell: bash
 
     - name: Build pyproject.toml + README.md (and commit)
       if: env.IS_GIT_BEHIND != 'true'
       run: |
+        set -euo pipefail
         set -e
         sudo apt-get update
         python -m venv action_venv
@@ -162,7 +171,7 @@ runs:
 
         # Build!
         set -x
-        export PYPROJECT_KEYWORDS
+        export PYPROJECT_KEYWORDS_JSON
         python3 ${{ github.action_path }}/pyproject_toml_builder.py \
           --toml pyproject.toml \
           --github-full-repo $GITHUB_REPOSITORY \
@@ -195,6 +204,7 @@ runs:
     - name: Add py.typed file(s) (and commit)
       if: env.IS_GIT_BEHIND != 'true'
       run: |
+        set -euo pipefail
         python -c '
         import os, sys
         from pathlib import Path
@@ -215,6 +225,7 @@ runs:
     - name: Push changes
       if: env.IS_GIT_BEHIND != 'true'
       run: |
+        set -euo pipefail
         status=`git status 2>&1 | tee`
         ahead=`echo -n "${status}" 2> /dev/null | grep "Your branch is ahead of" &> /dev/null; echo "$?"`
         if [ "$ahead" -eq "1" ]; then

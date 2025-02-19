@@ -715,7 +715,7 @@ def main() -> None:
         "--keywords",
         nargs="*",
         type=str,
-        default=shlex.split(os.getenv("PYPROJECT_KEYWORDS", "")),
+        default=shlex.split(os.getenv("PYPROJECT_KEYWORDS_JSON", "")),
         help="Space-separated list of keywords",
     )
     parser.add_argument(
