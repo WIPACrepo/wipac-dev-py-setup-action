@@ -8,7 +8,6 @@ import dataclasses
 import logging
 import os
 import re
-import shlex
 import subprocess
 from pathlib import Path
 from typing import Any, cast
@@ -713,10 +712,9 @@ def main() -> None:
     # OPTIONAL (meta)
     parser.add_argument(
         "--keywords",
-        nargs="*",
-        type=str,
-        default=shlex.split(os.getenv("PYPROJECT_KEYWORDS", "")),
-        help="Space-separated list of keywords",
+        type=lambda x: [k.strip() for k in x.split(",")],
+        default=[],
+        help="keywords",
     )
     parser.add_argument(
         "--author",
@@ -736,7 +734,6 @@ def main() -> None:
         default="",
         help="Repository's license type",
     )
-
     args = parser.parse_args()
     logging_tools.set_level("DEBUG", LOGGER, use_coloredlogs=True)
     logging_tools.log_argparse_args(args, logger=LOGGER)
