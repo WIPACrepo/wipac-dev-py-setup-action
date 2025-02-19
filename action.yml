@@ -141,24 +141,6 @@ runs:
         fi
       shell: bash
 
-    - name: Prepare Keywords
-      if: env.IS_GIT_BEHIND != 'true'
-      run: |
-        set -euo pipefail
-        PYPROJECT_KEYWORDS_JSON="${{ inputs.keywords }}"
-        echo "$PYPROJECT_KEYWORDS_JSON"
-        
-        # Check if input is a valid JSON array containing only strings
-        if echo "$PYPROJECT_KEYWORDS_JSON" | jq -e 'if type == "array" then all(.[]; type == "string") else false end' >/dev/null 2>&1; then
-            echo "Valid JSON list of strings"
-        else
-            echo "::error::'keywords' is invalid: must be a JSON-formatted array of strings like: '[\"WIPAC\", \"python\", \"tools\", \"utilities\"]'"
-            exit 1
-        fi
-        
-        echo "PYPROJECT_KEYWORDS_JSON=$PYPROJECT_KEYWORDS_JSON" >> $GITHUB_ENV
-      shell: bash
-
     - name: Build pyproject.toml + README.md (and commit)
       if: env.IS_GIT_BEHIND != 'true'
       run: |
@@ -182,6 +164,7 @@ runs:
           --exclude-dirs ${{ inputs.exclude_dirs }} \
           --pypi-name "${{ inputs.pypi_name }}" \
           --patch-without-tag "${{ inputs.patch_without_tag }}" \
+          --keywords "${{ inputs.keywords }}" \
           --author "${{ inputs.author }}" \
           --author-email "${{ inputs.author_email }}"
         set +x

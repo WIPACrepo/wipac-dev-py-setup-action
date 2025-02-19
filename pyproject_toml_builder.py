@@ -5,7 +5,6 @@ Used in CI/CD, used by GH Action.
 
 import argparse
 import dataclasses
-import json
 import logging
 import os
 import re
@@ -713,9 +712,8 @@ def main() -> None:
     # OPTIONAL (meta)
     parser.add_argument(
         "--keywords",
-        nargs="*",
-        type=str,
-        default=json.loads(os.getenv("PYPROJECT_KEYWORDS_JSON", "[]")),
+        type=lambda x: [k.strip() for k in x.split(",")],
+        default=[],
         help="keywords",
     )
     parser.add_argument(
