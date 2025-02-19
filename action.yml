@@ -151,7 +151,7 @@ runs:
         if echo "$PYPROJECT_KEYWORDS_JSON" | jq -e 'if type == "array" then all(.[]; type == "string") else false end' >/dev/null 2>&1; then
             echo "Valid JSON list of strings"
         else
-            echo "::error::'keywords' is invalid: must be a JSON-formatted list of strings"
+            echo "::error::'keywords' is invalid: must be a JSON-formatted array of strings"
             exit 1
         fi
         
