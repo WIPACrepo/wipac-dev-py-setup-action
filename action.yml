@@ -146,6 +146,7 @@ runs:
       run: |
         set -euo pipefail
         PYPROJECT_KEYWORDS_JSON="${{ inputs.keywords }}"
+        echo "$PYPROJECT_KEYWORDS_JSON"
         
         # Check if input is a valid JSON array containing only strings
         if echo "$PYPROJECT_KEYWORDS_JSON" | jq -e 'if type == "array" then all(.[]; type == "string") else false end' >/dev/null 2>&1; then
@@ -155,7 +156,6 @@ runs:
             exit 1
         fi
         
-        echo "$PYPROJECT_KEYWORDS_JSON"
         echo "PYPROJECT_KEYWORDS_JSON=$PYPROJECT_KEYWORDS_JSON" >> $GITHUB_ENV
       shell: bash
 
