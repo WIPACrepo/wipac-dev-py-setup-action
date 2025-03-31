@@ -582,7 +582,7 @@ def set_multiline_array(
     """Convert the list at the given dotted path into a multiline TOML array."""
     cur = toml_dict
     for key in path[:-1]:
-        cur = cur.get(key)
+        cur = cur.get(key)  # type: ignore[assignment]
         if cur is None:
             return  # path doesn't exist
     last_key = path[-1]
