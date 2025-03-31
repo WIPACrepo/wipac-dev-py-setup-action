@@ -528,17 +528,20 @@ class PyProjectTomlBuilder:
 
         # [project.optional-dependencies][mypy]
         if gha_input.auto_mypy_option:
-            toml_dict["project"]["optional-dependencies"]["mypy"] = sorted(
-                set(
-                    itertools.chain.from_iterable(
-                        deps
-                        for opt, deps in toml_dict["project"][
-                            "optional-dependencies"
-                        ].items()
-                        if opt != "mypy"
+            try:
+                toml_dict["project"]["optional-dependencies"]["mypy"] = sorted(
+                    set(
+                        itertools.chain.from_iterable(
+                            deps
+                            for opt, deps in toml_dict["project"][
+                                "optional-dependencies"
+                            ].items()
+                            if opt != "mypy"
+                        )
                     )
                 )
-            )
+            except KeyError:
+                pass  # there are no [project.optional-dependencies]
 
         # Automate some README stuff
         self.readme_mgr: READMEMarkdownManager | None
