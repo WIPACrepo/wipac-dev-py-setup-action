@@ -621,7 +621,7 @@ def write_toml(
         gha_input,
     )
 
-    # Make specific arrays multiline
+    # make specific arrays multiline
     set_multiline_array(toml_dict, "project", "dependencies", sort=True)
     set_multiline_array(toml_dict, "project", "keywords")
     set_multiline_array(toml_dict, "project", "classifiers")
@@ -629,6 +629,7 @@ def write_toml(
     for key in optional_deps:
         set_multiline_array(optional_deps, key, sort=True)
 
+    # all done--write it!
     with open(toml_file, "w") as f:
         tomlkit.dump(toml_dict, f)
 
