@@ -589,9 +589,9 @@ def set_multiline_array(
     val = cur.get(last_key)
     if isinstance(val, list):
         if sort:
-            cur[last_key] = array(sorted(val)).multiline(True)  # type: ignore=[arg-type]
+            cur[last_key] = array(sorted(val)).multiline(True)  # type: ignore[arg-type]
         else:
-            cur[last_key] = array(val).multiline(True)  # type: ignore=[arg-type]
+            cur[last_key] = array(val).multiline(True)  # type: ignore[arg-type]
 
 
 def write_toml(
