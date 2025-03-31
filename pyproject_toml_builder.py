@@ -599,7 +599,7 @@ def write_toml(
     )
 
     with open(toml_file, "w") as f:
-        f.write(tomlkit.dumps(toml_dict))
+        tomlkit.dump(toml_dict, f)
 
     return builder.readme_mgr
 
