@@ -1372,7 +1372,7 @@ def test_80_auto_mypy_option(directory: str, requests_mock: Any) -> None:
             **{
                 "optional-dependencies": {
                     **NO_PYPI_VANILLA_PROJECT_KEYVALS["optional-dependencies"],
-                    **{"mypy": ["wipac-telemetry"]},
+                    **{"mypy": ["wipac-telemetry", "pen", "paper", "hard-work"]},
                 }
             },
         },
