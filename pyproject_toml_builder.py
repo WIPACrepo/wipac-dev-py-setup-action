@@ -602,6 +602,8 @@ def write_toml(
     )
 
     # Make specific arrays multiline
+    if deps := toml_dict["project"].get("dependencies"):
+        toml_dict["project"]["dependencies"] = tomlkit.array(deps).multiline(True)
     if optional_deps := toml_dict["project"].get("optional-dependencies"):
         for key in optional_deps:
             optional_deps[key] = tomlkit.array(optional_deps[key]).multiline(True)
