@@ -10,7 +10,8 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-import toml
+import tomlkit
+from tomlkit import TOMLDocument
 
 LOGGER = logging.getLogger(__name__)
 
@@ -51,17 +52,20 @@ NONBUMPING_COMMIT_MESSAGE = "foo bar baz"
 VANILLA_SECTIONS_IN = {
     "project": {
         "version": "1.2.3",
-        "dependencies": [
-            "pyjwt",
-            "requests",
-            "requests-futures",
-            "tornado",
-            "wipac-dev-tools",
-        ],
+        "dependencies": sorted(
+            [
+                "pyjwt",
+                "requests",
+                "requests-futures",
+                "tornado",
+                "wipac-dev-tools",
+            ]
+        ),
         "optional-dependencies": {
             "telemetry": [
                 "wipac-telemetry",
-            ]
+            ],
+            "best-tools": sorted(["pen", "paper", "hard-work"]),
         },
     },
 }
@@ -137,10 +141,10 @@ def assert_outputted_pyproject_toml(
 ) -> None:
     """Compare each's contents casted to a dict."""
 
-    # test that we aren't using dots
-    no_dots = pyproject_toml_builder.NoDotsDict()
+    # sanity test
+    doc = TOMLDocument()
     for key, value in expected.items():
-        no_dots[key] = value
+        doc[key] = value
 
     print()
     print("EXPECTED TOML OUTPUT:")
@@ -149,7 +153,7 @@ def assert_outputted_pyproject_toml(
     print()
     print("ACTUAL TOML OUTPUT:")
     with open(pyproject_toml_path) as f:
-        actual = toml.load(f)
+        actual = tomlkit.load(f)
         print(actual)
 
     print()
@@ -273,7 +277,7 @@ def test_00_minimum_input(directory: str, requests_mock: Any) -> None:
 
     # write the original pyproject.toml
     with open(pyproject_toml_path, "w") as f:
-        toml.dump(VANILLA_SECTIONS_IN, f)
+        tomlkit.dump(VANILLA_SECTIONS_IN, f)
 
     pyproject_toml_expected = {
         **BUILD_SYSTEM_SECTION,
@@ -319,7 +323,7 @@ def test_01_minimum_input_w_pypi(directory: str, requests_mock: Any) -> None:
 
     # write the original pyproject.toml
     with open(pyproject_toml_path, "w") as f:
-        toml.dump(VANILLA_SECTIONS_IN, f)
+        tomlkit.dump(VANILLA_SECTIONS_IN, f)
 
     pyproject_toml_expected = {
         **BUILD_SYSTEM_SECTION,
@@ -386,7 +390,7 @@ def test_10_keywords(directory: str, requests_mock: Any) -> None:
 
     # write the original pyproject.toml
     with open(pyproject_toml_path, "w") as f:
-        toml.dump(VANILLA_SECTIONS_IN, f)
+        tomlkit.dump(VANILLA_SECTIONS_IN, f)
 
     pyproject_toml_expected = {
         **BUILD_SYSTEM_SECTION,
@@ -462,7 +466,7 @@ def test_20_python_max(directory: str, requests_mock: Any) -> None:
 
     # write the original pyproject.toml
     with open(pyproject_toml_path, "w") as f:
-        toml.dump(VANILLA_SECTIONS_IN, f)
+        tomlkit.dump(VANILLA_SECTIONS_IN, f)
 
     pyproject_toml_expected = {
         **BUILD_SYSTEM_SECTION,
@@ -535,7 +539,7 @@ def test_30_package_dirs__single(directory: str, requests_mock: Any) -> None:
 
     # write the original pyproject.toml
     with open(pyproject_toml_path, "w") as f:
-        toml.dump(VANILLA_SECTIONS_IN, f)
+        tomlkit.dump(VANILLA_SECTIONS_IN, f)
 
     pyproject_toml_expected = {
         **BUILD_SYSTEM_SECTION,
@@ -616,7 +620,7 @@ def test_34_package_dirs__multi_autoname__no_pypi(
 
     # write the original pyproject.toml
     with open(pyproject_toml_path, "w") as f:
-        toml.dump(VANILLA_SECTIONS_IN, f)
+        tomlkit.dump(VANILLA_SECTIONS_IN, f)
 
     pyproject_toml_expected = {
         **BUILD_SYSTEM_SECTION,
@@ -705,7 +709,7 @@ def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
 
     # write the original pyproject.toml
     with open(pyproject_toml_path, "w") as f:
-        toml.dump(VANILLA_SECTIONS_IN, f)
+        tomlkit.dump(VANILLA_SECTIONS_IN, f)
 
     pyproject_toml_expected = {
         **BUILD_SYSTEM_SECTION,
@@ -805,7 +809,7 @@ def test_36_package_dirs__multi_missing_init__error(
 
     # write the original pyproject.toml
     with open(pyproject_toml_path, "w") as f:
-        toml.dump(VANILLA_SECTIONS_IN, f)
+        tomlkit.dump(VANILLA_SECTIONS_IN, f)
 
     # make an extra package *not* to be included
     os.mkdir(f"{directory}/mock_package_test")
@@ -862,7 +866,7 @@ def test_40_extra_stuff(directory: str, requests_mock: Any) -> None:
         # extra sections
         extra_stuff["baz"] = {"a": 11}
         extra_stuff["foo"] = {"bar": {"b": 22}}
-        toml.dump(extra_stuff, f)
+        tomlkit.dump(extra_stuff, f)
 
     pyproject_toml_expected = {
         **BUILD_SYSTEM_SECTION,
@@ -1003,7 +1007,7 @@ def test_50_bumping(
     with open(pyproject_toml_path, "w") as f:
         sections_in = copy.deepcopy(VANILLA_SECTIONS_IN)
         sections_in["project"]["version"] = version
-        toml.dump(sections_in, f)
+        tomlkit.dump(sections_in, f)
 
     pyproject_toml_expected = {
         **BUILD_SYSTEM_SECTION,
@@ -1077,7 +1081,7 @@ def test_60_multi_version__one_missing__ok(directory: str, requests_mock: Any) -
 
     # write the original pyproject.toml
     with open(pyproject_toml_path, "w") as f:
-        toml.dump(VANILLA_SECTIONS_IN, f)
+        tomlkit.dump(VANILLA_SECTIONS_IN, f)
 
     pyproject_toml_expected = {
         **BUILD_SYSTEM_SECTION,
@@ -1175,7 +1179,7 @@ def test_61_multi_version__mismatch_w_inits__error(
 
     # write the original pyproject.toml
     with open(pyproject_toml_path, "w") as f:
-        toml.dump(VANILLA_SECTIONS_IN, f)
+        tomlkit.dump(VANILLA_SECTIONS_IN, f)
 
     # make an extra package *not* to be included
     os.mkdir(f"{directory}/mock_package_test")
@@ -1226,7 +1230,7 @@ def test_62_multi_version__mismatch_w_toml__error(
     with open(pyproject_toml_path, "w") as f:
         toml_sections_in = copy.deepcopy(VANILLA_SECTIONS_IN)
         toml_sections_in["project"]["version"] = "7.8.9"
-        toml.dump(toml_sections_in, f)
+        tomlkit.dump(toml_sections_in, f)
 
     # run pyproject_toml_builder
     with pytest.raises(
@@ -1271,7 +1275,7 @@ def test_63_multi_version__bad_init_format__error(
 
     # write the original pyproject.toml
     with open(pyproject_toml_path, "w") as f:
-        toml.dump(VANILLA_SECTIONS_IN, f)
+        tomlkit.dump(VANILLA_SECTIONS_IN, f)
 
     # make an extra package *not* to be included
     os.mkdir(f"{directory}/mock_package_test")
@@ -1326,7 +1330,7 @@ def test_70__has_no_projectversion__error(directory: str, requests_mock: Any) ->
     with open(pyproject_toml_path, "w") as f:
         sections_in = copy.deepcopy(VANILLA_SECTIONS_IN)
         del sections_in["project"]["version"]
-        toml.dump(sections_in, f)
+        tomlkit.dump(sections_in, f)
 
     # make an extra package
     os.mkdir(f"{directory}/another_one")
@@ -1346,3 +1350,54 @@ def test_70__has_no_projectversion__error(directory: str, requests_mock: Any) ->
             NONBUMPING_COMMIT_MESSAGE,
             gha_input,
         )
+
+
+def test_80_auto_mypy_option(directory: str, requests_mock: Any) -> None:
+    """Test using auto_mypy_option."""
+    mock_many_requests(requests_mock)
+
+    pyproject_toml_path = Path(f"{directory}/pyproject.toml")
+
+    gha_input = pyproject_toml_builder.GHAInput(
+        python_min=(3, 6),
+        auto_mypy_option=True,
+    )
+
+    # write the original pyproject.toml
+    with open(pyproject_toml_path, "w") as f:
+        tomlkit.dump(VANILLA_SECTIONS_IN, f)
+
+    pyproject_toml_expected = {
+        **BUILD_SYSTEM_SECTION,
+        "project": {
+            "name": "mock-package",
+            **NO_PYPI_VANILLA_PROJECT_KEYVALS,  # the true minimum is more vanilla than vanilla)
+            **{
+                "optional-dependencies": {
+                    **NO_PYPI_VANILLA_PROJECT_KEYVALS["optional-dependencies"],  # type: ignore[dict-item]
+                    **{
+                        "mypy": sorted(["wipac-telemetry", "pen", "paper", "hard-work"])
+                    },
+                }
+            },
+        },
+        "tool": {
+            **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
+            "setuptools": {
+                "package-data": {"*": ["py.typed"]},
+                "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
+            },
+        },
+    }
+
+    # run pyproject_toml_builder
+    pyproject_toml_builder.work(
+        pyproject_toml_path,
+        GITHUB_FULL_REPO,
+        TOKEN,
+        NONBUMPING_COMMIT_MESSAGE,
+        gha_input,
+    )
+
+    # assert outputted pyproject.toml
+    assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)

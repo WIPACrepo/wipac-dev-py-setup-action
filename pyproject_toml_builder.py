@@ -5,6 +5,7 @@ Used in CI/CD, used by GH Action.
 
 import argparse
 import dataclasses
+import itertools
 import logging
 import os
 import re
@@ -13,11 +14,13 @@ from pathlib import Path
 from typing import Any, cast
 
 import requests
-import toml
+import tomlkit
+from tomlkit import TOMLDocument, array
 from wipac_dev_tools import (
     argparse_tools,
     logging_tools,
     semver_parser_tools,
+    strtobool,
 )
 
 from find_packages import iterate_dirnames
@@ -49,24 +52,6 @@ DYNAMIC_DUNDER_VERSION = (
 )
 
 PythonMinMax = tuple[tuple[int, int], tuple[int, int]]
-
-
-class NoDotsDict(dict):
-    """A custom dictionary class that disallows keys with dots ('.').
-
-    Dots have a special meaning in TOML, so a key like `[a.b.c]` in a
-    `dict` would be dict["a"]["b"]["c"] but NOT dict["a.b.c"]. To avoid
-    this pitfall, we can disallow dots all together.
-
-    There are situations where a dotted key could be useful, like
-    `["127.0.0.1"] = "value"`. In this case, this the dict key is "127.0.0.1"
-    (and is not a nesting of subdicts).
-    """
-
-    def __setitem__(self, key, value):
-        if "." in key:
-            raise ValueError("Keys cannot contain dots ('.').")
-        super().__setitem__(key, value)
 
 
 class GitHubAPI:
@@ -118,6 +103,8 @@ class GHAInput:
     keywords: list[str] = dataclasses.field(default_factory=list)
     author: str = ""
     author_email: str = ""
+
+    auto_mypy_option: bool = False
 
     def __post_init__(self) -> None:
         # pypi-related metadata
@@ -397,6 +384,9 @@ class READMEMarkdownManager:
         ]
 
 
+TOMLDocumentIsh = Any  # TOMLDocument & mypy aren't friendly, so it's either this or a million 'ignore' comments
+
+
 class PyProjectTomlBuilder:
     """Build out the `[project]`, `[semantic_release]`, and `[options]` sections in `toml_dict`.
 
@@ -405,7 +395,7 @@ class PyProjectTomlBuilder:
 
     def __init__(
         self,
-        toml_dict: NoDotsDict,
+        toml_dict: TOMLDocumentIsh,
         root_path: Path,
         github_full_repo: str,
         token: str,
@@ -522,6 +512,23 @@ class PyProjectTomlBuilder:
             }
         )
 
+        # [project.optional-dependencies][mypy]
+        if gha_input.auto_mypy_option:
+            try:
+                toml_dict["project"]["optional-dependencies"]["mypy"] = sorted(
+                    set(
+                        itertools.chain.from_iterable(
+                            deps
+                            for opt, deps in toml_dict["project"][
+                                "optional-dependencies"
+                            ].items()
+                            if opt != "mypy"
+                        )
+                    )
+                )
+            except KeyError:
+                pass  # there are no [project.optional-dependencies]
+
         # Automate some README stuff
         self.readme_mgr: READMEMarkdownManager | None
         if ffile.readme_path.suffix == ".md":
@@ -532,7 +539,7 @@ class PyProjectTomlBuilder:
             self.readme_mgr = None
 
     @staticmethod
-    def _validate_repo_initial_state(toml_dict: NoDotsDict) -> None:
+    def _validate_repo_initial_state(toml_dict: TOMLDocumentIsh) -> None:
         # must have these fields...
         try:
             toml_dict["project"]["version"]
@@ -554,7 +561,7 @@ class PyProjectTomlBuilder:
         return dicto
 
     @staticmethod
-    def _tool_setuptools_packagedata_star(toml_dict: NoDotsDict) -> list[str]:
+    def _tool_setuptools_packagedata_star(toml_dict: TOMLDocumentIsh) -> list[str]:
         """Add py.typed to "*"."""
         try:
             current = set(toml_dict["tool"]["setuptools"]["package-data"]["*"])
@@ -565,6 +572,26 @@ class PyProjectTomlBuilder:
             return list(current)
         else:
             return list(current) + ["py.typed"]
+
+
+def set_multiline_array(
+    toml_dict: TOMLDocument,
+    *path: str,
+    sort: bool = False,
+) -> None:
+    """Convert the list at the given dotted path into a multiline TOML array."""
+    cur = toml_dict
+    for key in path[:-1]:
+        cur = cur.get(key)  # type: ignore[assignment]
+        if cur is None:
+            return  # path doesn't exist
+    last_key = path[-1]
+    val = cur.get(last_key)
+    if isinstance(val, list):
+        if sort:
+            cur[last_key] = array(sorted(val)).multiline(True)  # type: ignore[arg-type]
+        else:
+            cur[last_key] = array(val).multiline(True)  # type: ignore[arg-type]
 
 
 def write_toml(
@@ -581,12 +608,9 @@ def write_toml(
     toml_file = toml_file.resolve()
     if toml_file.exists():
         with open(toml_file, "r") as f:
-            try:
-                toml_dict = NoDotsDict(toml.load(f))
-            except toml.decoder.TomlDecodeError as e:
-                raise Exception(f"user's {toml_file} has invalid toml syntax") from e
+            toml_dict = tomlkit.load(f)
     else:
-        toml_dict = NoDotsDict()
+        toml_dict = TOMLDocument()
 
     builder = PyProjectTomlBuilder(
         toml_dict,  # updates this
@@ -597,8 +621,17 @@ def write_toml(
         gha_input,
     )
 
+    # make specific arrays multiline
+    set_multiline_array(toml_dict, "project", "dependencies", sort=True)
+    set_multiline_array(toml_dict, "project", "keywords")
+    set_multiline_array(toml_dict, "project", "classifiers")
+    optional_deps = toml_dict.get("project", {}).get("optional-dependencies", {})
+    for key in optional_deps:
+        set_multiline_array(optional_deps, key, sort=True)
+
+    # all done--write it!
     with open(toml_file, "w") as f:
-        toml.dump(dict(toml_dict), f)
+        tomlkit.dump(toml_dict, f)
 
     return builder.readme_mgr
 
@@ -705,7 +738,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--patch-without-tag",
-        type=bool,
+        type=strtobool,
         default=True,
         help="Whether to make a patch release even if the commit message does not explicitly warrant one",
     )
@@ -733,6 +766,12 @@ def main() -> None:
         type=str,
         default="",
         help="Repository's license type",
+    )
+    parser.add_argument(
+        "--auto-mypy-option",
+        type=strtobool,
+        default=False,
+        help="Whether to auto create/update the 'mypy' install option plus its dependencies",
     )
     args = parser.parse_args()
     logging_tools.set_level("DEBUG", LOGGER, use_coloredlogs=True)
