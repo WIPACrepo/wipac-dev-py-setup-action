@@ -1346,3 +1346,52 @@ def test_70__has_no_projectversion__error(directory: str, requests_mock: Any) ->
             NONBUMPING_COMMIT_MESSAGE,
             gha_input,
         )
+
+
+def test_80_auto_mypy_option(directory: str, requests_mock: Any) -> None:
+    """Test using auto_mypy_option."""
+    mock_many_requests(requests_mock)
+
+    pyproject_toml_path = Path(f"{directory}/pyproject.toml")
+
+    gha_input = pyproject_toml_builder.GHAInput(
+        python_min=(3, 6),
+        auto_mypy_option=True,
+    )
+
+    # write the original pyproject.toml
+    with open(pyproject_toml_path, "w") as f:
+        toml.dump(VANILLA_SECTIONS_IN, f)
+
+    pyproject_toml_expected = {
+        **BUILD_SYSTEM_SECTION,
+        "project": {
+            "name": "mock-package",
+            **NO_PYPI_VANILLA_PROJECT_KEYVALS,  # the true minimum is more vanilla than vanilla)
+            **{
+                "optional-dependencies": {
+                    **NO_PYPI_VANILLA_PROJECT_KEYVALS["optional-dependencies"],
+                    **{"mypy": ["wipac-telemetry"]},
+                }
+            },
+        },
+        "tool": {
+            **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
+            "setuptools": {
+                "package-data": {"*": ["py.typed"]},
+                "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
+            },
+        },
+    }
+
+    # run pyproject_toml_builder
+    pyproject_toml_builder.work(
+        pyproject_toml_path,
+        GITHUB_FULL_REPO,
+        TOKEN,
+        NONBUMPING_COMMIT_MESSAGE,
+        gha_input,
+    )
+
+    # assert outputted pyproject.toml
+    assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
