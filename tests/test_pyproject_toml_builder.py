@@ -1371,7 +1371,7 @@ def test_80_auto_mypy_option(directory: str, requests_mock: Any) -> None:
             **NO_PYPI_VANILLA_PROJECT_KEYVALS,  # the true minimum is more vanilla than vanilla)
             **{
                 "optional-dependencies": {
-                    **NO_PYPI_VANILLA_PROJECT_KEYVALS["optional-dependencies"],
+                    **NO_PYPI_VANILLA_PROJECT_KEYVALS["optional-dependencies"],  # type: ignore[dict-item]
                     **{"mypy": ["wipac-telemetry", "pen", "paper", "hard-work"]},
                 }
             },
