@@ -392,7 +392,7 @@ class PyProjectTomlBuilder:
 
     def __init__(
         self,
-        toml_dict: TOMLDocument,
+        toml_dict: Any,
         root_path: Path,
         github_full_repo: str,
         token: str,
