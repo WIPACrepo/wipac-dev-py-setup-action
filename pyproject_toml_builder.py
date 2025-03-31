@@ -15,7 +15,7 @@ from typing import Any, cast
 
 import requests
 import tomlkit
-from tomlkit import TOMLDocument
+from tomlkit import TOMLDocument, array
 from wipac_dev_tools import (
     argparse_tools,
     logging_tools,
@@ -574,6 +574,19 @@ class PyProjectTomlBuilder:
             return list(current) + ["py.typed"]
 
 
+def set_multiline_array(toml_dict: TOMLDocument, *path: str):
+    """Convert the list at the given dotted path into a multiline TOML array."""
+    cur = toml_dict
+    for key in path[:-1]:
+        cur = cur.get(key)
+        if cur is None:
+            return  # path doesn't exist
+    last_key = path[-1]
+    val = cur.get(last_key)
+    if isinstance(val, list):
+        cur[last_key] = array(val).multiline(True)
+
+
 def write_toml(
     toml_file: Path,
     github_full_repo: str,
@@ -602,11 +615,11 @@ def write_toml(
     )
 
     # Make specific arrays multiline
-    if deps := toml_dict["project"].get("dependencies"):
-        toml_dict["project"]["dependencies"] = tomlkit.array(deps).multiline(True)
-    if optional_deps := toml_dict["project"].get("optional-dependencies"):
-        for key in optional_deps:
-            optional_deps[key] = tomlkit.array(optional_deps[key]).multiline(True)
+    set_multiline_array(toml_dict, "project", "dependencies")
+    set_multiline_array(toml_dict, "project", "keywords")
+    optional_deps = toml_dict.get("project", {}).get("optional-dependencies", {})
+    for key in optional_deps:
+        set_multiline_array(optional_deps, key)
 
     with open(toml_file, "w") as f:
         tomlkit.dump(toml_dict, f)
