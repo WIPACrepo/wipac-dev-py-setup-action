@@ -61,7 +61,8 @@ VANILLA_SECTIONS_IN = {
         "optional-dependencies": {
             "telemetry": [
                 "wipac-telemetry",
-            ]
+            ],
+            "best-tools": ["pen", "paper", "hard-work"],
         },
     },
 }
