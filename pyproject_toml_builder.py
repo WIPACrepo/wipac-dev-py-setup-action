@@ -384,6 +384,9 @@ class READMEMarkdownManager:
         ]
 
 
+TOMLDocumentIsh = Any  # TOMLDocument & mypy aren't friendly, so it's either this or a million 'ignore' comments
+
+
 class PyProjectTomlBuilder:
     """Build out the `[project]`, `[semantic_release]`, and `[options]` sections in `toml_dict`.
 
@@ -392,7 +395,7 @@ class PyProjectTomlBuilder:
 
     def __init__(
         self,
-        toml_dict: Any,
+        toml_dict: TOMLDocumentIsh,
         root_path: Path,
         github_full_repo: str,
         token: str,
@@ -536,7 +539,7 @@ class PyProjectTomlBuilder:
             self.readme_mgr = None
 
     @staticmethod
-    def _validate_repo_initial_state(toml_dict: TOMLDocument) -> None:
+    def _validate_repo_initial_state(toml_dict: TOMLDocumentIsh) -> None:
         # must have these fields...
         try:
             toml_dict["project"]["version"]
@@ -558,7 +561,7 @@ class PyProjectTomlBuilder:
         return dicto
 
     @staticmethod
-    def _tool_setuptools_packagedata_star(toml_dict: TOMLDocument) -> list[str]:
+    def _tool_setuptools_packagedata_star(toml_dict: TOMLDocumentIsh) -> list[str]:
         """Add py.typed to "*"."""
         try:
             current = set(toml_dict["tool"]["setuptools"]["package-data"]["*"])
