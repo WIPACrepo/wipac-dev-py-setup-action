@@ -416,24 +416,24 @@ class PyProjectTomlBuilder:
         # [project]
         # if we DON'T want PyPI stuff:
         if not gha_input.pypi_name:
-            toml_dict["project"]["name"] = "_".join(ffile.packages).replace("_", "-")
-            toml_dict["project"]["requires-python"] = gha_input.get_requires_python()
+            toml_dict["project"]["name"] = "_".join(ffile.packages).replace("_", "-")  # type: ignore[index]
+            toml_dict["project"]["requires-python"] = gha_input.get_requires_python()  # type: ignore[index]
             # add the following if they were given:
             if gha_input.author or gha_input.author_email:
-                toml_dict["project"]["authors"] = [{}]
+                toml_dict["project"]["authors"] = [{}]  # type: ignore[index]
                 if gha_input.author:
-                    toml_dict["project"]["authors"][0].update(
+                    toml_dict["project"]["authors"][0].update(  # type: ignore[union-attr]
                         {"name": gha_input.author}
                     )
                 if gha_input.author_email:
-                    toml_dict["project"]["authors"][0].update(
+                    toml_dict["project"]["authors"][0].update(  # type: ignore[union-attr]
                         {"email": gha_input.author_email}
                     )
             if gha_input.keywords:
-                toml_dict["project"]["keywords"] = gha_input.keywords
+                toml_dict["project"]["keywords"] = gha_input.keywords  # type: ignore[index]
         # if we DO want PyPI, then include everything:
         else:
-            toml_dict["project"].update(
+            toml_dict["project"].update(  # type: ignore[union-attr]
                 {
                     "name": gha_input.pypi_name,
                     "authors": [
@@ -449,7 +449,7 @@ class PyProjectTomlBuilder:
                     "classifiers": (
                         [
                             get_development_status(
-                                toml_dict["project"]["version"],
+                                toml_dict["project"]["version"],  # type: ignore[index]
                                 gha_input.patch_without_tag,
                                 commit_message,
                             )
@@ -460,24 +460,26 @@ class PyProjectTomlBuilder:
                 }
             )
             # [project.urls]
-            toml_dict["project"]["urls"] = {
+            toml_dict["project"]["urls"] = {  # type: ignore[index]
                 "Homepage": f"https://pypi.org/project/{gha_input.pypi_name}/",
                 "Tracker": f"{gh_api.url}/issues",
                 "Source": gh_api.url,
             }
 
         # [tool]
-        if not toml_dict.get("tool"):
-            toml_dict["tool"] = {}
+        if not toml_dict.get("tool"):  # type: ignore[union-attr]
+            toml_dict["tool"] = {}  # type: ignore[index]
 
         # [tool.semantic_release] -- will be completely overridden
-        toml_dict["tool"]["semantic_release"] = {
+        toml_dict["tool"]["semantic_release"] = {  # type: ignore[index]
             "version_toml": ["pyproject.toml:project.version"],
             # "wipac_dev_tools/__init__.py:__version__"
             # "wipac_dev_tools/__init__.py:__version__,wipac_foo_tools/__init__.py:__version__"
             "version_variables": [
                 f"{p}:__version__"
-                for p in ffile.get_dunder_version_inits(toml_dict["project"]["version"])
+                for p in ffile.get_dunder_version_inits(
+                    toml_dict["project"]["version"],  # type: ignore[index]
+                )
             ],
             # the emoji parser is the simplest parser and does not require angular-style commits
             "commit_parser": "emoji",
@@ -495,15 +497,15 @@ class PyProjectTomlBuilder:
         }
 
         # [tool.setuptools]
-        if not toml_dict["tool"].get("setuptools"):
-            toml_dict["tool"]["setuptools"] = {}
-        toml_dict["tool"]["setuptools"].update(
+        if not toml_dict["tool"].get("setuptools"):  # type: ignore[union-attr]
+            toml_dict["tool"]["setuptools"] = {}  # type: ignore[index]
+        toml_dict["tool"]["setuptools"].update(  # type: ignore[union-attr]
             {
                 "packages": {
                     "find": self._tool_setuptools_packages_find(gha_input),
                 },
                 "package-data": {
-                    **toml_dict["tool"].get("setuptools", {}).get("package-data", {}),
+                    **toml_dict["tool"].get("setuptools", {}).get("package-data", {}),  # type: ignore[union-attr]
                     "*": self._tool_setuptools_packagedata_star(toml_dict),
                 },
             }
@@ -512,13 +514,14 @@ class PyProjectTomlBuilder:
         # [project.optional-dependencies][mypy]
         if gha_input.auto_mypy_option:
             try:
-                toml_dict["project"]["optional-dependencies"]["mypy"] = sorted(
+                toml_dict["project"]["optional-dependencies"]["mypy"] = sorted(  # type: ignore[index]
                     set(
                         itertools.chain.from_iterable(
                             deps
                             for opt, deps in toml_dict["project"][
                                 "optional-dependencies"
                             ].items()
+                            # type: ignore[index, union-attr]
                             if opt != "mypy"
                         )
                     )
