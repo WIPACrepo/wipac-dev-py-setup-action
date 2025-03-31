@@ -1,4 +1,5 @@
 wipac-dev-tools[semver]
+toml
 tomlkit
 coloredlogs
 requests
