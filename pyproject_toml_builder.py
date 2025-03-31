@@ -624,6 +624,7 @@ def write_toml(
     # Make specific arrays multiline
     set_multiline_array(toml_dict, "project", "dependencies", sort=True)
     set_multiline_array(toml_dict, "project", "keywords")
+    set_multiline_array(toml_dict, "project", "classifiers")
     optional_deps = toml_dict.get("project", {}).get("optional-dependencies", {})
     for key in optional_deps:
         set_multiline_array(optional_deps, key, sort=True)
