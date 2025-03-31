@@ -601,6 +601,11 @@ def write_toml(
         gha_input,
     )
 
+    # Make specific arrays multiline
+    if optional_deps := toml_dict["project"].get("optional-dependencies"):
+        for key in optional_deps:
+            optional_deps[key] = tomlkit.array(optional_deps[key]).multiline(True)
+
     with open(toml_file, "w") as f:
         tomlkit.dump(toml_dict, f)
 
