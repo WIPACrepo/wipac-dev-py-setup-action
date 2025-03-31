@@ -574,7 +574,11 @@ class PyProjectTomlBuilder:
             return list(current) + ["py.typed"]
 
 
-def set_multiline_array(toml_dict: TOMLDocument, *path: str):
+def set_multiline_array(
+    toml_dict: TOMLDocument,
+    *path: str,
+    sort: bool = False,
+) -> None:
     """Convert the list at the given dotted path into a multiline TOML array."""
     cur = toml_dict
     for key in path[:-1]:
@@ -584,7 +588,10 @@ def set_multiline_array(toml_dict: TOMLDocument, *path: str):
     last_key = path[-1]
     val = cur.get(last_key)
     if isinstance(val, list):
-        cur[last_key] = array(val).multiline(True)
+        if sort:
+            cur[last_key] = array(sorted(val)).multiline(True)
+        else:
+            cur[last_key] = array(val).multiline(True)
 
 
 def write_toml(
@@ -615,11 +622,11 @@ def write_toml(
     )
 
     # Make specific arrays multiline
-    set_multiline_array(toml_dict, "project", "dependencies")
+    set_multiline_array(toml_dict, "project", "dependencies", sort=True)
     set_multiline_array(toml_dict, "project", "keywords")
     optional_deps = toml_dict.get("project", {}).get("optional-dependencies", {})
     for key in optional_deps:
-        set_multiline_array(optional_deps, key)
+        set_multiline_array(optional_deps, key, sort=True)
 
     with open(toml_file, "w") as f:
         tomlkit.dump(toml_dict, f)
