@@ -70,6 +70,13 @@ runs:
           echo "::error::'keywords' input is deprecated: use 'keywords_comma'"
           exit 1
         fi
+        
+        if [ -n "${{ inputs.keywords_comma }}" ]; then
+          if [[ "$var" != *\"* ]]; then
+            echo "::error::'keywords_comma' input cannot include double quotes: for multi-word keywords, rely on comma delimitation (ex: \"one, foo bar, baz\")"
+            exit 2
+          fi
+        fi
       shell: bash
 
     - uses: actions/setup-python@v4
