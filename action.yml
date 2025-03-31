@@ -30,8 +30,8 @@ inputs:
     required: false
     default: 'True'
   # OPTIONAL (meta)
-  keywords:
-    description: 'Space-separated list of keywords'
+  keywords_comma:
+    description: 'Comma-delimited list of keywords (no quotes)'
     required: false
     default: ''
   author:
@@ -52,10 +52,6 @@ inputs:
     required: false
     default: github-actions@github.com
 
-# outputs:
-#   random-number:
-#     description: "Random number"
-#     value: ${{ steps.random-number-generator.outputs.random-id }}
 
 runs:
   using: "composite"
@@ -63,8 +59,15 @@ runs:
     - name: check required inputs
       run: |
         set -euo pipefail
+        echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        
         if [ -z "${{ inputs.python_min }}" ]; then
           echo "::error::required input not provided: python_min"
+          exit 1
+        fi
+        
+        if [ -n "${{ inputs.keywords }}" ]; then
+          echo "::error::'keywords' input is deprecated: use 'keywords_comma'"
           exit 1
         fi
       shell: bash
@@ -76,6 +79,8 @@ runs:
     - name: Is this most recent commit? It won't be if action was reran
       run: |
         set -euo pipefail
+        echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        
         git fetch &> /dev/null
         if [[ $(git status -sb | grep behind) ]]; then
           echo "IS_GIT_BEHIND=true" >> $GITHUB_ENV
@@ -87,6 +92,7 @@ runs:
       if: env.IS_GIT_BEHIND != 'true'
       run: |
         set -euo pipefail
+        echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
         git config user.name ${{ inputs.git_committer_name }}
         git config user.email ${{ inputs.git_committer_email }}
       shell: bash
@@ -95,6 +101,8 @@ runs:
       if: env.IS_GIT_BEHIND != 'true'
       run: |
         set -euo pipefail
+        echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        
         # if needed: auto-create a minimal pyproject.toml
         if [[ ! -f pyproject.toml ]]; then
             touch pyproject.toml
@@ -145,6 +153,8 @@ runs:
       if: env.IS_GIT_BEHIND != 'true'
       run: |
         set -euo pipefail
+        echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        
         set -e
         sudo apt-get update
         python -m venv action_venv
@@ -164,7 +174,7 @@ runs:
           --exclude-dirs ${{ inputs.exclude_dirs }} \
           --pypi-name "${{ inputs.pypi_name }}" \
           --patch-without-tag "${{ inputs.patch_without_tag }}" \
-          --keywords "${{ inputs.keywords }}" \
+          --keywords "${{ inputs.keywords_comma }}" \
           --author "${{ inputs.author }}" \
           --author-email "${{ inputs.author_email }}"
         set +x
@@ -188,6 +198,8 @@ runs:
       if: env.IS_GIT_BEHIND != 'true'
       run: |
         set -euo pipefail
+        echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        
         python -c '
         import os, sys
         from pathlib import Path
@@ -209,6 +221,8 @@ runs:
       if: env.IS_GIT_BEHIND != 'true'
       run: |
         set -euo pipefail
+        echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        
         status=`git status 2>&1 | tee`
         ahead=`echo -n "${status}" 2> /dev/null | grep "Your branch is ahead of" &> /dev/null; echo "$?"`
         if [ "$ahead" -eq "1" ]; then
