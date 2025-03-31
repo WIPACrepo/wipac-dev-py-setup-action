@@ -14,7 +14,8 @@ from pathlib import Path
 from typing import Any, cast
 
 import requests
-import toml
+import tomlkit
+from tomlkit import TOMLDocument
 from wipac_dev_tools import (
     argparse_tools,
     logging_tools,
@@ -51,24 +52,6 @@ DYNAMIC_DUNDER_VERSION = (
 )
 
 PythonMinMax = tuple[tuple[int, int], tuple[int, int]]
-
-
-class NoDotsDict(dict):
-    """A custom dictionary class that disallows keys with dots ('.').
-
-    Dots have a special meaning in TOML, so a key like `[a.b.c]` in a
-    `dict` would be dict["a"]["b"]["c"] but NOT dict["a.b.c"]. To avoid
-    this pitfall, we can disallow dots all together.
-
-    There are situations where a dotted key could be useful, like
-    `["127.0.0.1"] = "value"`. In this case, this the dict key is "127.0.0.1"
-    (and is not a nesting of subdicts).
-    """
-
-    def __setitem__(self, key, value):
-        if "." in key:
-            raise ValueError("Keys cannot contain dots ('.').")
-        super().__setitem__(key, value)
 
 
 class GitHubAPI:
@@ -409,7 +392,7 @@ class PyProjectTomlBuilder:
 
     def __init__(
         self,
-        toml_dict: NoDotsDict,
+        toml_dict: TOMLDocument,
         root_path: Path,
         github_full_repo: str,
         token: str,
@@ -553,7 +536,7 @@ class PyProjectTomlBuilder:
             self.readme_mgr = None
 
     @staticmethod
-    def _validate_repo_initial_state(toml_dict: NoDotsDict) -> None:
+    def _validate_repo_initial_state(toml_dict: TOMLDocument) -> None:
         # must have these fields...
         try:
             toml_dict["project"]["version"]
@@ -575,7 +558,7 @@ class PyProjectTomlBuilder:
         return dicto
 
     @staticmethod
-    def _tool_setuptools_packagedata_star(toml_dict: NoDotsDict) -> list[str]:
+    def _tool_setuptools_packagedata_star(toml_dict: TOMLDocument) -> list[str]:
         """Add py.typed to "*"."""
         try:
             current = set(toml_dict["tool"]["setuptools"]["package-data"]["*"])
@@ -602,12 +585,9 @@ def write_toml(
     toml_file = toml_file.resolve()
     if toml_file.exists():
         with open(toml_file, "r") as f:
-            try:
-                toml_dict = NoDotsDict(toml.load(f))
-            except toml.decoder.TomlDecodeError as e:
-                raise Exception(f"user's {toml_file} has invalid toml syntax") from e
+            toml_dict = tomlkit.load(f)
     else:
-        toml_dict = NoDotsDict()
+        toml_dict = TOMLDocument()
 
     builder = PyProjectTomlBuilder(
         toml_dict,  # updates this
@@ -619,7 +599,7 @@ def write_toml(
     )
 
     with open(toml_file, "w") as f:
-        toml.dump(dict(toml_dict), f)
+        f.write(tomlkit.dumps(toml_dict))
 
     return builder.readme_mgr
 

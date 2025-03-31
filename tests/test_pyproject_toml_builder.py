@@ -11,6 +11,7 @@ from typing import Any
 
 import pytest
 import toml
+from tomlkit import TOMLDocument
 
 LOGGER = logging.getLogger(__name__)
 
@@ -138,10 +139,10 @@ def assert_outputted_pyproject_toml(
 ) -> None:
     """Compare each's contents casted to a dict."""
 
-    # test that we aren't using dots
-    no_dots = pyproject_toml_builder.NoDotsDict()
+    # sanity test
+    doc = TOMLDocument()
     for key, value in expected.items():
-        no_dots[key] = value
+        doc[key] = value
 
     print()
     print("EXPECTED TOML OUTPUT:")
