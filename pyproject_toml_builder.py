@@ -5,6 +5,7 @@ Used in CI/CD, used by GH Action.
 
 import argparse
 import dataclasses
+import itertools
 import logging
 import os
 import re
@@ -18,6 +19,7 @@ from wipac_dev_tools import (
     argparse_tools,
     logging_tools,
     semver_parser_tools,
+    strtobool,
 )
 
 from find_packages import iterate_dirnames
@@ -118,6 +120,8 @@ class GHAInput:
     keywords: list[str] = dataclasses.field(default_factory=list)
     author: str = ""
     author_email: str = ""
+
+    auto_mypy_option: bool = False
 
     def __post_init__(self) -> None:
         # pypi-related metadata
@@ -522,6 +526,20 @@ class PyProjectTomlBuilder:
             }
         )
 
+        # [project.optional-dependencies][mypy]
+        if gha_input.auto_mypy_option:
+            toml_dict["project"]["optional-dependencies"]["mypy"] = sorted(
+                set(
+                    itertools.chain.from_iterable(
+                        deps
+                        for opt, deps in toml_dict["project"][
+                            "optional-dependencies"
+                        ].items()
+                        if opt != "mypy"
+                    )
+                )
+            )
+
         # Automate some README stuff
         self.readme_mgr: READMEMarkdownManager | None
         if ffile.readme_path.suffix == ".md":
@@ -705,7 +723,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--patch-without-tag",
-        type=bool,
+        type=strtobool,
         default=True,
         help="Whether to make a patch release even if the commit message does not explicitly warrant one",
     )
@@ -733,6 +751,12 @@ def main() -> None:
         type=str,
         default="",
         help="Repository's license type",
+    )
+    parser.add_argument(
+        "--auto-mypy-option",
+        type=strtobool,
+        default=False,
+        help="Whether to auto create/update the 'mypy' install option plus its dependencies",
     )
     args = parser.parse_args()
     logging_tools.set_level("DEBUG", LOGGER, use_coloredlogs=True)

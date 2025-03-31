@@ -42,6 +42,10 @@ inputs:
     description: 'Email of the package author (required if the package is intended to be hosted on PyPI)'
     required: false
     default: ''
+  auto_mypy_option:
+    description: 'Whether to auto create/update the `mypy` install option plus its dependencies'
+    required: false
+    default: 'False'
   # OPTIONAL (git)
   git_committer_name:
     description: 'Name used for "git config user.name"'
@@ -176,7 +180,8 @@ runs:
           --patch-without-tag "${{ inputs.patch_without_tag }}" \
           --keywords "${{ inputs.keywords_comma }}" \
           --author "${{ inputs.author }}" \
-          --author-email "${{ inputs.author_email }}"
+          --author-email "${{ inputs.author_email }}" \
+          --auto-mypy-option "${{ inputs.auto_mypy_option }}"
         set +x
         
         # format (inc. sorting sections)

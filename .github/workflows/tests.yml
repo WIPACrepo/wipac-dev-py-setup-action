@@ -28,8 +28,10 @@ jobs:
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}  # fyi, dependabot can't access normal secrets
       - if: github.actor != 'dependabot[bot]'
+        name: format and push
         run: |
           set -euo pipefail
+          echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
           git config user.name github-actions
           git config user.email github-actions@github.com
           
@@ -58,6 +60,8 @@ jobs:
           python-version: '3.12'  # NOTE: update, someday.
       - run: pip install -r requirements.txt
       - run: pip install -r requirements-dev.txt
-      - run: |
+      - name: pytest
+        run: |
           set -euo pipefail
+          echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
           pytest . -vvv --maxfail=1
