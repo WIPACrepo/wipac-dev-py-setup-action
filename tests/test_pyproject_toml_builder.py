@@ -52,18 +52,20 @@ NONBUMPING_COMMIT_MESSAGE = "foo bar baz"
 VANILLA_SECTIONS_IN = {
     "project": {
         "version": "1.2.3",
-        "dependencies": [
-            "pyjwt",
-            "requests",
-            "requests-futures",
-            "tornado",
-            "wipac-dev-tools",
-        ],
+        "dependencies": sorted(
+            [
+                "pyjwt",
+                "requests",
+                "requests-futures",
+                "tornado",
+                "wipac-dev-tools",
+            ]
+        ),
         "optional-dependencies": {
             "telemetry": [
                 "wipac-telemetry",
             ],
-            "best-tools": ["pen", "paper", "hard-work"],
+            "best-tools": sorted(["pen", "paper", "hard-work"]),
         },
     },
 }
