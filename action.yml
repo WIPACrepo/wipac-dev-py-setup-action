@@ -25,10 +25,6 @@ inputs:
     description: 'Name of the PyPI package'
     required: false
     default: ''
-  patch_without_tag:
-    description: 'Whether to make a patch release even if the commit message does not explicitly warrant one'
-    required: false
-    default: 'True'
   # OPTIONAL (meta)
   keywords_comma:
     description: 'Comma-delimited list of keywords (no quotes)'
@@ -65,13 +61,22 @@ runs:
         set -euo pipefail
         echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
         
+        # required inputs 
+        
         if [ -z "${{ inputs.python_min }}" ]; then
           echo "::error::required input not provided: python_min"
           exit 1
         fi
         
+        # deprecated inputs
+        
         if [ -n "${{ inputs.keywords }}" ]; then
           echo "::error::'keywords' input is deprecated: use 'keywords_comma'"
+          exit 1
+        fi
+        
+        if [ -n "${{ inputs.patch_without_tag }}" ]; then
+          echo "::error::'patch_without_tag' input is deprecated: use 'WIPACrepo/wipac-dev-next-version-action' ('force-patch-if-no-commit-token')"
           exit 1
         fi
       shell: bash
@@ -177,7 +182,6 @@ runs:
           --package-dirs ${{ inputs.package_dirs }} \
           --exclude-dirs ${{ inputs.exclude_dirs }} \
           --pypi-name "${{ inputs.pypi_name }}" \
-          --patch-without-tag "${{ inputs.patch_without_tag }}" \
           --keywords "${{ inputs.keywords_comma }}" \
           --author "${{ inputs.author }}" \
           --author-email "${{ inputs.author_email }}" \
