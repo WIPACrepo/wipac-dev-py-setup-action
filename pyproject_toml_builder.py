@@ -393,30 +393,6 @@ class PyProjectTomlBuilder:
         if not toml_dict.get("tool"):
             toml_dict["tool"] = {}
 
-        # [tool.semantic_release] -- will be completely overridden
-        toml_dict["tool"]["semantic_release"] = {
-            "version_toml": ["pyproject.toml:project.version"],
-            # "wipac_dev_tools/__init__.py:__version__"
-            # "wipac_dev_tools/__init__.py:__version__,wipac_foo_tools/__init__.py:__version__"
-            "version_variables": [
-                f"{p}:__version__"
-                for p in ffile.get_dunder_version_inits(toml_dict["project"]["version"])
-            ],
-            # the emoji parser is the simplest parser and does not require angular-style commits
-            "commit_parser": "emoji",
-            "commit_parser_options": {
-                "major_tags": SEMANTIC_RELEASE_MAJOR,
-                "minor_tags": SEMANTIC_RELEASE_MINOR,
-                "patch_tags": (
-                    SEMANTIC_RELEASE_PATCH
-                    if not gha_input.patch_without_tag
-                    else SEMANTIC_RELEASE_PATCH + sorted(PATCH_WITHOUT_TAG_WORKAROUND)
-                ),
-            },
-            # this is required fo the package to be pushed to pypi (by the pypa GHA)
-            "build_command": "pip install build && python -m build",
-        }
-
         # [tool.setuptools]
         if not toml_dict["tool"].get("setuptools"):
             toml_dict["tool"]["setuptools"] = {}

@@ -107,30 +107,6 @@ NO_PYPI_VANILLA_PROJECT_KEYVALS = {  # even MORE vanilla than vanilla
 }
 
 
-def _make_vanilla_semantic_release_section(patch_without_tag_workaround: bool):
-    return {
-        "semantic_release": {
-            "version_variables": ["mock_package/__init__.py:__version__"],
-            "version_toml": ["pyproject.toml:project.version"],
-            "commit_parser": "emoji",
-            "commit_parser_options": {
-                "major_tags": ["[major]"],
-                "minor_tags": ["[minor]", "[feature]"],
-                "patch_tags": ["[patch]", "[fix]"]
-                + sorted(
-                    PATCH_WITHOUT_TAG_WORKAROUND if patch_without_tag_workaround else []
-                ),
-            },
-            "build_command": "pip install build && python -m build",
-        }
-    }
-
-
-VANILLA_SEMANTIC_RELEASE_SUBSECTIONS = _make_vanilla_semantic_release_section(True)
-SEMANTIC_RELEASE_SUBSECTIONS__NO_PATCH = _make_vanilla_semantic_release_section(False)
-assert VANILLA_SEMANTIC_RELEASE_SUBSECTIONS != SEMANTIC_RELEASE_SUBSECTIONS__NO_PATCH
-
-
 ################################################################################
 # HELPER FUNCTIONS
 ################################################################################
@@ -286,7 +262,6 @@ def test_00_minimum_input(directory: str, requests_mock: Any) -> None:
             **NO_PYPI_VANILLA_PROJECT_KEYVALS,  # the true minimum is more vanilla than vanilla)
         },
         "tool": {
-            **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
@@ -342,7 +317,6 @@ def test_01_minimum_input_w_pypi(directory: str, requests_mock: Any) -> None:
             **PYPI_URLS_KEYVALS,
         },
         "tool": {
-            **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
@@ -418,7 +392,6 @@ def test_10_keywords(directory: str, requests_mock: Any) -> None:
             **PYPI_URLS_KEYVALS,
         },
         "tool": {
-            **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
@@ -490,7 +463,6 @@ def test_20_python_max(directory: str, requests_mock: Any) -> None:
             **PYPI_URLS_KEYVALS,
         },
         "tool": {
-            **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
@@ -563,7 +535,6 @@ def test_30_package_dirs__single(directory: str, requests_mock: Any) -> None:
             **PYPI_URLS_KEYVALS,
         },
         "tool": {
-            **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {
@@ -890,7 +861,6 @@ def test_40_extra_stuff(directory: str, requests_mock: Any) -> None:
             **PYPI_URLS_KEYVALS,
         },
         "tool": {
-            **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
@@ -1242,7 +1212,6 @@ def test_80_auto_mypy_option(directory: str, requests_mock: Any) -> None:
             },
         },
         "tool": {
-            **VANILLA_SEMANTIC_RELEASE_SUBSECTIONS,
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
