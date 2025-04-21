@@ -89,6 +89,7 @@ VANILLA_PROJECT_KEYVALS_OUT = {
     "readme": "README.md",
     "license": {"file": "LICENSE"},
     "requires-python": ">=3.6, <3.12",
+    "dynamic": ["version"],
 }
 NO_PYPI_VANILLA_PROJECT_KEYVALS_OUT = {  # even MORE vanilla than vanilla
     k: v
