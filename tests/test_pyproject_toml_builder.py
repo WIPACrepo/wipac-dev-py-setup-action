@@ -876,7 +876,7 @@ def test_60_defined_project_version__error(directory: str, requests_mock: Any) -
         python_min=(3, 6),
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
-        package_dirs=["mock_package", "another_one"],
+        package_dirs=["mock_package"],
         keywords=[
             "python",
             "REST",
