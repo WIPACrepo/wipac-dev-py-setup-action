@@ -208,7 +208,7 @@ runs:
           --author-email "${{ inputs.author_email }}" \
           --license-spdx-id "$LICENSE_SPDX_ID" \
           --license-file "$LICENSE_FILE" \
-          --auto-mypy-option "${{ inputs.auto_mypy_option }}" \
+          --auto-mypy-option "${{ inputs.auto_mypy_option }}"
         set +x
         
         # format (inc. sorting sections)
