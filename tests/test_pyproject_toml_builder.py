@@ -82,14 +82,7 @@ PYPI_URLS_KEYVALS = {
     }
 }
 
-# allow patch releases without specified commit tags (patch_without_tag=True)
-# fmt: off
-PATCH_WITHOUT_TAG_WORKAROUND = [
-    " ", "!", "#", "$", "%", "&", "'", "(", ")", "*", "+", "-", ".", "/", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ":", ";", "<", "=", ">", "?", "@", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "[", "]", "^", "_", "`", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "{", "|", "}", "~",
-]
-# fmt: on
-
-VANILLA_PROJECT_KEYVALS = {
+VANILLA_PROJECT_KEYVALS_OUT = {
     **VANILLA_SECTIONS_IN["project"],
     "authors": [{"name": AUTHOR, "email": AUTHOR_EMAIL}],
     "description": "Ceci n’est pas une pipe",
@@ -97,9 +90,9 @@ VANILLA_PROJECT_KEYVALS = {
     "license": {"file": "LICENSE"},
     "requires-python": ">=3.6, <3.12",
 }
-NO_PYPI_VANILLA_PROJECT_KEYVALS = {  # even MORE vanilla than vanilla
+NO_PYPI_VANILLA_PROJECT_KEYVALS_OUT = {  # even MORE vanilla than vanilla
     k: v
-    for k, v in VANILLA_PROJECT_KEYVALS.items()
+    for k, v in VANILLA_PROJECT_KEYVALS_OUT.items()
     if k in ["dependencies", "optional-dependencies", "requires-python"]
 }
 
@@ -251,9 +244,10 @@ def test_00_minimum_input(directory: str, requests_mock: Any) -> None:
         **BUILD_SYSTEM_SECTION,
         "project": {
             "name": "mock-package",
-            **NO_PYPI_VANILLA_PROJECT_KEYVALS,  # the true minimum is more vanilla than vanilla)
+            **NO_PYPI_VANILLA_PROJECT_KEYVALS_OUT,  # the true minimum is more vanilla than vanilla)
         },
         "tool": {
+            "setuptools_scm": {},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
@@ -296,7 +290,7 @@ def test_01_minimum_input_w_pypi(directory: str, requests_mock: Any) -> None:
         **BUILD_SYSTEM_SECTION,
         "project": {
             "name": "wipac-mock-package",
-            **VANILLA_PROJECT_KEYVALS,
+            **VANILLA_PROJECT_KEYVALS_OUT,
             "keywords": ["WIPAC", "IceCube"],
             "classifiers": [
                 "Programming Language :: Python :: 3.6",
@@ -309,6 +303,7 @@ def test_01_minimum_input_w_pypi(directory: str, requests_mock: Any) -> None:
             **PYPI_URLS_KEYVALS,
         },
         "tool": {
+            "setuptools_scm": {},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
@@ -361,7 +356,7 @@ def test_10_keywords(directory: str, requests_mock: Any) -> None:
         **BUILD_SYSTEM_SECTION,
         "project": {
             "name": "wipac-mock-package",
-            **VANILLA_PROJECT_KEYVALS,
+            **VANILLA_PROJECT_KEYVALS_OUT,
             "keywords": [
                 "python",
                 "REST",
@@ -384,6 +379,7 @@ def test_10_keywords(directory: str, requests_mock: Any) -> None:
             **PYPI_URLS_KEYVALS,
         },
         "tool": {
+            "setuptools_scm": {},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
@@ -435,7 +431,7 @@ def test_20_python_max(directory: str, requests_mock: Any) -> None:
         **BUILD_SYSTEM_SECTION,
         "project": {
             "name": "wipac-mock-package",
-            **VANILLA_PROJECT_KEYVALS,
+            **VANILLA_PROJECT_KEYVALS_OUT,
             "requires-python": ">=3.6, <3.10",  # override VANILLA_PROJECT_KEYVALS
             "keywords": [
                 "python",
@@ -455,6 +451,7 @@ def test_20_python_max(directory: str, requests_mock: Any) -> None:
             **PYPI_URLS_KEYVALS,
         },
         "tool": {
+            "setuptools_scm": {},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
@@ -506,7 +503,7 @@ def test_30_package_dirs__single(directory: str, requests_mock: Any) -> None:
         **BUILD_SYSTEM_SECTION,
         "project": {
             "name": "wipac-mock-package",
-            **VANILLA_PROJECT_KEYVALS,
+            **VANILLA_PROJECT_KEYVALS_OUT,
             "keywords": [
                 "python",
                 "REST",
@@ -527,6 +524,7 @@ def test_30_package_dirs__single(directory: str, requests_mock: Any) -> None:
             **PYPI_URLS_KEYVALS,
         },
         "tool": {
+            "setuptools_scm": {},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {
@@ -585,7 +583,7 @@ def test_34_package_dirs__multi_autoname__no_pypi(
         **BUILD_SYSTEM_SECTION,
         "project": {
             "name": "mock-package-another-one",
-            **NO_PYPI_VANILLA_PROJECT_KEYVALS,  # the true minimum is more vanilla than vanilla
+            **NO_PYPI_VANILLA_PROJECT_KEYVALS_OUT,  # the true minimum is more vanilla than vanilla
             "authors": [{"name": AUTHOR, "email": AUTHOR_EMAIL}],
             "keywords": [
                 "python",
@@ -598,6 +596,7 @@ def test_34_package_dirs__multi_autoname__no_pypi(
             ],
         },
         "tool": {
+            "setuptools_scm": {},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {
@@ -666,7 +665,7 @@ def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
         **BUILD_SYSTEM_SECTION,
         "project": {
             "name": "wipac-mock-package",
-            **VANILLA_PROJECT_KEYVALS,
+            **VANILLA_PROJECT_KEYVALS_OUT,
             "keywords": [
                 "python",
                 "REST",
@@ -687,6 +686,7 @@ def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
             **PYPI_URLS_KEYVALS,
         },
         "tool": {
+            "setuptools_scm": {},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {
@@ -816,7 +816,7 @@ def test_40_extra_stuff(directory: str, requests_mock: Any) -> None:
             "nickname": "the best python package around",
             "grocery_list": ["apple", "banana", "pumpkin"],
             "name": "wipac-mock-package",
-            **VANILLA_PROJECT_KEYVALS,
+            **VANILLA_PROJECT_KEYVALS_OUT,
             "keywords": [
                 "python",
                 "REST",
@@ -837,6 +837,7 @@ def test_40_extra_stuff(directory: str, requests_mock: Any) -> None:
             **PYPI_URLS_KEYVALS,
         },
         "tool": {
+            "setuptools_scm": {},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
@@ -929,10 +930,10 @@ def test_80_auto_mypy_option(directory: str, requests_mock: Any) -> None:
         **BUILD_SYSTEM_SECTION,
         "project": {
             "name": "mock-package",
-            **NO_PYPI_VANILLA_PROJECT_KEYVALS,  # the true minimum is more vanilla than vanilla)
+            **NO_PYPI_VANILLA_PROJECT_KEYVALS_OUT,  # the true minimum is more vanilla than vanilla)
             **{
                 "optional-dependencies": {
-                    **NO_PYPI_VANILLA_PROJECT_KEYVALS["optional-dependencies"],  # type: ignore[dict-item]
+                    **NO_PYPI_VANILLA_PROJECT_KEYVALS_OUT["optional-dependencies"],  # type: ignore[dict-item]
                     **{
                         "mypy": sorted(["wipac-telemetry", "pen", "paper", "hard-work"])
                     },
@@ -940,6 +941,7 @@ def test_80_auto_mypy_option(directory: str, requests_mock: Any) -> None:
             },
         },
         "tool": {
+            "setuptools_scm": {},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
