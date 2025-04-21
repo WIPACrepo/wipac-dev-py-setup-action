@@ -87,7 +87,8 @@ VANILLA_PROJECT_KEYVALS_OUT = {
     "authors": [{"name": AUTHOR, "email": AUTHOR_EMAIL}],
     "description": "Ceci n’est pas une pipe",
     "readme": "README.md",
-    "license": {"file": "LICENSE"},
+    "license": "MIT",
+    "license-files": ["MY_LICENSE"],
     "requires-python": ">=3.6, <3.12",
     "dynamic": ["version"],
 }
@@ -232,6 +233,8 @@ def test_00_minimum_input(directory: Path, requests_mock: Any) -> None:
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
         python_min=(3, 6),
+        license_spdx_id="MIT",
+        license_file="MY_LICENSE",
     )
 
     # write the original pyproject.toml
@@ -275,6 +278,8 @@ def test_01_minimum_input_w_pypi(directory: Path, requests_mock: Any) -> None:
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         python_min=(3, 6),
+        license_spdx_id="MIT",
+        license_file="MY_LICENSE",
         keywords=["WIPAC", "IceCube"],
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
@@ -331,6 +336,8 @@ def test_10_keywords(directory: Path, requests_mock: Any) -> None:
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         python_min=(3, 6),
+        license_spdx_id="MIT",
+        license_file="MY_LICENSE",
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
         keywords=[
@@ -407,6 +414,8 @@ def test_20_python_max(directory: Path, requests_mock: Any) -> None:
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         python_min=(3, 6),
+        license_spdx_id="MIT",
+        license_file="MY_LICENSE",
         python_max=(3, 9),
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
@@ -479,6 +488,8 @@ def test_30_package_dirs__single(directory: Path, requests_mock: Any) -> None:
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         python_min=(3, 6),
+        license_spdx_id="MIT",
+        license_file="MY_LICENSE",
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
         package_dirs=["mock_package"],
@@ -559,6 +570,8 @@ def test_34_package_dirs__multi_autoname__no_pypi(
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
         python_min=(3, 6),
+        license_spdx_id="MIT",
+        license_file="MY_LICENSE",
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
         package_dirs=["mock_package", "another_one"],
@@ -641,6 +654,8 @@ def test_35_package_dirs__multi(directory: Path, requests_mock: Any) -> None:
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         python_min=(3, 6),
+        license_spdx_id="MIT",
+        license_file="MY_LICENSE",
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
         package_dirs=["mock_package", "another_one"],
@@ -733,6 +748,8 @@ def test_36_package_dirs__multi_missing_init__error(
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         python_min=(3, 6),
+        license_spdx_id="MIT",
+        license_file="MY_LICENSE",
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
         package_dirs=["mock_package", "another_one"],
@@ -784,6 +801,8 @@ def test_40_extra_stuff(directory: Path, requests_mock: Any) -> None:
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         python_min=(3, 6),
+        license_spdx_id="MIT",
+        license_file="MY_LICENSE",
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
         keywords=[
@@ -870,6 +889,8 @@ def test_60_defined_project_version__error(directory: Path, requests_mock: Any) 
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
         python_min=(3, 6),
+        license_spdx_id="MIT",
+        license_file="MY_LICENSE",
     )
 
     # write the original pyproject.toml
@@ -900,6 +921,8 @@ def test_70_defined_init_version__error(directory: Path, requests_mock: Any) -> 
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
         python_min=(3, 6),
+        license_spdx_id="MIT",
+        license_file="MY_LICENSE",
     )
 
     # write the original pyproject.toml
@@ -933,6 +956,8 @@ def test_80_auto_mypy_option(directory: Path, requests_mock: Any) -> None:
 
     gha_input = pyproject_toml_builder.GHAInput(
         python_min=(3, 6),
+        license_spdx_id="MIT",
+        license_file="MY_LICENSE",
         auto_mypy_option=True,
     )
 

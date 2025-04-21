@@ -84,6 +84,10 @@ class GHAInput:
     author: str = ""
     author_email: str = ""
 
+    # OPTIONAL (license)
+    license_spdx_id: str = ""
+    license_file: str = ""
+
     auto_mypy_option: bool = False
 
     def __post_init__(self) -> None:
@@ -332,7 +336,8 @@ class PyProjectTomlBuilder:
                     ],
                     "description": gh_api.description,
                     "readme": ffile.readme_path.name,
-                    "license": {"file": "LICENSE"},
+                    "license": gha_input.license_spdx_id,
+                    "license-files": [gha_input.license_file],
                     "keywords": gha_input.keywords,
                     "classifiers": gha_input.python_classifiers(),
                     "requires-python": gha_input.get_requires_python(),
@@ -612,10 +617,16 @@ def main() -> None:
         help="Email of the package author (required if the package is intended to be hosted on PyPI)",
     )
     parser.add_argument(
-        "--license",
+        "--license-spdx-id",
         type=str,
         default="",
-        help="Repository's license type",
+        help="Repository's license SPDX ID",
+    )
+    parser.add_argument(
+        "--license-file",
+        type=str,
+        default="",
+        help="Repository's license file",
     )
     parser.add_argument(
         "--auto-mypy-option",
