@@ -527,7 +527,10 @@ class PyProjectTomlBuilder:
                     )
                 )
             except KeyError:
-                pass  # there are no [project.optional-dependencies]
+                # there are no [project.optional-dependencies]
+                # -> this is okay, it means that `WIPACrepo/wipac-dev-mypy-action` will
+                #    just run w/ 'pip install .'
+                pass
 
         # Automate some README stuff
         self.readme_mgr: READMEMarkdownManager | None

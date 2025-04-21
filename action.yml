@@ -45,7 +45,7 @@ inputs:
   auto_mypy_option:
     description: 'Whether to auto create/update the `mypy` install option plus its dependencies'
     required: false
-    default: 'False'
+    default: 'True'
   # OPTIONAL (git)
   git_committer_name:
     description: 'Name used for "git config user.name"'
