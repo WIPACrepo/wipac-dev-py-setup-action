@@ -155,30 +155,6 @@ runs:
         fi
       shell: bash
 
-    - name: Detect SPDX License and LICENSE file path
-      if: env.IS_GIT_BEHIND != 'true'
-      run: |
-        set -euo pipefail
-        echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
-
-        sudo apt-get install -y ruby jq
-
-        gem install licensee --user-install
-        export PATH="$HOME/.local/share/gem/ruby/3.2.0/bin:$HOME/.gem/ruby/3.2.0/bin:$PATH"
-
-        json=$(licensee detect --json .)
-
-        LICENSE_SPDX_ID=$(jq -r '.spdx_id' <<< "$json")
-        LICENSE_FILE_ABS=$(jq -r '.matched_file.filename' <<< "$json")
-        LICENSE_FILE_REL=$(realpath --relative-to="." "$LICENSE_FILE_ABS")
-
-        echo "LICENSE_SPDX_ID=$LICENSE_SPDX_ID"
-        echo "LICENSE_FILE_REL=$LICENSE_FILE_REL"
-
-        echo "LICENSE_SPDX_ID=$LICENSE_SPDX_ID" >> $GITHUB_ENV
-        echo "LICENSE_FILE=$LICENSE_FILE_REL" >> $GITHUB_ENV
-      shell: bash
-
     - name: Build pyproject.toml + README.md (and commit)
       if: env.IS_GIT_BEHIND != 'true'
       run: |
@@ -206,8 +182,8 @@ runs:
           --keywords "${{ inputs.keywords_comma }}" \
           --author "${{ inputs.author }}" \
           --author-email "${{ inputs.author_email }}" \
-          --license-spdx-id "$LICENSE_SPDX_ID" \
-          --license-file "$LICENSE_FILE" \
+          --license-spdx-id "MIT" \
+          --license-file "LICENSE" \
           --auto-mypy-option "${{ inputs.auto_mypy_option }}"
         set +x
         
