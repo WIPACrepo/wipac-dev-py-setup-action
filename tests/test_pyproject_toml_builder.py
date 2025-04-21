@@ -69,7 +69,7 @@ VANILLA_SECTIONS_IN = {
 
 BUILD_SYSTEM_SECTION = {
     "build-system": {
-        "requires": ["setuptools>=61.0"],
+        "requires": ["setuptools>=78.1", "setuptools-scm"],
         "build-backend": "setuptools.build_meta",
     },
 }
@@ -890,10 +890,7 @@ def test_60_defined_project_version__error(directory: str, requests_mock: Any) -
     input = copy.deepcopy(VANILLA_SECTIONS_IN)
     input["project"]["version"] = "1.2.3"
     with open(pyproject_toml_path, "w") as f:
-        tomlkit.dump(
-            input,
-            f,
-        )
+        tomlkit.dump(input, f)
 
     # run pyproject_toml_builder
     with pytest.raises(
