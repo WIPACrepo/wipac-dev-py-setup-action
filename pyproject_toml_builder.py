@@ -9,7 +9,6 @@ import itertools
 import logging
 import os
 import re
-import subprocess
 from pathlib import Path
 from typing import Any, cast
 
@@ -32,11 +31,6 @@ REAMDE_BADGES_END_DELIMITER = "<!--- End of README Badges (automated) --->"
 
 LOGGER = logging.getLogger("setup-builder")
 
-
-# https://stackoverflow.com/a/71126828/13156561
-DYNAMIC_DUNDER_VERSION = (
-    "__version__ = importlib_metadata.version(__package__ or __name__)"
-)
 
 PythonMinMax = tuple[tuple[int, int], tuple[int, int]]
 
@@ -140,7 +134,6 @@ class FromFiles:
         self,
         root: Path,
         gha_input: GHAInput,
-        commit_message: str,
     ) -> None:
         if not os.path.exists(root):
             raise NotADirectoryError(root)
@@ -194,49 +187,6 @@ class FromFiles:
             if fname.stem == "README":
                 return Path(fname)
         raise FileNotFoundError(f"No README file found in '{self.root}'")
-
-    def get_dunder_version_inits(self, version_from_toml: str) -> list[str]:
-        """Get the __init__.py file(s) that have a `__version__` string.
-
-        Also, check if the retrieved `__version__` strings are equivalent.
-
-        `__version__` needs to be parsed as plain text due to potential
-        race condition, see:
-        https://stackoverflow.com/a/2073599/13156561
-        """
-
-        def get_init_version(ppath: Path) -> tuple[Path, str | None]:
-            with open(ppath / "__init__.py") as f:
-                for line in f.readlines():
-                    if line.startswith("__version__ ="):
-                        # grab "X.Y.Z" from `__version__ = 'X.Y.Z'`
-                        # or     foo() from `__version__ = foo()`
-                        # - quote-style insensitive
-                        if m := re.match(
-                            r"^__version__ = [\"\'](?P<version>\w+\.\w+\.\w+)[\"\']",
-                            line,
-                        ):
-                            return Path(f.name), m.group("version")
-                        else:
-                            raise Exception(
-                                f"'__version__' must be in the semantic version format: "
-                                f"{ppath.name}/__init__.py -> '{line.strip()}'"
-                            )
-                return Path(f.name), None
-
-        fpath_versions = dict(get_init_version(p) for p in self._pkg_paths)
-        fpath_versions = {k: v for k, v in fpath_versions.items() if v is not None}
-
-        if init_versions := set(fpath_versions.values()):
-            if len(init_versions) != 1:
-                raise Exception(f"Version mismatch between packages: {fpath_versions}")
-            if version_from_toml != list(init_versions)[0]:
-                raise Exception(
-                    f"Version mismatch between package(s) ({list(init_versions)[0]}) "
-                    f"and pyproject.toml's 'project.version' ({version_from_toml})"
-                )
-
-        return [str(p.relative_to(self.root)) for p in fpath_versions.keys()]
 
 
 class READMEMarkdownManager:
@@ -328,20 +278,18 @@ class PyProjectTomlBuilder:
         root_path: Path,
         github_full_repo: str,
         token: str,
-        commit_message: str,
         gha_input: GHAInput,
     ):
         ffile = FromFiles(  # things requiring reading files
             root_path,
             gha_input,
-            commit_message,
         )
         gh_api = GitHubAPI(github_full_repo, oauth_token=token)
         self._validate_repo_initial_state(toml_dict)
 
         # [build-system]
         toml_dict["build-system"] = {
-            "requires": ["setuptools>=61.0"],
+            "requires": ["setuptools>=78.1", "setuptools-scm"],
             "build-backend": "setuptools.build_meta",
         }
 
@@ -367,6 +315,7 @@ class PyProjectTomlBuilder:
         else:
             toml_dict["project"].update(
                 {
+                    "dynamic": ["version"],  # for 'setuptools-scm'
                     "name": gha_input.pypi_name,
                     "authors": [
                         {
@@ -408,6 +357,10 @@ class PyProjectTomlBuilder:
             }
         )
 
+        # [tool.setuptools_scm] -- an empty section is the bare minimum
+        if not toml_dict["tool"].get("setuptools_scm"):
+            toml_dict["tool"]["setuptools_scm"] = {}
+
         # [project.optional-dependencies][mypy]
         if gha_input.auto_mypy_option:
             try:
@@ -439,11 +392,12 @@ class PyProjectTomlBuilder:
 
     @staticmethod
     def _validate_repo_initial_state(toml_dict: TOMLDocumentIsh) -> None:
+        # must *not* have these fields...
+        if toml_dict.get("project", {}).get("version", None):
+            raise Exception("pyproject.toml must NOT define 'project.version'")
+
         # must have these fields...
-        try:
-            toml_dict["project"]["version"]
-        except KeyError:
-            raise Exception("pyproject.toml must have 'project.version'")
+        # <none>
 
     @staticmethod
     def _tool_setuptools_packages_find(gha_input: GHAInput) -> dict[str, Any]:
@@ -497,7 +451,6 @@ def write_toml(
     toml_file: Path,
     github_full_repo: str,
     token: str,
-    commit_message: str,
     gha_input: GHAInput,
 ) -> READMEMarkdownManager | None:
     """Build/write the `pyproject.toml` sections according to `BUILDER_SECTION_NAME`.
@@ -516,7 +469,6 @@ def write_toml(
         toml_file.parent,
         github_full_repo,
         token,
-        commit_message,
         gha_input,
     )
 
@@ -539,7 +491,6 @@ def work(
     toml_file: Path,
     github_full_repo: str,
     token: str,
-    commit_message: str,
     gha_input: GHAInput,
 ) -> None:
     """Build & write the pyproject.toml. Write the readme if necessary."""
@@ -547,7 +498,6 @@ def work(
         toml_file,
         github_full_repo,
         token,
-        commit_message,
         gha_input,
     )
 
@@ -680,18 +630,10 @@ def main() -> None:
     )
     LOGGER.info(gha_input)
 
-    commit_message = (  # retrieving this in bash is messy since the string can include any character
-        subprocess.check_output("git log -1 --pretty=%B".split())
-        .decode("utf-8")
-        .strip()
-    )
-    LOGGER.info(f"{commit_message=}")
-
     work(
         args.toml,
         args.github_full_repo,
         args.token,
-        commit_message,
         gha_input,
     )
 
