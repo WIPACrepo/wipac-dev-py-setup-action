@@ -239,6 +239,7 @@ def test_00_minimum_input(directory: str, requests_mock: Any) -> None:
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
 
     gha_input = pyproject_toml_builder.GHAInput(
+        auto_mypy_option=False,
         python_min=(3, 6),
     )
 
@@ -279,6 +280,7 @@ def test_01_minimum_input_w_pypi(directory: str, requests_mock: Any) -> None:
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
 
     gha_input = pyproject_toml_builder.GHAInput(
+        auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         python_min=(3, 6),
         keywords=["WIPAC", "IceCube"],
@@ -333,6 +335,7 @@ def test_10_keywords(directory: str, requests_mock: Any) -> None:
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
 
     gha_input = pyproject_toml_builder.GHAInput(
+        auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         python_min=(3, 6),
         author=AUTHOR,
@@ -407,6 +410,7 @@ def test_20_python_max(directory: str, requests_mock: Any) -> None:
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
 
     gha_input = pyproject_toml_builder.GHAInput(
+        auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         python_min=(3, 6),
         python_max=(3, 9),
@@ -477,6 +481,7 @@ def test_30_package_dirs__single(directory: str, requests_mock: Any) -> None:
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
 
     gha_input = pyproject_toml_builder.GHAInput(
+        auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         python_min=(3, 6),
         author=AUTHOR,
@@ -556,6 +561,7 @@ def test_34_package_dirs__multi_autoname__no_pypi(
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
 
     gha_input = pyproject_toml_builder.GHAInput(
+        auto_mypy_option=False,
         python_min=(3, 6),
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
@@ -635,6 +641,7 @@ def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
 
     gha_input = pyproject_toml_builder.GHAInput(
+        auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         python_min=(3, 6),
         author=AUTHOR,
@@ -725,6 +732,7 @@ def test_36_package_dirs__multi_missing_init__error(
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
 
     gha_input = pyproject_toml_builder.GHAInput(
+        auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         python_min=(3, 6),
         author=AUTHOR,
@@ -775,6 +783,7 @@ def test_40_extra_stuff(directory: str, requests_mock: Any) -> None:
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
 
     gha_input = pyproject_toml_builder.GHAInput(
+        auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         python_min=(3, 6),
         author=AUTHOR,
@@ -860,6 +869,7 @@ def test_60_defined_project_version__error(directory: str, requests_mock: Any) -
     pyproject_toml_path = Path(f"{directory}/pyproject.toml")
 
     gha_input = pyproject_toml_builder.GHAInput(
+        auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         python_min=(3, 6),
         author=AUTHOR,
