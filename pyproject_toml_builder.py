@@ -143,6 +143,8 @@ class FromFiles:
         self.packages = [p.name for p in self._pkg_paths]
         self.readme_path = self._get_readme_path()
 
+        self.check_no_version_dunders()  # do now so we don't forget to
+
     def _get_package_paths(self, dirs_exclude: list[str]) -> list[Path]:
         """Find the package path(s)."""
 
@@ -180,6 +182,16 @@ class FromFiles:
                     f"or [3] list which packages to ignore in your GitHub Action step's 'with.exclude-dirs'."
                 )
             return [self.root / available_pkgs[0]]
+
+    def check_no_version_dunders(self) -> None:
+        """Check that no modules' __init__.py define a __version__ attribute."""
+        for pkg in self._pkg_paths:
+            with open(pkg / "__init__.py") as f:
+                for line in f:
+                    if "__version__" in line and "=" in line:
+                        raise Exception(
+                            f"Module ({pkg.name}) '__init__.py' must not define '__version__'."
+                        )
 
     def _get_readme_path(self) -> Path:
         """Return the 'README' file and its extension."""

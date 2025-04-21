@@ -133,18 +133,18 @@ def assert_outputted_pyproject_toml(
 
 
 @pytest.fixture
-def directory() -> str:
+def directory() -> Path:
     """Get path to pyproject.toml in a random testing directory."""
-    _dir = f"test-dir-{uuid.uuid1()}"
+    _dir = Path(f"test-dir-{uuid.uuid1()}")
 
     os.mkdir(_dir)
-    with open(f"{_dir}/README.md", "w") as f:
+    with open(_dir / "README.md", "w") as f:
         f.write("# This is a test package, it's not real\n")
 
-    os.mkdir(f"{_dir}/mock_package")
-    Path(f"{_dir}/mock_package/__init__.py").touch()
+    os.mkdir(_dir / "mock_package")
+    Path(_dir / "mock_package/__init__.py").touch()
 
-    os.mkdir(f"{_dir}/.circleci")
+    os.mkdir(f"{_dir}/.circleci")  # TODO DEPRECATE
     Path(f"{_dir}/.circleci/config.yml").touch()
 
     print(_dir)
@@ -226,11 +226,11 @@ def mock_many_requests(requests_mock: Any) -> None:
 ################################################################################
 
 
-def test_00_minimum_input(directory: str, requests_mock: Any) -> None:
+def test_00_minimum_input(directory: Path, requests_mock: Any) -> None:
     """Test using bare minimum input."""
     mock_many_requests(requests_mock)
 
-    pyproject_toml_path = Path(f"{directory}/pyproject.toml")
+    pyproject_toml_path = directory / "pyproject.toml"
 
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
@@ -268,11 +268,11 @@ def test_00_minimum_input(directory: str, requests_mock: Any) -> None:
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
 
 
-def test_01_minimum_input_w_pypi(directory: str, requests_mock: Any) -> None:
+def test_01_minimum_input_w_pypi(directory: Path, requests_mock: Any) -> None:
     """Test using the minimum input with pypi attrs."""
     mock_many_requests(requests_mock)
 
-    pyproject_toml_path = Path(f"{directory}/pyproject.toml")
+    pyproject_toml_path = directory / "pyproject.toml"
 
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
@@ -324,11 +324,11 @@ def test_01_minimum_input_w_pypi(directory: str, requests_mock: Any) -> None:
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
 
 
-def test_10_keywords(directory: str, requests_mock: Any) -> None:
+def test_10_keywords(directory: Path, requests_mock: Any) -> None:
     """Test using  `keywords`."""
     mock_many_requests(requests_mock)
 
-    pyproject_toml_path = Path(f"{directory}/pyproject.toml")
+    pyproject_toml_path = directory / "pyproject.toml"
 
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
@@ -400,11 +400,11 @@ def test_10_keywords(directory: str, requests_mock: Any) -> None:
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
 
 
-def test_20_python_max(directory: str, requests_mock: Any) -> None:
+def test_20_python_max(directory: Path, requests_mock: Any) -> None:
     """Test using  `python_max`."""
     mock_many_requests(requests_mock)
 
-    pyproject_toml_path = Path(f"{directory}/pyproject.toml")
+    pyproject_toml_path = directory / "pyproject.toml"
 
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
@@ -472,11 +472,11 @@ def test_20_python_max(directory: str, requests_mock: Any) -> None:
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
 
 
-def test_30_package_dirs__single(directory: str, requests_mock: Any) -> None:
+def test_30_package_dirs__single(directory: Path, requests_mock: Any) -> None:
     """Test using `package_dirs` & a single desired package."""
     mock_many_requests(requests_mock)
 
-    pyproject_toml_path = Path(f"{directory}/pyproject.toml")
+    pyproject_toml_path = directory / "pyproject.toml"
 
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
@@ -536,8 +536,8 @@ def test_30_package_dirs__single(directory: str, requests_mock: Any) -> None:
     }
 
     # make an extra package *not* to be included
-    os.mkdir(f"{directory}/mock_package_test")
-    Path(f"{directory}/mock_package_test/__init__.py").touch()
+    os.mkdir(directory / "mock_package_test")
+    Path(directory / "mock_package_test/__init__.py").touch()
 
     # run pyproject_toml_builder
     pyproject_toml_builder.work(
@@ -552,12 +552,12 @@ def test_30_package_dirs__single(directory: str, requests_mock: Any) -> None:
 
 
 def test_34_package_dirs__multi_autoname__no_pypi(
-    directory: str, requests_mock: Any
+    directory: Path, requests_mock: Any
 ) -> None:
     """Test using `package_dirs` & multiple desired packages."""
     mock_many_requests(requests_mock)
 
-    pyproject_toml_path = Path(f"{directory}/pyproject.toml")
+    pyproject_toml_path = directory / "pyproject.toml"
 
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
@@ -615,12 +615,12 @@ def test_34_package_dirs__multi_autoname__no_pypi(
     }
 
     # make an extra package *not* to be included
-    os.mkdir(f"{directory}/mock_package_test")
-    Path(f"{directory}/mock_package_test/__init__.py").touch()
+    os.mkdir(directory / "mock_package_test")
+    Path(directory / "mock_package_test/__init__.py").touch()
 
     # make an extra package *TO BE* included
-    os.mkdir(f"{directory}/another_one")
-    Path(f"{directory}/another_one/__init__.py").touch()
+    os.mkdir(directory / "another_one")
+    Path(directory / "another_one/__init__.py").touch()
 
     # run pyproject_toml_builder
     pyproject_toml_builder.work(
@@ -634,11 +634,11 @@ def test_34_package_dirs__multi_autoname__no_pypi(
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
 
 
-def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
+def test_35_package_dirs__multi(directory: Path, requests_mock: Any) -> None:
     """Test using `package_dirs` & multiple desired packages."""
     mock_many_requests(requests_mock)
 
-    pyproject_toml_path = Path(f"{directory}/pyproject.toml")
+    pyproject_toml_path = directory / "pyproject.toml"
 
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
@@ -705,12 +705,12 @@ def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
     }
 
     # make an extra package *not* to be included
-    os.mkdir(f"{directory}/mock_package_test")
-    Path(f"{directory}/mock_package_test/__init__.py").touch()
+    os.mkdir(directory / "mock_package_test")
+    Path(directory / "mock_package_test/__init__.py").touch()
 
     # make an extra package *TO BE* included
-    os.mkdir(f"{directory}/another_one")
-    Path(f"{directory}/another_one/__init__.py").touch()
+    os.mkdir(directory / "another_one")
+    Path(directory / "another_one/__init__.py").touch()
 
     # run pyproject_toml_builder
     pyproject_toml_builder.work(
@@ -725,12 +725,12 @@ def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
 
 
 def test_36_package_dirs__multi_missing_init__error(
-    directory: str, requests_mock: Any
+    directory: Path, requests_mock: Any
 ) -> None:
     """Test using `package_dirs` & multiple desired packages."""
     mock_many_requests(requests_mock)
 
-    pyproject_toml_path = Path(f"{directory}/pyproject.toml")
+    pyproject_toml_path = directory / "pyproject.toml"
 
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
@@ -755,11 +755,11 @@ def test_36_package_dirs__multi_missing_init__error(
         tomlkit.dump(VANILLA_SECTIONS_IN, f)
 
     # make an extra package *not* to be included
-    os.mkdir(f"{directory}/mock_package_test")
-    Path(f"{directory}/mock_package_test/__init__.py").touch()
+    os.mkdir(directory / "mock_package_test")
+    Path(directory / "mock_package_test/__init__.py").touch()
 
     # make an extra package *TO BE* included
-    os.mkdir(f"{directory}/another_one")
+    os.mkdir(directory / "another_one")
 
     # run pyproject_toml_builder
     with pytest.raises(
@@ -777,11 +777,11 @@ def test_36_package_dirs__multi_missing_init__error(
         )
 
 
-def test_40_extra_stuff(directory: str, requests_mock: Any) -> None:
+def test_40_extra_stuff(directory: Path, requests_mock: Any) -> None:
     """Test using extra stuff."""
     mock_many_requests(requests_mock)
 
-    pyproject_toml_path = Path(f"{directory}/pyproject.toml")
+    pyproject_toml_path = directory / "pyproject.toml"
 
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
@@ -864,28 +864,15 @@ def test_40_extra_stuff(directory: str, requests_mock: Any) -> None:
 # NOTE: test 50 was removed -- it tested deprecated functionality
 
 
-def test_60_defined_project_version__error(directory: str, requests_mock: Any) -> None:
+def test_60_defined_project_version__error(directory: Path, requests_mock: Any) -> None:
     """Test situation where 'project.version' is defined."""
     mock_many_requests(requests_mock)
 
-    pyproject_toml_path = Path(f"{directory}/pyproject.toml")
+    pyproject_toml_path = directory / "pyproject.toml"
 
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
-        pypi_name="wipac-mock-package",
         python_min=(3, 6),
-        author=AUTHOR,
-        author_email=AUTHOR_EMAIL,
-        package_dirs=["mock_package"],
-        keywords=[
-            "python",
-            "REST",
-            "tools",
-            "utilities",
-            "OpenTelemetry",
-            "tracing",
-            "telemetry",
-        ],
     )
 
     # write the original pyproject.toml
@@ -907,14 +894,43 @@ def test_60_defined_project_version__error(directory: str, requests_mock: Any) -
         )
 
 
-# NOTE: test 70 was removed -- it tested deprecated functionality
+def test_70_defined_init_version__error(directory: Path, requests_mock: Any) -> None:
+    """Test situation where 'project.version' is defined."""
+    mock_many_requests(requests_mock)
+
+    pyproject_toml_path = directory / "pyproject.toml"
+
+    gha_input = pyproject_toml_builder.GHAInput(
+        auto_mypy_option=False,
+        python_min=(3, 6),
+    )
+
+    # write the original pyproject.toml
+    with open(pyproject_toml_path, "w") as f:
+        tomlkit.dump(VANILLA_SECTIONS_IN, f)
+
+    # write the illegal __version__
+    with open(directory / "mock_package/__init__.py") as f:
+        f.write("__version__ = '1.2.3'")
+
+    # run pyproject_toml_builder
+    with pytest.raises(
+        Exception,
+        match=re.escape("pyproject.toml must NOT define 'project.version'"),
+    ):
+        pyproject_toml_builder.work(
+            pyproject_toml_path,
+            GITHUB_FULL_REPO,
+            TOKEN,
+            gha_input,
+        )
 
 
-def test_80_auto_mypy_option(directory: str, requests_mock: Any) -> None:
+def test_80_auto_mypy_option(directory: Path, requests_mock: Any) -> None:
     """Test using auto_mypy_option."""
     mock_many_requests(requests_mock)
 
-    pyproject_toml_path = Path(f"{directory}/pyproject.toml")
+    pyproject_toml_path = directory / "pyproject.toml"
 
     gha_input = pyproject_toml_builder.GHAInput(
         python_min=(3, 6),
