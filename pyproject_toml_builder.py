@@ -32,19 +32,6 @@ REAMDE_BADGES_END_DELIMITER = "<!--- End of README Badges (automated) --->"
 
 LOGGER = logging.getLogger("setup-builder")
 
-SEMANTIC_RELEASE_MAJOR = ["[major]"]
-SEMANTIC_RELEASE_MINOR = ["[minor]", "[feature]"]
-SEMANTIC_RELEASE_PATCH = ["[patch]", "[fix]"]
-PATCH_WITHOUT_TAG_WORKAROUND = [
-    chr(i)
-    for i in range(32, 127)
-    if chr(i) not in ['"', ",", "\\"]  # else upsets toml syntax
-]
-
-DEV_STATUS_PREALPHA_0_0_0 = "Development Status :: 2 - Pre-Alpha"
-DEV_STATUS_ALPHA_0_0_Z = "Development Status :: 3 - Alpha"
-DEV_STATUS_BETA_0_Y_Z = "Development Status :: 4 - Beta"
-DEV_STATUS_PROD_X_Y_Z = "Development Status :: 5 - Production/Stable"
 
 # https://stackoverflow.com/a/71126828/13156561
 DYNAMIC_DUNDER_VERSION = (
@@ -98,7 +85,6 @@ class GHAInput:
     )
     # OPTIONAL (releases)
     pypi_name: str = ""
-    patch_without_tag: bool = True
     # OPTIONAL (meta)
     keywords: list[str] = dataclasses.field(default_factory=list)
     author: str = ""
@@ -253,63 +239,6 @@ class FromFiles:
         return [str(p.relative_to(self.root)) for p in fpath_versions.keys()]
 
 
-def get_development_status(
-    version: str,
-    patch_without_tag: bool,
-    commit_message: str,
-) -> str:
-    """Detect the development status from the package's version.
-
-    Known Statuses (**not all are supported**):
-        `"Development Status :: 1 - Planning"`
-        `"Development Status :: 2 - Pre-Alpha"`
-        `"Development Status :: 3 - Alpha"`
-        `"Development Status :: 4 - Beta"`
-        `"Development Status :: 5 - Production/Stable"`
-        `"Development Status :: 6 - Mature"`
-        `"Development Status :: 7 - Inactive"`
-    """
-
-    # detect version threshold crossing
-    pending_major_bump = any(k in commit_message for k in SEMANTIC_RELEASE_MAJOR)
-    pending_minor_bump = any(k in commit_message for k in SEMANTIC_RELEASE_MINOR)
-    pending_patch_bump = patch_without_tag or any(
-        k in commit_message for k in SEMANTIC_RELEASE_PATCH
-    )
-
-    # NOTE - if someday we abandon python-semantic-release, this is a starting place to detect the next version -- in this case, we'd change the version number before merging to main
-
-    if version == "0.0.0":
-        if pending_major_bump:
-            return DEV_STATUS_PROD_X_Y_Z  # MAJOR-BUMPPING STRAIGHT TO PROD
-        elif pending_minor_bump:
-            return DEV_STATUS_BETA_0_Y_Z  # MINOR-BUMPPING STRAIGHT TO BETA
-        elif pending_patch_bump:
-            return DEV_STATUS_ALPHA_0_0_Z  # PATCH-BUMPPING STRAIGHT TO ALPHA
-        else:
-            return DEV_STATUS_PREALPHA_0_0_0  # staying at pre-alpha
-
-    elif version.startswith("0.0."):
-        if pending_major_bump:
-            return DEV_STATUS_PROD_X_Y_Z  # MAJOR-BUMPPING STRAIGHT TO PROD
-        elif pending_minor_bump:
-            return DEV_STATUS_BETA_0_Y_Z  # MINOR-BUMPPING STRAIGHT TO BETA
-        else:
-            return DEV_STATUS_ALPHA_0_0_Z  # staying at alpha
-
-    elif version.startswith("0."):
-        if pending_major_bump:
-            return DEV_STATUS_PROD_X_Y_Z  # MAJOR-BUMPPING STRAIGHT TO PROD
-        else:
-            return DEV_STATUS_BETA_0_Y_Z  # staying at beta
-
-    elif int(version.split(".")[0]) >= 1:
-        return DEV_STATUS_PROD_X_Y_Z
-
-    else:
-        raise Exception(f"Could not figure 'Development Status' for version: {version}")
-
-
 class READMEMarkdownManager:
     """Add some automation to README.md."""
 
@@ -449,16 +378,7 @@ class PyProjectTomlBuilder:
                     "readme": ffile.readme_path.name,
                     "license": {"file": "LICENSE"},
                     "keywords": gha_input.keywords,
-                    "classifiers": (
-                        [
-                            get_development_status(
-                                toml_dict["project"]["version"],
-                                gha_input.patch_without_tag,
-                                commit_message,
-                            )
-                        ]
-                        + gha_input.python_classifiers()
-                    ),
+                    "classifiers": gha_input.python_classifiers(),
                     "requires-python": gha_input.get_requires_python(),
                 }
             )
@@ -738,12 +658,6 @@ def main() -> None:
         type=str,
         default="",
         help="Name of the PyPI package",
-    )
-    parser.add_argument(
-        "--patch-without-tag",
-        type=strtobool,
-        default=True,
-        help="Whether to make a patch release even if the commit message does not explicitly warrant one",
     )
     # OPTIONAL (meta)
     parser.add_argument(

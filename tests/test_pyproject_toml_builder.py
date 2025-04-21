@@ -332,7 +332,6 @@ def test_01_minimum_input_w_pypi(directory: str, requests_mock: Any) -> None:
             **VANILLA_PROJECT_KEYVALS,
             "keywords": ["WIPAC", "IceCube"],
             "classifiers": [
-                "Development Status :: 5 - Production/Stable",
                 "Programming Language :: Python :: 3.6",
                 "Programming Language :: Python :: 3.7",
                 "Programming Language :: Python :: 3.8",
@@ -409,7 +408,6 @@ def test_10_keywords(directory: str, requests_mock: Any) -> None:
                 "3+ word string keywords",
             ],
             "classifiers": [
-                "Development Status :: 5 - Production/Stable",
                 "Programming Language :: Python :: 3.6",
                 "Programming Language :: Python :: 3.7",
                 "Programming Language :: Python :: 3.8",
@@ -484,7 +482,6 @@ def test_20_python_max(directory: str, requests_mock: Any) -> None:
                 "telemetry",
             ],
             "classifiers": [
-                "Development Status :: 5 - Production/Stable",
                 "Programming Language :: Python :: 3.6",
                 "Programming Language :: Python :: 3.7",
                 "Programming Language :: Python :: 3.8",
@@ -556,7 +553,6 @@ def test_30_package_dirs__single(directory: str, requests_mock: Any) -> None:
                 "telemetry",
             ],
             "classifiers": [
-                "Development Status :: 5 - Production/Stable",
                 "Programming Language :: Python :: 3.6",
                 "Programming Language :: Python :: 3.7",
                 "Programming Language :: Python :: 3.8",
@@ -726,7 +722,6 @@ def test_35_package_dirs__multi(directory: str, requests_mock: Any) -> None:
                 "telemetry",
             ],
             "classifiers": [
-                "Development Status :: 5 - Production/Stable",
                 "Programming Language :: Python :: 3.6",
                 "Programming Language :: Python :: 3.7",
                 "Programming Language :: Python :: 3.8",
@@ -885,7 +880,6 @@ def test_40_extra_stuff(directory: str, requests_mock: Any) -> None:
                 "telemetry",
             ],
             "classifiers": [
-                "Development Status :: 5 - Production/Stable",
                 "Programming Language :: Python :: 3.6",
                 "Programming Language :: Python :: 3.7",
                 "Programming Language :: Python :: 3.8",
@@ -918,12 +912,6 @@ def test_40_extra_stuff(directory: str, requests_mock: Any) -> None:
 
     # assert outputted pyproject.toml
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
-
-
-CLASSIFIER_0_0_0 = "Development Status :: 2 - Pre-Alpha"
-CLASSIFIER_0_0_Z = "Development Status :: 3 - Alpha"
-CLASSIFIER_0_Y_Z = "Development Status :: 4 - Beta"
-CLASSIFIER_X_Y_Z = "Development Status :: 5 - Production/Stable"
 
 
 @pytest.mark.parametrize(
@@ -1098,7 +1086,6 @@ def test_60_multi_version__one_missing__ok(directory: str, requests_mock: Any) -
                 "telemetry",
             ],
             "classifiers": [
-                "Development Status :: 5 - Production/Stable",
                 "Programming Language :: Python :: 3.6",
                 "Programming Language :: Python :: 3.7",
                 "Programming Language :: Python :: 3.8",
