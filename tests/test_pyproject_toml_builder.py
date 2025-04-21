@@ -144,9 +144,6 @@ def directory() -> Path:
     os.mkdir(_dir / "mock_package")
     Path(_dir / "mock_package/__init__.py").touch()
 
-    os.mkdir(f"{_dir}/.circleci")  # TODO DEPRECATE
-    Path(f"{_dir}/.circleci/config.yml").touch()
-
     print(_dir)
     return _dir
 

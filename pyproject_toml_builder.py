@@ -239,11 +239,6 @@ class READMEMarkdownManager:
         """Create and return the lines used to append to a README.md containing various linked-badges."""
         badges_line = ""
 
-        # CircleCI badge
-        if os.path.exists(f"{self.ffile.root}/.circleci/config.yml"):
-            circleci = f"https://app.circleci.com/pipelines/github/{self.github_full_repo}?branch={self.gh_api.default_branch}&filter=all"
-            badges_line += f"[![CircleCI](https://img.shields.io/circleci/build/github/{self.github_full_repo})]({circleci}) "
-
         # PyPI badge
         if self.bsec.pypi_name:
             badges_line += f"[![PyPI](https://img.shields.io/pypi/v/{self.bsec.pypi_name})](https://pypi.org/project/{self.bsec.pypi_name}/) "
