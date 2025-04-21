@@ -162,7 +162,9 @@ runs:
         echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
 
         sudo apt-get install -y ruby jq
-        gem install licensee
+
+        gem install licensee --user-install
+        export PATH="$HOME/.local/share/gem/ruby/3.2.0/bin:$HOME/.gem/ruby/3.2.0/bin:$PATH"
 
         json=$(licensee detect --json .)
 
@@ -170,7 +172,7 @@ runs:
         LICENSE_FILE_ABS=$(jq -r '.matched_file.filename' <<< "$json")
         LICENSE_FILE_REL=$(realpath --relative-to="." "$LICENSE_FILE_ABS")
 
-        echo "LICENSE_SPDX_ID=$SPDX_ID"
+        echo "LICENSE_SPDX_ID=$LICENSE_SPDX_ID"
         echo "LICENSE_FILE_REL=$LICENSE_FILE_REL"
 
         echo "LICENSE_SPDX_ID=$LICENSE_SPDX_ID" >> $GITHUB_ENV
