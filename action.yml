@@ -155,6 +155,29 @@ runs:
         fi
       shell: bash
 
+    - name: Detect MIT License or fallback only if missing
+      if: env.IS_GIT_BEHIND != 'true'
+      run: |
+        set -euo pipefail
+        echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+
+        LICENSE_FILE="LICENSE"
+
+        if [[ -f "$LICENSE_FILE" ]]; then
+          if grep -iq "MIT License" "$LICENSE_FILE"; then
+            echo "LICENSE_SPDX_ID=MIT" >> $GITHUB_ENV
+            echo "LICENSE_FILE=$LICENSE_FILE" >> $GITHUB_ENV
+          else
+            echo "::error::LICENSE file found but does not contain 'MIT License'"
+            exit 1
+          fi
+        else  # NO FILE 
+          echo "::warning::LICENSE file not found — falling back to MIT"
+          echo "LICENSE_SPDX_ID=MIT" >> $GITHUB_ENV
+          echo "LICENSE_FILE=" >> $GITHUB_ENV
+        fi
+      shell: bash
+
     - name: Build pyproject.toml + README.md (and commit)
       if: env.IS_GIT_BEHIND != 'true'
       run: |
@@ -182,8 +205,8 @@ runs:
           --keywords "${{ inputs.keywords_comma }}" \
           --author "${{ inputs.author }}" \
           --author-email "${{ inputs.author_email }}" \
-          --license-spdx-id "MIT" \
-          --license-file "LICENSE" \
+          --license-spdx-id "$LICENSE_SPDX_ID" \
+          --license-file "$LICENSE_FILE" \
           --auto-mypy-option "${{ inputs.auto_mypy_option }}"
         set +x
         

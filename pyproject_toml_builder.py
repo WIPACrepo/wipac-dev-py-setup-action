@@ -337,7 +337,9 @@ class PyProjectTomlBuilder:
                     "description": gh_api.description,
                     "readme": ffile.readme_path.name,
                     "license": gha_input.license_spdx_id,
-                    "license-files": [gha_input.license_file],
+                    "license-files": (
+                        [gha_input.license_file] if gha_input.license_file else []
+                    ),
                     "keywords": gha_input.keywords,
                     "classifiers": gha_input.python_classifiers(),
                     "requires-python": gha_input.get_requires_python(),
