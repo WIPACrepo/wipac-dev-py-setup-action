@@ -85,7 +85,7 @@ runs:
       with:
         python-version: '3.12'  # NOTE: update, someday.
 
-    - name: Is this most recent commit? It won't be if action was reran
+    - name: Is this most recent commit?
       run: |
         set -euo pipefail
         echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
