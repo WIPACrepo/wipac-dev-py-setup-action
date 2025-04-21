@@ -907,7 +907,7 @@ def test_70_defined_init_version__error(directory: Path, requests_mock: Any) -> 
         tomlkit.dump(VANILLA_SECTIONS_IN, f)
 
     # write the illegal __version__
-    with open(directory / "mock_package/__init__.py") as f:
+    with open(directory / "mock_package/__init__.py", "w") as f:
         f.write("__version__ = '1.2.3'")
 
     # run pyproject_toml_builder
