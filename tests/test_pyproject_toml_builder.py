@@ -897,9 +897,7 @@ def test_60_defined_project_version__error(directory: str, requests_mock: Any) -
     # run pyproject_toml_builder
     with pytest.raises(
         Exception,
-        match=re.escape(
-            "'__version__' must be in the semantic version format: another_one/__init__.py -> '__version__ = a_var'"
-        ),
+        match=re.escape("pyproject.toml must NOT define 'project.version'"),
     ):
         pyproject_toml_builder.work(
             pyproject_toml_path,
