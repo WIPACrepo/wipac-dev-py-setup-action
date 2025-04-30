@@ -33,9 +33,7 @@ In order to use the action, a few files need to have the following:
 
         setup()
         ```
-    - a `pyproject.toml` file with a `[project].version` attribute (defining `__version__` strings in
-      package `__init__.py`
-      file(s) is allowed). Other sections and attributes will be auto-inserted. Any conflicting
+    - a `pyproject.toml` -- sections and attributes will be auto-inserted. Any conflicting
       sections/attributes will be overwritten.
 2. Run as GitHub Action
 3. Source code updates are committed and pushed by the `github-actions` bot (by default)
@@ -47,10 +45,10 @@ In order to use the action, a few files need to have the following:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-      - uses: WIPACrepo/wipac-dev-py-setup-action@v4.#
+      - uses: WIPACrepo/wipac-dev-py-setup-action@v5.#
         with:
           python_min: ...
           ...
@@ -65,19 +63,18 @@ still* trigger GH workflows. The token needs "repo" permissions.
 
 The following are inputted to the GitHub Action package in its `with` block:
 
-| Input                 | Description                                                                                              | Required                           | Default                                                                    |
-|-----------------------|----------------------------------------------------------------------------------------------------------|------------------------------------|----------------------------------------------------------------------------|
-| `python_min`          | Minimum required Python version                                                                          | **True**                           | -                                                                          |
-| `keywords_comma`      | A comma-delimited string of strings, like "WIPAC, python tools, utilities"                               | _required if `pypi_name` is given_ | N/A                                                                        |
-| `author`              | Author of the package                                                                                    | _required if `pypi_name` is given_ | N/A                                                                        |
-| `author_email`        | Email of the package's author                                                                            | _required if `pypi_name` is given_ | N/A                                                                        |
-| `pypi_name`           | Name of the PyPI package                                                                                 | False                              | N/A -- not providing this will bypass PyPI-related metadata and publishing |
-| `python_max`          | Maximum supported Python version                                                                         | False                              | the most recent Python release                                             |
-| `package_dirs`        | Space-separated list of directories to package                                                           | False                              | All packages in the repository's root directory                            |
-| `exclude_dirs`        | Space-separated list of directories to exclude from release, relative to the repository's root directory | False                              | `test tests doc docs resource resources example examples`                  |
-| `patch_without_tag`   | Whether to make a patch release even if the commit message does not explicitly warrant one               | False                              | `True`                                                                     |
-| `git_committer_name`  | Name used for `git config user.name`                                                                     | False                              | `github-actions`                                                           |
-| `git_committer_email` | Email used for `git config user.email`                                                                   | False                              | `github-actions@github.com`                                                |
+| Input                 | Description                                                                                              | Required                           | Default                                                                |
+|-----------------------|----------------------------------------------------------------------------------------------------------|------------------------------------|------------------------------------------------------------------------|
+| `python_min`          | Minimum required Python version                                                                          | **True**                           | -                                                                      |
+| `keywords_comma`      | A comma-delimited string of strings, like "WIPAC, python tools, utilities"                               | _required if `pypi_name` is given_ | N/A                                                                    |
+| `author`              | Author of the package                                                                                    | _required if `pypi_name` is given_ | N/A                                                                    |
+| `author_email`        | Email of the package's author                                                                            | _required if `pypi_name` is given_ | N/A                                                                    |
+| `pypi_name`           | Name of the PyPI package                                                                                 | False                              | N/A -- not providing this will bypass generating PyPI-related metadata |
+| `python_max`          | Maximum supported Python version                                                                         | False                              | the most recent Python release                                         |
+| `package_dirs`        | Space-separated list of directories to package                                                           | False                              | All packages in the repository's root directory                        |
+| `exclude_dirs`        | Space-separated list of directories to exclude from release, relative to the repository's root directory | False                              | `test tests doc docs resource resources example examples`              |
+| `git_committer_name`  | Name used for `git config user.name`                                                                     | False                              | `github-actions`                                                       |
+| `git_committer_email` | Email used for `git config user.email`                                                                   | False                              | `github-actions@github.com`                                            |
 
 ## Configuration Modes
 
@@ -93,58 +90,37 @@ autogenerated:
 - `pyproject.toml` with all the original, non-conflicting sections *plus*:
     ```
     [build-system]
-    requires = ["setuptools>=61.0"]
+    requires = ["setuptools>=78.1", "setuptools-scm"]
     build-backend = "setuptools.build_meta"
     
     [project]
-    version = "1.2.3"
+    dynamic = ["version"]
     name = "wipac-dev-tools"
     description = "Common, basic, and reusable development tools"
     readme = "README.md"
     keywords = ["WIPAC", "python tools", "utilities"]
-    classifiers = ["Development Status :: 5 - Production/Stable", "Programming Language :: Python :: 3.8", "Programming Language :: Python :: 3.9", "Programming Language :: Python :: 3.10", "Programming Language :: Python :: 3.11", "Programming Language :: Python :: 3.12"]
+    classifiers = ["Programming Language :: Python :: 3.8", "Programming Language :: Python :: 3.9", "Programming Language :: Python :: 3.10", "Programming Language :: Python :: 3.11", "Programming Language :: Python :: 3.12"]
     requires-python = ">=3.8, <3.13"
+    license-files = ["LICENSE"]
+    license = "MIT"
     
     [[project.authors]]
     name = "WIPAC Developers"
     email = "developers@icecube.wisc.edu"
-    
-    [project.license]
-    file = "LICENSE"
     
     [project.urls]
     Homepage = "https://pypi.org/project/wipac-dev-tools/"
     Tracker = "https://github.com/WIPACrepo/wipac-dev-tools/issues"
     Source = "https://github.com/WIPACrepo/wipac-dev-tools"
     
-    [tool.semantic_release]
-    version_toml = ["pyproject.toml:project.version"]
-    version_variables = ["wipac_dev_tools/__init__.py:__version__"] 
-    commit_parser = "emoji"
-    
-    [tool.semantic_release.commit_parser_options]
-    major_tags = ["[major]"]
-    minor_tags = ["[minor]", "[feature]"]
-    patch_tags = ["[patch]", "[fix]", " ", "!", "#", "$", "%", "&", "'", "(", ")", "*", "+", "-", ".", "/", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ":", ";", "<", "=", ">", "?", "@", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "[", "]", "^", "_", "`", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "{", "|", "}", "~"]
-    
-    [tool.setuptools.package-data]
-    "*" = ["py.typed"]
-    
     [tool.setuptools.packages.find]
     namespaces = false
     exclude = ["test", "tests", "doc", "docs", "resource", "resources", "example", "examples"]
+  
+    [tool.setuptools_scm]
     ```
 - `README.md` prepended with hyperlink-embedded badges:
-    + [![CircleCI](https://img.shields.io/circleci/build/github/WIPACrepo/wipac-dev-tools)](https://app.circleci.com/pipelines/github/WIPACrepo/wipac-dev-tools?branch=main&filter=all) [![PyPI](https://img.shields.io/pypi/v/wipac-dev-tools)](https://pypi.org/project/wipac-dev-tools/) [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/WIPACrepo/wipac-dev-tools?include_prereleases)](https://github.com/WIPACrepo/wipac-dev-tools/) [![Versions](https://img.shields.io/pypi/pyversions/wipac-dev-tools.svg)](https://pypi.org/project/wipac-dev-tools) [![PyPI - License](https://img.shields.io/pypi/l/wipac-dev-tools)](https://github.com/WIPACrepo/wipac-dev-tools/blob/main/LICENSE) [![GitHub issues](https://img.shields.io/github/issues/WIPACrepo/wipac-dev-tools)](https://github.com/WIPACrepo/wipac-dev-tools/issues?q=is%3Aissue+sort%3Aupdated-desc+is%3Aopen) [![GitHub pull requests](https://img.shields.io/github/issues-pr/WIPACrepo/wipac-dev-tools)](https://github.com/WIPACrepo/wipac-dev-tools/pulls?q=is%3Apr+sort%3Aupdated-desc+is%3Aopen)
-    + Note: The CircleCI badge is only auto-generated if the client repo uses CircleCI.
-
-#### Note on PyPI's Python Classifier "Development Status"
-
-This is determined by auto-detecting the package's current version. If (1) the git commit message is intending to
-trigger
-Semantic Release's version bumping action, (2) the `patch_without_tag` is not `False`, and (3) the new version will
-qualify for
-a new "Development Status", then that Status is used ahead of time.
+    + [![PyPI](https://img.shields.io/pypi/v/wipac-dev-tools)](https://pypi.org/project/wipac-dev-tools/) [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/WIPACrepo/wipac-dev-tools?include_prereleases)](https://github.com/WIPACrepo/wipac-dev-tools/) [![Versions](https://img.shields.io/pypi/pyversions/wipac-dev-tools.svg)](https://pypi.org/project/wipac-dev-tools) [![PyPI - License](https://img.shields.io/pypi/l/wipac-dev-tools)](https://github.com/WIPACrepo/wipac-dev-tools/blob/main/LICENSE) [![GitHub issues](https://img.shields.io/github/issues/WIPACrepo/wipac-dev-tools)](https://github.com/WIPACrepo/wipac-dev-tools/issues?q=is%3Aissue+sort%3Aupdated-desc+is%3Aopen) [![GitHub pull requests](https://img.shields.io/github/issues-pr/WIPACrepo/wipac-dev-tools)](https://github.com/WIPACrepo/wipac-dev-tools/pulls?q=is%3Apr+sort%3Aupdated-desc+is%3Aopen)
 
 ### Outputs for Non-PyPI Enabled Packages
 
@@ -153,39 +129,27 @@ The following is autogenerated for the absolute minimal input (see [inputs](#inp
 - `pyproject.toml` with all the original, non-conflicting sections *plus*:
   ```
     [build-system]
-    requires = ["setuptools>=61.0"]
+    requires = ["setuptools>=78.1", "setuptools-scm"]
     build-backend = "setuptools.build_meta"
     
     [project]
-    version = "1.2.3"
+    dynamic = ["version"]
     name = "wipac-dev-tools"
     requires-python = ">=3.8, <3.13"
-    
-    [tool.semantic_release]
-    version_toml = ["pyproject.toml:project.version"]
-    version_variables = ["wipac_dev_tools/__init__.py:__version__"]
-    commit_parser = "emoji"
-    
-    [tool.semantic_release.commit_parser_options]
-    major_tags = ["[major]"]
-    minor_tags = ["[minor]", "[feature]"]
-    patch_tags = ["[patch]", "[fix]", " ", "!", "#", "$", "%", "&", "'", "(", ")", "*", "+", "-", ".", "/", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ":", ";", "<", "=", ">", "?", "@", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "[", "]", "^", "_", "`", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "{", "|", "}", "~"]
-    
-    [tool.setuptools.package-data]
-    "*" = ["py.typed"]
     
     [tool.setuptools.packages.find]
     namespaces = false
     exclude = ["test", "tests", "doc", "docs", "resource", "resources", "example", "examples"]
+  
+    [tool.setuptools_scm]
     ```
 - `README.md` prepended with hyperlink-embedded badges (*note the lack of PyPI badges*):
-    + [![CircleCI](https://img.shields.io/circleci/build/github/WIPACrepo/wipac-dev-tools)](https://app.circleci.com/pipelines/github/WIPACrepo/wipac-dev-tools?branch=main&filter=all) [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/WIPACrepo/wipac-dev-tools?include_prereleases)](https://github.com/WIPACrepo/wipac-dev-tools/) [![GitHub issues](https://img.shields.io/github/issues/WIPACrepo/wipac-dev-tools)](https://github.com/WIPACrepo/wipac-dev-tools/issues?q=is%3Aissue+sort%3Aupdated-desc+is%3Aopen) [![GitHub pull requests](https://img.shields.io/github/issues-pr/WIPACrepo/wipac-dev-tools)](https://github.com/WIPACrepo/wipac-dev-tools/pulls?q=is%3Apr+sort%3Aupdated-desc+is%3Aopen)
-    + Note: The CircleCI badge is only auto-generated if the client repo uses CircleCI.
+    + [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/WIPACrepo/wipac-dev-tools?include_prereleases)](https://github.com/WIPACrepo/wipac-dev-tools/) [![GitHub issues](https://img.shields.io/github/issues/WIPACrepo/wipac-dev-tools)](https://github.com/WIPACrepo/wipac-dev-tools/issues?q=is%3Aissue+sort%3Aupdated-desc+is%3Aopen) [![GitHub pull requests](https://img.shields.io/github/issues-pr/WIPACrepo/wipac-dev-tools)](https://github.com/WIPACrepo/wipac-dev-tools/pulls?q=is%3Apr+sort%3Aupdated-desc+is%3Aopen)
 
 ## Example GitHub Action Workflow
 
-The [wipac-dev-tools](https://github.com/WIPACrepo/wipac-dev-tools/blob/main/.github/workflows/wipac-cicd.yml)
-repository ([PyPI package](https://pypi.org/project/wipac-dev-tools/)) uses the following GitHub Action
+The [WIPACrepo/wipac-dev-actions-testbed](https://github.com/WIPACrepo/wipac-dev-actions-testbed/blob/main/.github/workflows/cicd.yml)
+repository ([PyPI package](https://pypi.org/project/wipac-dev-actions-testbed/)) uses the following GitHub Action
 packages:
 
 1. [`WIPACrepo/wipac-dev-py-versions-action` _(source)_](https://github.com/WIPACrepo/wipac-dev-py-versions-action)
@@ -196,6 +160,9 @@ packages:
 1. [`WIPACrepo/wipac-dev-py-dependencies-action`  _(
    source)_](https://github.com/WIPACrepo/wipac-dev-py-dependencies-action)
     - This bumps the client package dependencies' versions in `dependencies.log` (and similar files)
-1. [`python-semantic-release/python-semantic-release` _(
-   source)_](https://python-semantic-release.readthedocs.io/en/latest/)
-    - This will make a new GitHub Release and a PyPI Release (if not disabled with `patch_without_tag = False`).
+1. [`WIPACrepo/wipac-dev-next-version-action`](https://github.com/WIPACrepo/wipac-dev-next-version-action)
+    - This determines the next semantic version for the repo
+1. [`WIPACrepo/wipac-dev-py-build-action`](https://github.com/WIPACrepo/wipac-dev-py-build-action)
+    - This builds the Python package using an injected semantic version (see above)
+2. `softprops/action-gh-release` and `pypa/gh-action-pypi-publish`
+    - These publish release builds to GitHub and PyPI, respectively

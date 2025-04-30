@@ -25,10 +25,6 @@ inputs:
     description: 'Name of the PyPI package'
     required: false
     default: ''
-  patch_without_tag:
-    description: 'Whether to make a patch release even if the commit message does not explicitly warrant one'
-    required: false
-    default: 'True'
   # OPTIONAL (meta)
   keywords_comma:
     description: 'Comma-delimited list of keywords (no quotes)'
@@ -45,7 +41,7 @@ inputs:
   auto_mypy_option:
     description: 'Whether to auto create/update the `mypy` install option plus its dependencies'
     required: false
-    default: 'False'
+    default: 'True'
   # OPTIONAL (git)
   git_committer_name:
     description: 'Name used for "git config user.name"'
@@ -65,13 +61,22 @@ runs:
         set -euo pipefail
         echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
         
+        # required inputs 
+        
         if [ -z "${{ inputs.python_min }}" ]; then
           echo "::error::required input not provided: python_min"
           exit 1
         fi
         
+        # deprecated inputs
+        
         if [ -n "${{ inputs.keywords }}" ]; then
           echo "::error::'keywords' input is deprecated: use 'keywords_comma'"
+          exit 1
+        fi
+        
+        if [ -n "${{ inputs.patch_without_tag }}" ]; then
+          echo "::error::'patch_without_tag' input is deprecated: use 'WIPACrepo/wipac-dev-next-version-action' ('force-patch-if-no-commit-token')"
           exit 1
         fi
       shell: bash
@@ -80,7 +85,7 @@ runs:
       with:
         python-version: '3.12'  # NOTE: update, someday.
 
-    - name: Is this most recent commit? It won't be if action was reran
+    - name: Is this most recent commit?
       run: |
         set -euo pipefail
         echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
@@ -114,9 +119,6 @@ runs:
             # add required fields
             echo "# WIPACrepo/wipac-dev-py-setup-action@v4+ Migration Helper:" >> pyproject.toml
             echo "" >> pyproject.toml
-            echo "# set these fields:" >> pyproject.toml
-            echo "[project]" >> pyproject.toml
-            echo "version = \"0.0.0\"" >> pyproject.toml
             # add most likely needed fields
             echo "dependencies = []  # leave empty if there are no dependencies" >> pyproject.toml
             echo "" >> pyproject.toml
@@ -153,6 +155,29 @@ runs:
         fi
       shell: bash
 
+    - name: Detect MIT License or fallback only if missing
+      if: env.IS_GIT_BEHIND != 'true'
+      run: |
+        set -euo pipefail
+        echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+
+        LICENSE_FILE="LICENSE"
+
+        if [[ -f "$LICENSE_FILE" ]]; then
+          if grep -iq "MIT License" "$LICENSE_FILE"; then
+            echo "LICENSE_SPDX_ID=MIT" >> $GITHUB_ENV
+            echo "LICENSE_FILE=$LICENSE_FILE" >> $GITHUB_ENV
+          else
+            echo "::error::LICENSE file found but does not contain 'MIT License'"
+            exit 1
+          fi
+        else  # NO FILE 
+          echo "::warning::LICENSE file not found — falling back to MIT"
+          echo "LICENSE_SPDX_ID=MIT" >> $GITHUB_ENV
+          echo "LICENSE_FILE=" >> $GITHUB_ENV
+        fi
+      shell: bash
+
     - name: Build pyproject.toml + README.md (and commit)
       if: env.IS_GIT_BEHIND != 'true'
       run: |
@@ -177,10 +202,11 @@ runs:
           --package-dirs ${{ inputs.package_dirs }} \
           --exclude-dirs ${{ inputs.exclude_dirs }} \
           --pypi-name "${{ inputs.pypi_name }}" \
-          --patch-without-tag "${{ inputs.patch_without_tag }}" \
           --keywords "${{ inputs.keywords_comma }}" \
           --author "${{ inputs.author }}" \
           --author-email "${{ inputs.author_email }}" \
+          --license-spdx-id "$LICENSE_SPDX_ID" \
+          --license-file "$LICENSE_FILE" \
           --auto-mypy-option "${{ inputs.auto_mypy_option }}"
         set +x
         

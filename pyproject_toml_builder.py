@@ -9,7 +9,6 @@ import itertools
 import logging
 import os
 import re
-import subprocess
 from pathlib import Path
 from typing import Any, cast
 
@@ -32,24 +31,6 @@ REAMDE_BADGES_END_DELIMITER = "<!--- End of README Badges (automated) --->"
 
 LOGGER = logging.getLogger("setup-builder")
 
-SEMANTIC_RELEASE_MAJOR = ["[major]"]
-SEMANTIC_RELEASE_MINOR = ["[minor]", "[feature]"]
-SEMANTIC_RELEASE_PATCH = ["[patch]", "[fix]"]
-PATCH_WITHOUT_TAG_WORKAROUND = [
-    chr(i)
-    for i in range(32, 127)
-    if chr(i) not in ['"', ",", "\\"]  # else upsets toml syntax
-]
-
-DEV_STATUS_PREALPHA_0_0_0 = "Development Status :: 2 - Pre-Alpha"
-DEV_STATUS_ALPHA_0_0_Z = "Development Status :: 3 - Alpha"
-DEV_STATUS_BETA_0_Y_Z = "Development Status :: 4 - Beta"
-DEV_STATUS_PROD_X_Y_Z = "Development Status :: 5 - Production/Stable"
-
-# https://stackoverflow.com/a/71126828/13156561
-DYNAMIC_DUNDER_VERSION = (
-    "__version__ = importlib_metadata.version(__package__ or __name__)"
-)
 
 PythonMinMax = tuple[tuple[int, int], tuple[int, int]]
 
@@ -98,11 +79,14 @@ class GHAInput:
     )
     # OPTIONAL (releases)
     pypi_name: str = ""
-    patch_without_tag: bool = True
     # OPTIONAL (meta)
     keywords: list[str] = dataclasses.field(default_factory=list)
     author: str = ""
     author_email: str = ""
+
+    # OPTIONAL (license)
+    license_spdx_id: str = ""
+    license_file: str = ""
 
     auto_mypy_option: bool = False
 
@@ -154,7 +138,6 @@ class FromFiles:
         self,
         root: Path,
         gha_input: GHAInput,
-        commit_message: str,
     ) -> None:
         if not os.path.exists(root):
             raise NotADirectoryError(root)
@@ -163,6 +146,8 @@ class FromFiles:
         self._pkg_paths = self._get_package_paths(self.gha_input.exclude_dirs)
         self.packages = [p.name for p in self._pkg_paths]
         self.readme_path = self._get_readme_path()
+
+        self.check_no_version_dunders()  # do now so we don't forget to
 
     def _get_package_paths(self, dirs_exclude: list[str]) -> list[Path]:
         """Find the package path(s)."""
@@ -202,112 +187,22 @@ class FromFiles:
                 )
             return [self.root / available_pkgs[0]]
 
+    def check_no_version_dunders(self) -> None:
+        """Check that no modules' __init__.py define a __version__ attribute."""
+        for pkg in self._pkg_paths:
+            with open(pkg / "__init__.py") as f:
+                for line in f:
+                    if "__version__" in line and "=" in line:
+                        raise Exception(
+                            f"Module ({pkg.name}) '__init__.py' must not define '__version__'."
+                        )
+
     def _get_readme_path(self) -> Path:
         """Return the 'README' file and its extension."""
         for fname in self.root.iterdir():
             if fname.stem == "README":
                 return Path(fname)
         raise FileNotFoundError(f"No README file found in '{self.root}'")
-
-    def get_dunder_version_inits(self, version_from_toml: str) -> list[str]:
-        """Get the __init__.py file(s) that have a `__version__` string.
-
-        Also, check if the retrieved `__version__` strings are equivalent.
-
-        `__version__` needs to be parsed as plain text due to potential
-        race condition, see:
-        https://stackoverflow.com/a/2073599/13156561
-        """
-
-        def get_init_version(ppath: Path) -> tuple[Path, str | None]:
-            with open(ppath / "__init__.py") as f:
-                for line in f.readlines():
-                    if line.startswith("__version__ ="):
-                        # grab "X.Y.Z" from `__version__ = 'X.Y.Z'`
-                        # or     foo() from `__version__ = foo()`
-                        # - quote-style insensitive
-                        if m := re.match(
-                            r"^__version__ = [\"\'](?P<version>\w+\.\w+\.\w+)[\"\']",
-                            line,
-                        ):
-                            return Path(f.name), m.group("version")
-                        else:
-                            raise Exception(
-                                f"'__version__' must be in the semantic version format: "
-                                f"{ppath.name}/__init__.py -> '{line.strip()}'"
-                            )
-                return Path(f.name), None
-
-        fpath_versions = dict(get_init_version(p) for p in self._pkg_paths)
-        fpath_versions = {k: v for k, v in fpath_versions.items() if v is not None}
-
-        if init_versions := set(fpath_versions.values()):
-            if len(init_versions) != 1:
-                raise Exception(f"Version mismatch between packages: {fpath_versions}")
-            if version_from_toml != list(init_versions)[0]:
-                raise Exception(
-                    f"Version mismatch between package(s) ({list(init_versions)[0]}) "
-                    f"and pyproject.toml's 'project.version' ({version_from_toml})"
-                )
-
-        return [str(p.relative_to(self.root)) for p in fpath_versions.keys()]
-
-
-def get_development_status(
-    version: str,
-    patch_without_tag: bool,
-    commit_message: str,
-) -> str:
-    """Detect the development status from the package's version.
-
-    Known Statuses (**not all are supported**):
-        `"Development Status :: 1 - Planning"`
-        `"Development Status :: 2 - Pre-Alpha"`
-        `"Development Status :: 3 - Alpha"`
-        `"Development Status :: 4 - Beta"`
-        `"Development Status :: 5 - Production/Stable"`
-        `"Development Status :: 6 - Mature"`
-        `"Development Status :: 7 - Inactive"`
-    """
-
-    # detect version threshold crossing
-    pending_major_bump = any(k in commit_message for k in SEMANTIC_RELEASE_MAJOR)
-    pending_minor_bump = any(k in commit_message for k in SEMANTIC_RELEASE_MINOR)
-    pending_patch_bump = patch_without_tag or any(
-        k in commit_message for k in SEMANTIC_RELEASE_PATCH
-    )
-
-    # NOTE - if someday we abandon python-semantic-release, this is a starting place to detect the next version -- in this case, we'd change the version number before merging to main
-
-    if version == "0.0.0":
-        if pending_major_bump:
-            return DEV_STATUS_PROD_X_Y_Z  # MAJOR-BUMPPING STRAIGHT TO PROD
-        elif pending_minor_bump:
-            return DEV_STATUS_BETA_0_Y_Z  # MINOR-BUMPPING STRAIGHT TO BETA
-        elif pending_patch_bump:
-            return DEV_STATUS_ALPHA_0_0_Z  # PATCH-BUMPPING STRAIGHT TO ALPHA
-        else:
-            return DEV_STATUS_PREALPHA_0_0_0  # staying at pre-alpha
-
-    elif version.startswith("0.0."):
-        if pending_major_bump:
-            return DEV_STATUS_PROD_X_Y_Z  # MAJOR-BUMPPING STRAIGHT TO PROD
-        elif pending_minor_bump:
-            return DEV_STATUS_BETA_0_Y_Z  # MINOR-BUMPPING STRAIGHT TO BETA
-        else:
-            return DEV_STATUS_ALPHA_0_0_Z  # staying at alpha
-
-    elif version.startswith("0."):
-        if pending_major_bump:
-            return DEV_STATUS_PROD_X_Y_Z  # MAJOR-BUMPPING STRAIGHT TO PROD
-        else:
-            return DEV_STATUS_BETA_0_Y_Z  # staying at beta
-
-    elif int(version.split(".")[0]) >= 1:
-        return DEV_STATUS_PROD_X_Y_Z
-
-    else:
-        raise Exception(f"Could not figure 'Development Status' for version: {version}")
 
 
 class READMEMarkdownManager:
@@ -347,11 +242,6 @@ class READMEMarkdownManager:
     def badges_lines(self) -> list[str]:
         """Create and return the lines used to append to a README.md containing various linked-badges."""
         badges_line = ""
-
-        # CircleCI badge
-        if os.path.exists(f"{self.ffile.root}/.circleci/config.yml"):
-            circleci = f"https://app.circleci.com/pipelines/github/{self.github_full_repo}?branch={self.gh_api.default_branch}&filter=all"
-            badges_line += f"[![CircleCI](https://img.shields.io/circleci/build/github/{self.github_full_repo})]({circleci}) "
 
         # PyPI badge
         if self.bsec.pypi_name:
@@ -399,20 +289,18 @@ class PyProjectTomlBuilder:
         root_path: Path,
         github_full_repo: str,
         token: str,
-        commit_message: str,
         gha_input: GHAInput,
     ):
         ffile = FromFiles(  # things requiring reading files
             root_path,
             gha_input,
-            commit_message,
         )
         gh_api = GitHubAPI(github_full_repo, oauth_token=token)
         self._validate_repo_initial_state(toml_dict)
 
         # [build-system]
         toml_dict["build-system"] = {
-            "requires": ["setuptools>=61.0"],
+            "requires": ["setuptools>=78.1", "setuptools-scm"],
             "build-backend": "setuptools.build_meta",
         }
 
@@ -438,6 +326,7 @@ class PyProjectTomlBuilder:
         else:
             toml_dict["project"].update(
                 {
+                    "dynamic": ["version"],  # for 'setuptools-scm'
                     "name": gha_input.pypi_name,
                     "authors": [
                         {
@@ -447,18 +336,12 @@ class PyProjectTomlBuilder:
                     ],
                     "description": gh_api.description,
                     "readme": ffile.readme_path.name,
-                    "license": {"file": "LICENSE"},
-                    "keywords": gha_input.keywords,
-                    "classifiers": (
-                        [
-                            get_development_status(
-                                toml_dict["project"]["version"],
-                                gha_input.patch_without_tag,
-                                commit_message,
-                            )
-                        ]
-                        + gha_input.python_classifiers()
+                    "license": gha_input.license_spdx_id,
+                    "license-files": (
+                        [gha_input.license_file] if gha_input.license_file else []
                     ),
+                    "keywords": gha_input.keywords,
+                    "classifiers": gha_input.python_classifiers(),
                     "requires-python": gha_input.get_requires_python(),
                 }
             )
@@ -472,30 +355,6 @@ class PyProjectTomlBuilder:
         # [tool]
         if not toml_dict.get("tool"):
             toml_dict["tool"] = {}
-
-        # [tool.semantic_release] -- will be completely overridden
-        toml_dict["tool"]["semantic_release"] = {
-            "version_toml": ["pyproject.toml:project.version"],
-            # "wipac_dev_tools/__init__.py:__version__"
-            # "wipac_dev_tools/__init__.py:__version__,wipac_foo_tools/__init__.py:__version__"
-            "version_variables": [
-                f"{p}:__version__"
-                for p in ffile.get_dunder_version_inits(toml_dict["project"]["version"])
-            ],
-            # the emoji parser is the simplest parser and does not require angular-style commits
-            "commit_parser": "emoji",
-            "commit_parser_options": {
-                "major_tags": SEMANTIC_RELEASE_MAJOR,
-                "minor_tags": SEMANTIC_RELEASE_MINOR,
-                "patch_tags": (
-                    SEMANTIC_RELEASE_PATCH
-                    if not gha_input.patch_without_tag
-                    else SEMANTIC_RELEASE_PATCH + sorted(PATCH_WITHOUT_TAG_WORKAROUND)
-                ),
-            },
-            # this is required fo the package to be pushed to pypi (by the pypa GHA)
-            "build_command": "pip install build && python -m build",
-        }
 
         # [tool.setuptools]
         if not toml_dict["tool"].get("setuptools"):
@@ -512,6 +371,10 @@ class PyProjectTomlBuilder:
             }
         )
 
+        # [tool.setuptools_scm] -- an empty section is the bare minimum
+        if not toml_dict["tool"].get("setuptools_scm"):
+            toml_dict["tool"]["setuptools_scm"] = {}
+
         # [project.optional-dependencies][mypy]
         if gha_input.auto_mypy_option:
             try:
@@ -527,7 +390,10 @@ class PyProjectTomlBuilder:
                     )
                 )
             except KeyError:
-                pass  # there are no [project.optional-dependencies]
+                # there are no [project.optional-dependencies]
+                # -> this is okay, it means that `WIPACrepo/wipac-dev-mypy-action` will
+                #    just run w/ 'pip install .'
+                pass
 
         # Automate some README stuff
         self.readme_mgr: READMEMarkdownManager | None
@@ -540,11 +406,12 @@ class PyProjectTomlBuilder:
 
     @staticmethod
     def _validate_repo_initial_state(toml_dict: TOMLDocumentIsh) -> None:
+        # must *not* have these fields...
+        if toml_dict.get("project", {}).get("version", None):
+            raise Exception("pyproject.toml must NOT define 'project.version'")
+
         # must have these fields...
-        try:
-            toml_dict["project"]["version"]
-        except KeyError:
-            raise Exception("pyproject.toml must have 'project.version'")
+        # <none>
 
     @staticmethod
     def _tool_setuptools_packages_find(gha_input: GHAInput) -> dict[str, Any]:
@@ -598,7 +465,6 @@ def write_toml(
     toml_file: Path,
     github_full_repo: str,
     token: str,
-    commit_message: str,
     gha_input: GHAInput,
 ) -> READMEMarkdownManager | None:
     """Build/write the `pyproject.toml` sections according to `BUILDER_SECTION_NAME`.
@@ -617,7 +483,6 @@ def write_toml(
         toml_file.parent,
         github_full_repo,
         token,
-        commit_message,
         gha_input,
     )
 
@@ -640,7 +505,6 @@ def work(
     toml_file: Path,
     github_full_repo: str,
     token: str,
-    commit_message: str,
     gha_input: GHAInput,
 ) -> None:
     """Build & write the pyproject.toml. Write the readme if necessary."""
@@ -648,7 +512,6 @@ def work(
         toml_file,
         github_full_repo,
         token,
-        commit_message,
         gha_input,
     )
 
@@ -736,12 +599,6 @@ def main() -> None:
         default="",
         help="Name of the PyPI package",
     )
-    parser.add_argument(
-        "--patch-without-tag",
-        type=strtobool,
-        default=True,
-        help="Whether to make a patch release even if the commit message does not explicitly warrant one",
-    )
     # OPTIONAL (meta)
     parser.add_argument(
         "--keywords",
@@ -762,10 +619,16 @@ def main() -> None:
         help="Email of the package author (required if the package is intended to be hosted on PyPI)",
     )
     parser.add_argument(
-        "--license",
+        "--license-spdx-id",
         type=str,
         default="",
-        help="Repository's license type",
+        help="Repository's license SPDX ID",
+    )
+    parser.add_argument(
+        "--license-file",
+        type=str,
+        default="",
+        help="Repository's license file",
     )
     parser.add_argument(
         "--auto-mypy-option",
@@ -787,18 +650,10 @@ def main() -> None:
     )
     LOGGER.info(gha_input)
 
-    commit_message = (  # retrieving this in bash is messy since the string can include any character
-        subprocess.check_output("git log -1 --pretty=%B".split())
-        .decode("utf-8")
-        .strip()
-    )
-    LOGGER.info(f"{commit_message=}")
-
     work(
         args.toml,
         args.github_full_repo,
         args.token,
-        commit_message,
         gha_input,
     )
 
