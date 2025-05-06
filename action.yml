@@ -58,8 +58,8 @@ runs:
   steps:
     - name: check required inputs
       run: |
-        set -euo pipefail
-        echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        # step: check required inputs
+        set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
         
         # required inputs 
         
@@ -87,8 +87,8 @@ runs:
 
     - name: Is this most recent commit?
       run: |
-        set -euo pipefail
-        echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        # step: Is this most recent commit?
+        set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
         
         git fetch &> /dev/null
         if [[ $(git status -sb | grep behind) ]]; then
@@ -100,8 +100,8 @@ runs:
     - name: Git config
       if: env.IS_GIT_BEHIND != 'true'
       run: |
-        set -euo pipefail
-        echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        # step: Git config
+        set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
         git config user.name ${{ inputs.git_committer_name }}
         git config user.email ${{ inputs.git_committer_email }}
       shell: bash
@@ -109,8 +109,8 @@ runs:
     - name: Check pyproject.toml for project migration
       if: env.IS_GIT_BEHIND != 'true'
       run: |
-        set -euo pipefail
-        echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        # step: Check pyproject.toml for project migration
+        set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
         
         # if needed: auto-create a minimal pyproject.toml
         if [[ ! -f pyproject.toml ]]; then
@@ -158,8 +158,8 @@ runs:
     - name: Detect MIT License or fallback only if missing
       if: env.IS_GIT_BEHIND != 'true'
       run: |
-        set -euo pipefail
-        echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        # step: Detect MIT License or fallback only if missing
+        set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
 
         LICENSE_FILE="LICENSE"
 
@@ -181,8 +181,8 @@ runs:
     - name: Build pyproject.toml + README.md (and commit)
       if: env.IS_GIT_BEHIND != 'true'
       run: |
-        set -euo pipefail
-        echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        # step: Build pyproject.toml + README.md (and commit)
+        set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
         
         set -e
         sudo apt-get update
@@ -228,8 +228,8 @@ runs:
     - name: Add py.typed file(s) (and commit)
       if: env.IS_GIT_BEHIND != 'true'
       run: |
-        set -euo pipefail
-        echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        # step: Add py.typed file(s) (and commit)
+        set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
         
         python -c '
         import os, sys
@@ -251,8 +251,8 @@ runs:
     - name: Push changes
       if: env.IS_GIT_BEHIND != 'true'
       run: |
-        set -euo pipefail
-        echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        # step: Push changes
+        set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
         
         status=`git status 2>&1 | tee`
         ahead=`echo -n "${status}" 2> /dev/null | grep "Your branch is ahead of" &> /dev/null; echo "$?"`

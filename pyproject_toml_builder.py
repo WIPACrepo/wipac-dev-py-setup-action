@@ -494,6 +494,10 @@ def write_toml(
     for key in optional_deps:
         set_multiline_array(optional_deps, key, sort=True)
 
+    # remove sections that used to be auto-added but are now not needed
+    # -> [tool.semantic_release], [tool.semantic_release.commit_parser_options]
+    toml_dict["tool"].pop("semantic_release")
+
     # all done--write it!
     with open(toml_file, "w") as f:
         tomlkit.dump(toml_dict, f)
