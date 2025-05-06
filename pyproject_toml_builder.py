@@ -496,7 +496,7 @@ def write_toml(
 
     # remove sections that used to be auto-added but are now not needed
     # -> [tool.semantic_release], [tool.semantic_release.commit_parser_options]
-    toml_dict["tool"].pop("semantic_release", None)
+    toml_dict["tool"].pop("semantic_release", None)  # type: ignore[union-attr]
 
     # all done--write it!
     with open(toml_file, "w") as f:
