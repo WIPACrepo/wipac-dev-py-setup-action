@@ -95,7 +95,7 @@ VANILLA_PROJECT_KEYVALS_OUT = {
 NO_PYPI_VANILLA_PROJECT_KEYVALS_OUT = {  # even MORE vanilla than vanilla
     k: v
     for k, v in VANILLA_PROJECT_KEYVALS_OUT.items()
-    if k in ["dependencies", "optional-dependencies", "requires-python"]
+    if k in ["dependencies", "optional-dependencies", "requires-python", "dynamic"]
 }
 
 
