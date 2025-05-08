@@ -305,6 +305,11 @@ class PyProjectTomlBuilder:
         }
 
         # [project]
+        toml_dict["project"].update(
+            {
+                "dynamic": ["version"],  # for 'setuptools-scm'
+            }
+        )
         # if we DON'T want PyPI stuff:
         if not gha_input.pypi_name:
             toml_dict["project"]["name"] = "_".join(ffile.packages).replace("_", "-")
@@ -326,7 +331,6 @@ class PyProjectTomlBuilder:
         else:
             toml_dict["project"].update(
                 {
-                    "dynamic": ["version"],  # for 'setuptools-scm'
                     "name": gha_input.pypi_name,
                     "authors": [
                         {
@@ -606,7 +610,7 @@ def main() -> None:
     # OPTIONAL (meta)
     parser.add_argument(
         "--keywords",
-        type=lambda x: [k.strip() for k in x.split(",")],
+        type=lambda x: [k.strip() for k in x.split(",") if k.strip()],
         default=[],
         help="keywords",
     )

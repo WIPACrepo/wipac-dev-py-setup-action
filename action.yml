@@ -120,6 +120,7 @@ runs:
             echo "# WIPACrepo/wipac-dev-py-setup-action@v4+ Migration Helper:" >> pyproject.toml
             echo "" >> pyproject.toml
             # add most likely needed fields
+            echo "[project]" >> pyproject.toml
             echo "dependencies = []  # leave empty if there are no dependencies" >> pyproject.toml
             echo "" >> pyproject.toml
             echo "# optional sections:" >> pyproject.toml
