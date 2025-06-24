@@ -100,6 +100,7 @@ class GHAInput:
                     "'mode' is 'PACKAGING_AND_PYPI'"
                 )
         if self.pypi_name and self.mode != "PACKAGING_AND_PYPI":
+            # note: the other values are okay to provide when not in pypi mode
             raise Exception(
                 f"'pypi_name' cannot be defined when 'mode' is not 'PACKAGING_AND_PYPI' "
                 f"(current mode: {self.mode})"
