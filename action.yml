@@ -3,6 +3,12 @@ description: 'GitHub Action Package for Automating Python-Package Setup'
 
 inputs:
   # REQUIRED
+  mode:
+    description: |
+      The mode to use:
+        PACKAGING           - setup packaging files, metadata, etc. for the project 
+        PACKAGING_AND_PYPI  - PACKAGING, plus additional metadata for publishing to PyPI
+    required: true  # needs to be explicitly checked
   python_min:
     description: 'Minimum required Python version'
     required: true  # needs to be explicitly checked
@@ -63,6 +69,10 @@ runs:
         
         # required inputs 
         
+        if [ -z "${{ inputs.mode }}" ]; then
+          echo "::error::required input not provided: mode"
+          exit 1
+        fi
         if [ -z "${{ inputs.python_min }}" ]; then
           echo "::error::required input not provided: python_min"
           exit 1

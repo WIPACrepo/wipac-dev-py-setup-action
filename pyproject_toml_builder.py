@@ -10,7 +10,7 @@ import logging
 import os
 import re
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 import requests
 import tomlkit
@@ -57,6 +57,7 @@ class GHAInput:
     """The inputs passed from the client GitHub Action."""
 
     # REQUIRED
+    mode: Literal["PACKAGING", "PACKAGING_AND_PYPI"]
     python_min: tuple[int, int]
 
     # OPTIONAL (python)
@@ -92,11 +93,11 @@ class GHAInput:
 
     def __post_init__(self) -> None:
         # pypi-related metadata
-        if self.pypi_name:
-            if not self.keywords or not self.author or not self.author_email:
+        if self.mode == "PACKAGING_AND_PYPI":
+            if not all([self.pypi_name, self.keywords, self.author, self.author_email]):
                 raise Exception(
-                    "'keywords', 'author', and 'author_email' must be provided when "
-                    "'pypi_name' is `True`"
+                    "'pypi_name', 'keywords', 'author', and 'author_email' must be provided when "
+                    "'mode' is 'PACKAGING_AND_PYPI'"
                 )
 
         # validate python min/max
@@ -310,8 +311,8 @@ class PyProjectTomlBuilder:
                 "dynamic": ["version"],  # for 'setuptools-scm'
             }
         )
-        # if we DON'T want PyPI stuff:
-        if not gha_input.pypi_name:
+        # if we only want packaging stuff:
+        if gha_input.mode == "PACKAGING":
             toml_dict["project"]["name"] = "_".join(ffile.packages).replace("_", "-")
             toml_dict["project"]["requires-python"] = gha_input.get_requires_python()
             # add the following if they were given:
@@ -328,7 +329,7 @@ class PyProjectTomlBuilder:
             if gha_input.keywords:
                 toml_dict["project"]["keywords"] = gha_input.keywords
         # if we DO want PyPI, then include everything:
-        else:
+        elif gha_input.mode == "PACKAGING_AND_PYPI":
             toml_dict["project"].update(
                 {
                     "name": gha_input.pypi_name,
@@ -355,6 +356,8 @@ class PyProjectTomlBuilder:
                 "Tracker": f"{gh_api.url}/issues",
                 "Source": gh_api.url,
             }
+        else:
+            raise RuntimeError(f"Unknown mode: {gha_input.mode}")
 
         # [tool]
         if not toml_dict.get("tool"):
