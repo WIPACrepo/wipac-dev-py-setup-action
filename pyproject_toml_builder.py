@@ -99,6 +99,11 @@ class GHAInput:
                     "'pypi_name', 'keywords', 'author', and 'author_email' must be provided when "
                     "'mode' is 'PACKAGING_AND_PYPI'"
                 )
+        if self.pypi_name and self.mode != "PACKAGING_AND_PYPI":
+            raise Exception(
+                f"'pypi_name' cannot be defined when 'mode' is not 'PACKAGING_AND_PYPI' "
+                f"(current mode: {self.mode})"
+            )
 
         # validate python min/max
         for major, attr_name in [
