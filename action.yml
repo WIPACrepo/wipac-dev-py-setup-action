@@ -67,7 +67,9 @@ runs:
         # step: check required inputs
         set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
         
-        # required inputs 
+        #
+        # required inputs
+        #
         
         if [ -z "${{ inputs.mode }}" ]; then
           echo "::error::required input not provided: mode"
@@ -78,7 +80,9 @@ runs:
           exit 1
         fi
         
+        #
         # deprecated inputs
+        #
         
         if [ -n "${{ inputs.keywords }}" ]; then
           echo "::error::'keywords' input is deprecated: use 'keywords_comma'"
@@ -89,6 +93,41 @@ runs:
           echo "::error::'patch_without_tag' input is deprecated: use 'WIPACrepo/wipac-dev-next-version-action' ('force-patch-if-no-commit-token')"
           exit 1
         fi
+      shell: bash
+
+    - name: validate inputs -- simple
+      run: |
+        # step: validate inputs -- simple
+        set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        
+        #
+        # python_min & python_max
+        #
+        
+        check_pyversion_post_yamlfication() {
+          # YAML interprets e.g. 3.10 as 3.1 -- which is (or should be) never intended
+          local name="$1"
+          local value="$2"
+
+          case "$value" in
+            "3.1")
+              echo "::error title=Unquoted ${name}::You probably meant '3.10' but YAML parsed it as '3.1'. Quote it as \"3.10\""
+              exit 1
+              ;;
+            "3.2")
+              echo "::error title=Unquoted ${name}::You probably meant '3.20' but YAML parsed it as '3.2'. Quote it as \"3.20\""
+              exit 1
+              ;;
+            # FUTURE DEV: add more versions as needed
+          esac
+        }
+
+        check_pyversion_post_yamlfication "python_min" "${{ inputs.python_min }}"
+
+        if [ -n "${{ inputs.python_max }}" ]; then
+          check_pyversion_post_yamlfication "python_max" "${{ inputs.python_max }}"
+        fi
+
       shell: bash
 
     - uses: actions/setup-python@v4
