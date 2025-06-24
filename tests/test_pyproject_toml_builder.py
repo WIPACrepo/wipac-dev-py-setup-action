@@ -232,6 +232,7 @@ def test_00_minimum_input(directory: Path, requests_mock: Any) -> None:
 
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
+        mode="PACKAGING",
         python_min=(3, 6),
         license_spdx_id="MIT",
         license_file="MY_LICENSE",
@@ -277,6 +278,7 @@ def test_01_minimum_input_w_pypi(directory: Path, requests_mock: Any) -> None:
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
+        mode="PACKAGING_AND_PYPI",
         python_min=(3, 6),
         license_spdx_id="MIT",
         license_file="MY_LICENSE",
@@ -335,6 +337,7 @@ def test_10_keywords(directory: Path, requests_mock: Any) -> None:
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
+        mode="PACKAGING_AND_PYPI",
         python_min=(3, 6),
         license_spdx_id="MIT",
         license_file="MY_LICENSE",
@@ -413,6 +416,7 @@ def test_20_python_max(directory: Path, requests_mock: Any) -> None:
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
+        mode="PACKAGING_AND_PYPI",
         python_min=(3, 6),
         license_spdx_id="MIT",
         license_file="MY_LICENSE",
@@ -487,6 +491,7 @@ def test_30_package_dirs__single(directory: Path, requests_mock: Any) -> None:
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
+        mode="PACKAGING_AND_PYPI",
         python_min=(3, 6),
         license_spdx_id="MIT",
         license_file="MY_LICENSE",
@@ -569,6 +574,7 @@ def test_34_package_dirs__multi_autoname__no_pypi(
 
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
+        mode="PACKAGING",
         python_min=(3, 6),
         license_spdx_id="MIT",
         license_file="MY_LICENSE",
@@ -653,6 +659,7 @@ def test_35_package_dirs__multi(directory: Path, requests_mock: Any) -> None:
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
+        mode="PACKAGING_AND_PYPI",
         python_min=(3, 6),
         license_spdx_id="MIT",
         license_file="MY_LICENSE",
@@ -747,6 +754,7 @@ def test_36_package_dirs__multi_missing_init__error(
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
+        mode="PACKAGING_AND_PYPI",
         python_min=(3, 6),
         license_spdx_id="MIT",
         license_file="MY_LICENSE",
@@ -800,6 +808,7 @@ def test_40_extra_stuff(directory: Path, requests_mock: Any) -> None:
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
+        mode="PACKAGING_AND_PYPI",
         python_min=(3, 6),
         license_spdx_id="MIT",
         license_file="MY_LICENSE",
@@ -888,6 +897,7 @@ def test_60_defined_project_version__error(directory: Path, requests_mock: Any) 
 
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
+        mode="PACKAGING",
         python_min=(3, 6),
         license_spdx_id="MIT",
         license_file="MY_LICENSE",
@@ -920,6 +930,7 @@ def test_70_defined_init_version__error(directory: Path, requests_mock: Any) -> 
 
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
+        mode="PACKAGING",
         python_min=(3, 6),
         license_spdx_id="MIT",
         license_file="MY_LICENSE",
@@ -955,6 +966,7 @@ def test_80_auto_mypy_option(directory: Path, requests_mock: Any) -> None:
     pyproject_toml_path = directory / "pyproject.toml"
 
     gha_input = pyproject_toml_builder.GHAInput(
+        mode="PACKAGING",
         python_min=(3, 6),
         license_spdx_id="MIT",
         license_file="MY_LICENSE",

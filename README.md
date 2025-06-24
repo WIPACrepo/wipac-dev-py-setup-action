@@ -50,6 +50,7 @@ In order to use the action, a few files need to have the following:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       - uses: WIPACrepo/wipac-dev-py-setup-action@v5.#
         with:
+          mode: ...
           python_min: ...
           ...
 ```
@@ -63,29 +64,49 @@ still* trigger GH workflows. The token needs "repo" permissions.
 
 The following are inputted to the GitHub Action package in its `with` block:
 
-| Input                 | Description                                                                                              | Required                           | Default                                                                |
-|-----------------------|----------------------------------------------------------------------------------------------------------|------------------------------------|------------------------------------------------------------------------|
-| `python_min`          | Minimum required Python version                                                                          | **True**                           | -                                                                      |
-| `keywords_comma`      | A comma-delimited string of strings, like "WIPAC, python tools, utilities"                               | _required if `pypi_name` is given_ | N/A                                                                    |
-| `author`              | Author of the package                                                                                    | _required if `pypi_name` is given_ | N/A                                                                    |
-| `author_email`        | Email of the package's author                                                                            | _required if `pypi_name` is given_ | N/A                                                                    |
-| `pypi_name`           | Name of the PyPI package                                                                                 | False                              | N/A -- not providing this will bypass generating PyPI-related metadata |
-| `python_max`          | Maximum supported Python version                                                                         | False                              | the most recent Python release                                         |
-| `package_dirs`        | Space-separated list of directories to package                                                           | False                              | All packages in the repository's root directory                        |
-| `exclude_dirs`        | Space-separated list of directories to exclude from release, relative to the repository's root directory | False                              | `test tests doc docs resource resources example examples`              |
-| `git_committer_name`  | Name used for `git config user.name`                                                                     | False                              | `github-actions`                                                       |
-| `git_committer_email` | Email used for `git config user.email`                                                                   | False                              | `github-actions@github.com`                                            |
+| Input                 | Description                                                                                                                                                                                                          | Required                           | Default                                                                |
+|-----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------|------------------------------------------------------------------------|
+| `mode`                | The mode corresponding to what to do:<br>-`PACKAGING`: setup packaging files, metadata, etc. for the project<br>-`PACKAGING_AND_PYPI`: everything in `PACKAGING`, plus additional metadata needed to publish to PyPI | **True**                           | -                                                                      |
+| `python_min`          | Minimum required Python version                                                                                                                                                                                      | **True**                           | -                                                                      |
+| `keywords_comma`      | A comma-delimited string of strings, like "WIPAC, python tools, utilities"                                                                                                                                           | _required if `pypi_name` is given_ | N/A                                                                    |
+| `author`              | Author of the package                                                                                                                                                                                                | _required if `pypi_name` is given_ | N/A                                                                    |
+| `author_email`        | Email of the package's author                                                                                                                                                                                        | _required if `pypi_name` is given_ | N/A                                                                    |
+| `pypi_name`           | Name of the PyPI package (relevant if `mode=PACKAGING_AND_PYPI`)                                                                                                                                                     | False                              | N/A -- not providing this will bypass generating PyPI-related metadata |
+| `python_max`          | Maximum supported Python version                                                                                                                                                                                     | False                              | the most recent Python release                                         |
+| `package_dirs`        | Space-separated list of directories to package                                                                                                                                                                       | False                              | All packages in the repository's root directory                        |
+| `exclude_dirs`        | Space-separated list of directories to exclude from release, relative to the repository's root directory                                                                                                             | False                              | `test tests doc docs resource resources example examples`              |
+| `git_committer_name`  | Name used for `git config user.name`                                                                                                                                                                                 | False                              | `github-actions`                                                       |
+| `git_committer_email` | Email used for `git config user.email`                                                                                                                                                                               | False                              | `github-actions@github.com`                                            |
 
 ## Configuration Modes
 
-There are several [input attributes](#inputs). However, these broadly can be grouped into two subsets, or two "modes":
-[PyPI enabled](#outputs-for-pypi-enabled-packages)
-and [non-PyPI enabled](#outputs-for-non-pypi-enabled-packages).
+### `mode=PACKAGING`: Outputs for Non-PyPI Enabled Packages
 
-### Outputs for PyPI-Enabled Packages
+The following is autogenerated for the absolute minimal input (see [inputs](#inputs)):
 
-When the `pypi_name` input is `True` and other relevant inputs are given (see [inputs](#inputs)), the following is
-autogenerated:
+- `pyproject.toml` with all the original, non-conflicting sections *plus*:
+  ```
+    [build-system]
+    requires = ["setuptools>=78.1", "setuptools-scm"]
+    build-backend = "setuptools.build_meta"
+    
+    [project]
+    dynamic = ["version"]
+    name = "wipac-dev-tools"
+    requires-python = ">=3.8, <3.13"
+    
+    [tool.setuptools.packages.find]
+    namespaces = false
+    exclude = ["test", "tests", "doc", "docs", "resource", "resources", "example", "examples"]
+  
+    [tool.setuptools_scm]
+    ```
+- `README.md` prepended with hyperlink-embedded badges (*note the lack of PyPI badges*):
+    + [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/WIPACrepo/wipac-dev-tools?include_prereleases)](https://github.com/WIPACrepo/wipac-dev-tools/) [![GitHub issues](https://img.shields.io/github/issues/WIPACrepo/wipac-dev-tools)](https://github.com/WIPACrepo/wipac-dev-tools/issues?q=is%3Aissue+sort%3Aupdated-desc+is%3Aopen) [![GitHub pull requests](https://img.shields.io/github/issues-pr/WIPACrepo/wipac-dev-tools)](https://github.com/WIPACrepo/wipac-dev-tools/pulls?q=is%3Apr+sort%3Aupdated-desc+is%3Aopen)
+
+### `mode=PACKAGING_AND_PYPI`: Outputs for PyPI-Enabled Packages
+
+When the relevant inputs are given (see [inputs](#inputs)), the following is autogenerated:
 
 - `pyproject.toml` with all the original, non-conflicting sections *plus*:
     ```
@@ -121,30 +142,6 @@ autogenerated:
     ```
 - `README.md` prepended with hyperlink-embedded badges:
     + [![PyPI](https://img.shields.io/pypi/v/wipac-dev-tools)](https://pypi.org/project/wipac-dev-tools/) [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/WIPACrepo/wipac-dev-tools?include_prereleases)](https://github.com/WIPACrepo/wipac-dev-tools/) [![Versions](https://img.shields.io/pypi/pyversions/wipac-dev-tools.svg)](https://pypi.org/project/wipac-dev-tools) [![PyPI - License](https://img.shields.io/pypi/l/wipac-dev-tools)](https://github.com/WIPACrepo/wipac-dev-tools/blob/main/LICENSE) [![GitHub issues](https://img.shields.io/github/issues/WIPACrepo/wipac-dev-tools)](https://github.com/WIPACrepo/wipac-dev-tools/issues?q=is%3Aissue+sort%3Aupdated-desc+is%3Aopen) [![GitHub pull requests](https://img.shields.io/github/issues-pr/WIPACrepo/wipac-dev-tools)](https://github.com/WIPACrepo/wipac-dev-tools/pulls?q=is%3Apr+sort%3Aupdated-desc+is%3Aopen)
-
-### Outputs for Non-PyPI Enabled Packages
-
-The following is autogenerated for the absolute minimal input (see [inputs](#inputs)):
-
-- `pyproject.toml` with all the original, non-conflicting sections *plus*:
-  ```
-    [build-system]
-    requires = ["setuptools>=78.1", "setuptools-scm"]
-    build-backend = "setuptools.build_meta"
-    
-    [project]
-    dynamic = ["version"]
-    name = "wipac-dev-tools"
-    requires-python = ">=3.8, <3.13"
-    
-    [tool.setuptools.packages.find]
-    namespaces = false
-    exclude = ["test", "tests", "doc", "docs", "resource", "resources", "example", "examples"]
-  
-    [tool.setuptools_scm]
-    ```
-- `README.md` prepended with hyperlink-embedded badges (*note the lack of PyPI badges*):
-    + [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/WIPACrepo/wipac-dev-tools?include_prereleases)](https://github.com/WIPACrepo/wipac-dev-tools/) [![GitHub issues](https://img.shields.io/github/issues/WIPACrepo/wipac-dev-tools)](https://github.com/WIPACrepo/wipac-dev-tools/issues?q=is%3Aissue+sort%3Aupdated-desc+is%3Aopen) [![GitHub pull requests](https://img.shields.io/github/issues-pr/WIPACrepo/wipac-dev-tools)](https://github.com/WIPACrepo/wipac-dev-tools/pulls?q=is%3Apr+sort%3Aupdated-desc+is%3Aopen)
 
 ## Example GitHub Action Workflow
 
