@@ -32,9 +32,6 @@ REAMDE_BADGES_END_DELIMITER = "<!--- End of README Badges (automated) --->"
 LOGGER = logging.getLogger("setup-builder")
 
 
-PythonMinMax = tuple[tuple[int, int], tuple[int, int]]
-
-
 class GitHubAPI:
     """Relay info from the GitHub API."""
 
