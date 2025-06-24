@@ -7,7 +7,7 @@ inputs:
     description: |
       The mode to use:
         PACKAGING           - setup packaging files, metadata, etc. for the project 
-        PACKAGING_AND_PYPI  - PACKAGING, plus additional metadata for publishing to PyPI
+        PACKAGING_AND_PYPI  - PACKAGING, plus additional metadata needed to publish to PyPI
     required: true  # needs to be explicitly checked
   python_min:
     description: 'Minimum required Python version'
