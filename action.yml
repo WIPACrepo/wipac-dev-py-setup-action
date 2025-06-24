@@ -208,6 +208,7 @@ runs:
           --toml pyproject.toml \
           --github-full-repo $GITHUB_REPOSITORY \
           --token ${{ github.token }} \
+          --mode ${{ inputs.mode }} \
           --python-min "${{ inputs.python_min }}" \
           --python-max "${{ inputs.python_max }}" \
           --package-dirs ${{ inputs.package_dirs }} \

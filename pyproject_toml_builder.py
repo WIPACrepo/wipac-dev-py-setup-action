@@ -580,6 +580,12 @@ def main() -> None:
     # From Client GitHub Action Input
     # REQUIRED
     parser.add_argument(
+        "--mode",
+        choices=["PACKAGING", "PACKAGING_AND_PYPI"],
+        required=True,
+        help="The mode",
+    )
+    parser.add_argument(
         "--python-min",
         # "3.12" -> (3,12)
         type=coerce_python_version,
