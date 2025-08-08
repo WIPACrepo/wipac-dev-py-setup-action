@@ -163,7 +163,8 @@ runs:
         
         sudo apt-get update
         
-        SETUP_PY_GHA_PYVENV=action_venv
+        tmpdir=$(mktemp -d)
+        SETUP_PY_GHA_PYVENV="$tmpdir"/action_venv
         python -m venv $SETUP_PY_GHA_PYVENV
         . "$SETUP_PY_GHA_PYVENV"/bin/activate
         pip3 install -r ${{ github.action_path }}/requirements.txt
@@ -268,8 +269,6 @@ runs:
         toml-sort --in-place --ignore-case pyproject.toml
         
         cat pyproject.toml
-        
-        rm -rf action_venv
         
         # Commits
         git add pyproject.toml
