@@ -228,15 +228,16 @@ class FromFiles:
         packages_with_dunder_versions = []
 
         for pkg in self._pkg_paths:
+            init_py = pkg / "__init__.py"
             # insert a comment directly below the first __version__ line, if it exists
-            out, count = DUNDER_VERSION_RE.subn(commenter, pkg.read_text(), count=1)
+            out, count = DUNDER_VERSION_RE.subn(commenter, init_py.read_text(), count=1)
             if count > 0:
                 # __init__ has __version__ -- insert the comment after __version__
-                pkg.write_text(out)  # overwrite
+                init_py.write_text(out)  # overwrite
                 packages_with_dunder_versions.append(pkg)
             else:
                 # __init__ does *not* have __version__ -- append the comment
-                with pkg.open("a") as f:
+                with init_py.open("a") as f:
                     f.write(f"\n{NO_DUNDER_VERSION_COMMENT}\n")
 
         if packages_with_dunder_versions:
