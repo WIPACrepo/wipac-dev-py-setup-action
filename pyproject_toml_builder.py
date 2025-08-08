@@ -230,20 +230,24 @@ class FromFiles:
 
         for pkg in self._pkg_paths:
             init_py = pkg / "__init__.py"
-            # insert a comment directly below the first __version__ line, if it exists
+
+            # use a regex subn to detect __version__ and do a replace at same time
+            # -- inserts a comment directly below the first __version__ line (if it exists)
             out, count = DUNDER_VERSION_RE.subn(commenter, init_py.read_text(), count=1)
-            if count > 0:
+
+            # Q: does __init__ have __version__?
+            if count > 0:  # A: yes
                 packages_with_dunder_versions.append(pkg)
-                # __init__ has __version__ -- insert the comment after __version__
-                if INIT_DUNDER_VERSION_NOT_NEEDED_COMMENT in init_py.read_text():
-                    continue  # stops an infinite recursion git-push loop (waiting on user)
-                else:
+                # -- insert the comment after __version__ (if not already there, else inf commit-loop)
+                if INIT_DUNDER_VERSION_NOT_NEEDED_COMMENT not in init_py.read_text():
                     init_py.write_text(out)  # overwrite
                     git_update_these.append(pkg)
-            else:
-                # __init__ does *not* have __version__ -- append the comment
-                with init_py.open("a") as f:
-                    f.write(f"\n{INIT_DUNDER_VERSION_NOT_NEEDED_COMMENT}\n")
+            else:  # A: no
+                # -- append the comment (if not already there, else inf commit-loop)
+                if INIT_DUNDER_VERSION_NOT_NEEDED_COMMENT not in init_py.read_text():
+                    with init_py.open("a") as f:
+                        f.write(f"\n{INIT_DUNDER_VERSION_NOT_NEEDED_COMMENT}\n")
+                    git_update_these.append(pkg)
 
         if packages_with_dunder_versions:
             # this is unusual, but git-push the comments even though the action failed
