@@ -254,7 +254,12 @@ class FromFiles:
                     check=True,
                 )
                 subprocess.run(
-                    ["git", "commit", "-m", "comment in __init__.py about __version__"],
+                    [
+                        "git",
+                        "commit",
+                        "-m",
+                        "<bot> comment in __init__.py about __version__",
+                    ],
                     check=True,
                 )
                 subprocess.run(
