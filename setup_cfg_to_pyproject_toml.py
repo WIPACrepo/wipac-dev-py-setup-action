@@ -11,7 +11,7 @@ import tomlkit
 
 
 def migrate_dependencies(setup_cfg: Path) -> str:
-    """Return the setup.cfg's dependencies as a pyproject.toml string."""
+    """Return the setup.cfg's dependencies as a pyproject.toml string with multiline arrays."""
     parser = ConfigParser()
     parser.read_string(setup_cfg.read_text())
 
@@ -27,14 +27,22 @@ def migrate_dependencies(setup_cfg: Path) -> str:
             for line in parser["options"]["install_requires"].splitlines()
             if line.strip()
         ]
-        project["dependencies"] = deps
+        deps_array = tomlkit.array()
+        deps_array.multiline(True)
+        for dep in deps:
+            deps_array.append(dep)
+        project["dependencies"] = deps_array
 
     # [project.optional-dependencies]
     if "options.extras_require" in parser:
         extras = tomlkit.table()
         for extra, deps_block in parser["options.extras_require"].items():
             deps = [line.strip() for line in deps_block.splitlines() if line.strip()]
-            extras[extra] = deps
+            deps_array = tomlkit.array()
+            deps_array.multiline(True)
+            for dep in deps:
+                deps_array.append(dep)
+            extras[extra] = deps_array
         project["optional-dependencies"] = extras
 
     pyproject["project"] = project
@@ -93,10 +101,13 @@ def main():
             f.write("# bar = []\n")
         return
 
+    # header
+    args.pyproject_toml.write_text("# pyproject.toml\n")
+
     # migrate dependencies
     toml_deps_text = migrate_dependencies(args.setup_cfg)
     with args.pyproject_toml.open("a") as f:
-        f.write("\n\n")
+        f.write("\n")
         f.write(toml_deps_text)
 
 
