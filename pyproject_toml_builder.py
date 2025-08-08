@@ -258,7 +258,7 @@ class FromFiles:
                         "git",
                         "commit",
                         "-m",
-                        "<bot> comment in __init__.py about __version__",
+                        "<bot> comment in `__init__.py` file(s) about `__version__`",
                     ],
                     check=True,
                 )
