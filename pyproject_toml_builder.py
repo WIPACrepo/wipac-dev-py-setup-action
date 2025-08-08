@@ -462,7 +462,7 @@ class PyProjectTomlBuilder:
         }
         toml_dict["tool"]["setuptools"].update(updates)
         for u in updates:
-            self._inline_comment(toml_dict["project"][u])
+            self._inline_comment(toml_dict["tool"]["setuptools"][u])
 
         # [tool.setuptools_scm] -- an empty section is the bare minimum
         if not toml_dict["tool"].get("setuptools_scm"):
