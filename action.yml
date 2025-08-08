@@ -155,6 +155,22 @@ runs:
         git config user.email ${{ inputs.git_committer_email }}
       shell: bash
 
+    - name: Setup Python Venv
+      if: env.IS_GIT_BEHIND != 'true'
+      run: |
+        # step: Setup Python Venv
+        set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        
+        sudo apt-get update
+        
+        SETUP_PY_GHA_PYVENV=action_venv
+        python -m venv $SETUP_PY_GHA_PYVENV
+        . "$SETUP_PY_GHA_PYVENV"/bin/activate
+        pip3 install -r ${{ github.action_path }}/requirements.txt
+        
+        echo "SETUP_PY_GHA_PYVENV=$SETUP_PY_GHA_PYVENV" >> $GITHUB_ENV
+      shell: bash
+
     - name: Check pyproject.toml for project migration
       if: env.IS_GIT_BEHIND != 'true'
       run: |
@@ -164,6 +180,7 @@ runs:
         # if needed: auto-create a minimal pyproject.toml
         if [[ ! -f pyproject.toml ]]; then
             touch pyproject.toml
+            . "$SETUP_PY_GHA_PYVENV"/bin/activate
             python3 ${{ github.action_path }}/setup_cfg_to_pyproject_toml.py setup.cfg pyproject.toml
             # commit, push, exit
             msg="added pyproject.toml -- ALERT: user needs to set values for auto-added fields"
@@ -222,13 +239,9 @@ runs:
       run: |
         # step: Build pyproject.toml + README.md (and commit)
         set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
-        
-        set -e
-        sudo apt-get update
-        python -m venv action_venv
-        . action_venv/bin/activate
-        pip3 install -r ${{ github.action_path }}/requirements.txt
 
+        . "$SETUP_PY_GHA_PYVENV"/bin/activate
+        
         # Build!
         set -x
         export PYPROJECT_KEYWORDS_JSON
