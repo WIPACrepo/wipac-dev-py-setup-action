@@ -184,12 +184,14 @@ runs:
             . "$SETUP_PY_GHA_PYVENV"/bin/activate
             python3 ${{ github.action_path }}/setup_cfg_to_pyproject_toml.py setup.cfg pyproject.toml
             # commit, push, exit
-            msg="added pyproject.toml -- ALERT: user needs to set values for auto-added fields"
+            msg="created pyproject.toml -- ALERT: user needs to review!"
             git add .
             git commit -m "<bot> $msg"
             git push
             echo $msg
             echo "IS_GIT_BEHIND=true" >> $GITHUB_ENV
+            echo "::warn::Auto-created pyproject.toml -- look at most recent commit."
+            exit 1
         fi
         
         # no setup.cfg allowed!
