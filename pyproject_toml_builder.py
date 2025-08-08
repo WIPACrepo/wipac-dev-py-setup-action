@@ -228,6 +228,7 @@ class FromFiles:
         packages_with_dunder_versions = []
         git_update_these = []
 
+        # detect
         for pkg in self._pkg_paths:
             init_py = pkg / "__init__.py"
 
@@ -249,27 +250,29 @@ class FromFiles:
                         f.write(f"\n{INIT_DUNDER_VERSION_NOT_NEEDED_COMMENT}\n")
                     git_update_these.append(pkg)
 
+        # make any git add + comment
+        if git_update_these:
+            LOGGER.info(f"git updating '__init__.py' files in {git_update_these}")
+            subprocess.run(
+                ["git", "add"] + [str(p) for p in git_update_these],
+                check=True,
+            )
+            subprocess.run(
+                [
+                    "git",
+                    "commit",
+                    "-m",
+                    "<bot> comment in `__init__.py` file(s) about `__version__`",
+                ],
+                check=True,
+            )
+
+        # end game
         if packages_with_dunder_versions:
-            # this is unusual, but git-push the comments even though the action failed
             if git_update_these:
-                LOGGER.info(f"git updating '__init__.py' files in {git_update_these}")
-                subprocess.run(
-                    ["git", "add"] + [str(p) for p in git_update_these],
-                    check=True,
-                )
-                subprocess.run(
-                    [
-                        "git",
-                        "commit",
-                        "-m",
-                        "<bot> comment in `__init__.py` file(s) about `__version__`",
-                    ],
-                    check=True,
-                )
-                subprocess.run(
-                    ["git", "push"],
-                    check=True,
-                )
+                # -- this is unusual, but git-push the __init__ updates even though the action failed
+                LOGGER.info(f"git pushing '__init__.py' files in {git_update_these}")
+                subprocess.run(["git", "push"], check=True)
             # then, raise
             raise _log_error_then_get_exception(
                 f"Module(s) {[p.name for p in packages_with_dunder_versions]}:"
