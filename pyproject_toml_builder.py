@@ -38,6 +38,12 @@ GENERATED_BY_COMMENT = (
 )
 
 
+def _log_error_then_get_exception(msg: str) -> Exception:
+    # fyi: this design allows mypy to detect when a function could raise
+    print("::error::" + msg, flush=True)
+    return RuntimeError(msg)
+
+
 class GitHubAPI:
     """Relay info from the GitHub API."""
 
@@ -98,13 +104,13 @@ class GHAInput:
         # pypi-related metadata
         if self.mode == "PACKAGING_AND_PYPI":
             if not all([self.pypi_name, self.keywords, self.author, self.author_email]):
-                raise Exception(
+                raise _log_error_then_get_exception(
                     "'pypi_name', 'keywords', 'author', and 'author_email' must be provided when "
                     "'mode' is 'PACKAGING_AND_PYPI'"
                 )
         if self.pypi_name and self.mode != "PACKAGING_AND_PYPI":
             # note: the other values are okay to provide when not in pypi mode
-            raise Exception(
+            raise _log_error_then_get_exception(
                 f"'pypi_name' cannot be defined when 'mode' is not 'PACKAGING_AND_PYPI' "
                 f"(current mode: {self.mode})"
             )
@@ -115,11 +121,11 @@ class GHAInput:
             (self.python_max[0], "python_max"),
         ]:
             if major < 3:
-                raise Exception(
+                raise _log_error_then_get_exception(
                     f"Python-release automation ('{attr_name}') does not work for python <3."
                 )
             elif major >= 4:
-                raise Exception(
+                raise _log_error_then_get_exception(
                     f"Python-release automation ('{attr_name}') does not work for python 4+."
                 )
 
@@ -163,7 +169,7 @@ class FromFiles:
         """Find the package path(s)."""
 
         if not (available_pkgs := list(iterate_dirnames(self.root, dirs_exclude))):
-            raise Exception(
+            raise _log_error_then_get_exception(
                 f"No package found in '{self.root}'. Are you missing an __init__.py?"
             )
 
@@ -173,12 +179,12 @@ class FromFiles:
                 p for p in self.gha_input.package_dirs if p not in available_pkgs
             ]:
                 if len(not_ins) == 1:
-                    raise Exception(
+                    raise _log_error_then_get_exception(
                         f"Package directory not found: "
                         f"{not_ins[0]} (defined in pyproject.toml). "
                         f"Is the directory missing an __init__.py?"
                     )
-                raise Exception(
+                raise _log_error_then_get_exception(
                     f"Package directories not found: "
                     f"{', '.join(not_ins)} (defined in pyproject.toml). "
                     f"Are the directories missing __init__.py files?"
@@ -188,7 +194,7 @@ class FromFiles:
         # use the auto-detected package (if there's ONE)
         else:
             if len(available_pkgs) > 1:
-                raise Exception(
+                raise _log_error_then_get_exception(
                     f"More than one package found in '{self.root}': {', '.join(available_pkgs)}. "
                     f"Either "
                     f"[1] list *all* your desired packages in your pyproject.toml's 'package_dirs', "
@@ -203,7 +209,7 @@ class FromFiles:
             with open(pkg / "__init__.py") as f:
                 for line in f:
                     if "__version__" in line and "=" in line:
-                        raise Exception(
+                        raise _log_error_then_get_exception(
                             f"Module ({pkg.name}) '__init__.py' must not define '__version__'."
                         )
 
@@ -442,7 +448,9 @@ class PyProjectTomlBuilder:
     def _validate_repo_initial_state(toml_dict: TOMLDocumentTypeHint) -> None:
         # must *not* have these fields...
         if toml_dict.get("project", {}).get("version", None):
-            raise Exception("pyproject.toml must NOT define 'project.version'")
+            raise _log_error_then_get_exception(
+                "pyproject.toml must NOT define 'project.version'"
+            )
 
         # must have these fields...
         # <none>
