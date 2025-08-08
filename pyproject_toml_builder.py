@@ -315,13 +315,19 @@ class PyProjectTomlBuilder:
         # [project]
         if "project" not in toml_dict:
             toml_dict["project"] = {}
+        #
         # for 'setuptools-scm'
         toml_dict["project"]["dynamic"] = ["version"]
-        toml_dict["project"]["dynamic"].trivia.comment = GENERATED_BY_COMMENT
+        self._inline_comment(toml_dict["project"]["dynamic"])
+        #
         # if we only want packaging stuff:
         if gha_input.mode == "PACKAGING":
+            #
             toml_dict["project"]["name"] = "_".join(ffile.packages).replace("_", "-")
+            self._inline_comment(toml_dict["project"]["name"])
+            #
             toml_dict["project"]["requires-python"] = gha_input.get_requires_python()
+            self._inline_comment(toml_dict["project"]["requires-python"])
             # add the following if they were given:
             if gha_input.author or gha_input.author_email:
                 toml_dict["project"]["authors"] = [{}]
@@ -329,40 +335,46 @@ class PyProjectTomlBuilder:
                     toml_dict["project"]["authors"][0].update(
                         {"name": gha_input.author}
                     )
+                    self._inline_comment(toml_dict["project"]["authors"][0])
                 if gha_input.author_email:
                     toml_dict["project"]["authors"][0].update(
                         {"email": gha_input.author_email}
                     )
+                    self._inline_comment(toml_dict["project"]["authors"][0])
             if gha_input.keywords:
                 toml_dict["project"]["keywords"] = gha_input.keywords
+                self._inline_comment(toml_dict["project"]["keywords"])
+        #
         # if we DO want PyPI, then include everything:
         elif gha_input.mode == "PACKAGING_AND_PYPI":
-            toml_dict["project"].update(
-                {
-                    "name": gha_input.pypi_name,
-                    "authors": [
-                        {
-                            "name": gha_input.author,
-                            "email": gha_input.author_email,
-                        }
-                    ],
-                    "description": gh_api.description,
-                    "readme": ffile.readme_path.name,
-                    "license": gha_input.license_spdx_id,
-                    "license-files": (
-                        [gha_input.license_file] if gha_input.license_file else []
-                    ),
-                    "keywords": gha_input.keywords,
-                    "classifiers": gha_input.python_classifiers(),
-                    "requires-python": gha_input.get_requires_python(),
-                }
-            )
+            updates = {
+                "name": gha_input.pypi_name,
+                "authors": [
+                    {
+                        "name": gha_input.author,
+                        "email": gha_input.author_email,
+                    }
+                ],
+                "description": gh_api.description,
+                "readme": ffile.readme_path.name,
+                "license": gha_input.license_spdx_id,
+                "license-files": (
+                    [gha_input.license_file] if gha_input.license_file else []
+                ),
+                "keywords": gha_input.keywords,
+                "classifiers": gha_input.python_classifiers(),
+                "requires-python": gha_input.get_requires_python(),
+            }
+            toml_dict["project"].update(updates)
+            for u in updates:
+                self._inline_comment(toml_dict["project"][u])
             # [project.urls]
             toml_dict["project"]["urls"] = {
                 "Homepage": f"https://pypi.org/project/{gha_input.pypi_name}/",
                 "Tracker": f"{gh_api.url}/issues",
                 "Source": gh_api.url,
             }
+            self._inline_comment(toml_dict["project"]["urls"])
         else:
             raise RuntimeError(f"Unknown mode: {gha_input.mode}")
 
@@ -373,17 +385,18 @@ class PyProjectTomlBuilder:
         # [tool.setuptools]
         if not toml_dict["tool"].get("setuptools"):
             toml_dict["tool"]["setuptools"] = {}
-        toml_dict["tool"]["setuptools"].update(
-            {
-                "packages": {
-                    "find": self._tool_setuptools_packages_find(gha_input),
-                },
-                "package-data": {
-                    **toml_dict["tool"].get("setuptools", {}).get("package-data", {}),
-                    "*": self._tool_setuptools_packagedata_star(toml_dict),
-                },
-            }
-        )
+        updates = {
+            "packages": {
+                "find": self._tool_setuptools_packages_find(gha_input),
+            },
+            "package-data": {
+                **toml_dict["tool"].get("setuptools", {}).get("package-data", {}),
+                "*": self._tool_setuptools_packagedata_star(toml_dict),
+            },
+        }
+        toml_dict["tool"]["setuptools"].update(updates)
+        for u in updates:
+            self._inline_comment(toml_dict["project"][u])
 
         # [tool.setuptools_scm] -- an empty section is the bare minimum
         if not toml_dict["tool"].get("setuptools_scm"):
@@ -403,6 +416,9 @@ class PyProjectTomlBuilder:
                         )
                     )
                 )
+                self._inline_comment(
+                    toml_dict["project"]["optional-dependencies"]["mypy"]
+                )
             except KeyError:
                 # there are no [project.optional-dependencies]
                 # -> this is okay, it means that `WIPACrepo/wipac-dev-mypy-action` will
@@ -417,6 +433,10 @@ class PyProjectTomlBuilder:
             )
         else:
             self.readme_mgr = None
+
+    @staticmethod
+    def _inline_comment(section: Any) -> None:
+        section.trivia.comment = GENERATED_BY_COMMENT
 
     @staticmethod
     def _validate_repo_initial_state(toml_dict: TOMLDocumentTypeHint) -> None:
