@@ -9,6 +9,8 @@ from pathlib import Path
 
 import tomlkit
 
+MIGRATED_BY_COMMENT = "originally migrated from 'setup.cfg' by 'WIPACrepo/wipac-dev-py-setup-action' github action package"
+
 
 def migrate_dependencies(setup_cfg: Path) -> str:
     """Return the setup.cfg's dependencies as a pyproject.toml string with multiline arrays."""
@@ -16,8 +18,6 @@ def migrate_dependencies(setup_cfg: Path) -> str:
     parser.read_string(setup_cfg.read_text())
 
     pyproject = tomlkit.document()
-    pyproject.add(tomlkit.comment("Generated from setup.cfg dependencies"))
-
     project = tomlkit.table()
 
     # [project.dependencies]
@@ -32,6 +32,7 @@ def migrate_dependencies(setup_cfg: Path) -> str:
         for dep in deps:
             deps_array.append(dep)
         project["dependencies"] = deps_array
+        project["dependencies"].trivia.comment = MIGRATED_BY_COMMENT
 
     # [project.optional-dependencies]
     if "options.extras_require" in parser:
@@ -44,6 +45,7 @@ def migrate_dependencies(setup_cfg: Path) -> str:
                 deps_array.append(dep)
             extras[extra] = deps_array
         project["optional-dependencies"] = extras
+        project["optional-dependencies"].trivia.comment = MIGRATED_BY_COMMENT
 
     pyproject["project"] = project
     return tomlkit.dumps(pyproject)
