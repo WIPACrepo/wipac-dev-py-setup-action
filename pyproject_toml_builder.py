@@ -226,6 +226,7 @@ class FromFiles:
             )
 
         packages_with_dunder_versions = []
+        git_update_these = []
 
         for pkg in self._pkg_paths:
             init_py = pkg / "__init__.py"
@@ -235,6 +236,9 @@ class FromFiles:
                 # __init__ has __version__ -- insert the comment after __version__
                 init_py.write_text(out)  # overwrite
                 packages_with_dunder_versions.append(pkg)
+                if NO_DUNDER_VERSION_COMMENT not in init_py.read_text():
+                    # this stop an infinite recursion git-push loop
+                    git_update_these.append(pkg)
             else:
                 # __init__ does *not* have __version__ -- append the comment
                 with init_py.open("a") as f:
@@ -242,18 +246,20 @@ class FromFiles:
 
         if packages_with_dunder_versions:
             # this is unusual, but git-push the comments even though the action failed
-            subprocess.run(
-                ["git", "add"] + [str(p) for p in packages_with_dunder_versions],
-                check=True,
-            )
-            subprocess.run(
-                ["git", "commit", "-m", "comment in __init__.py about __version__"],
-                check=True,
-            )
-            subprocess.run(
-                ["git", "push"],
-                check=True,
-            )
+            if git_update_these:
+                subprocess.run(
+                    ["git", "add"] + [str(p) for p in git_update_these],
+                    check=True,
+                )
+                subprocess.run(
+                    ["git", "commit", "-m", "comment in __init__.py about __version__"],
+                    check=True,
+                )
+                subprocess.run(
+                    ["git", "push"],
+                    check=True,
+                )
+            # then, raise
             raise _log_error_then_get_exception(
                 f"Module(s) {[p.name for p in packages_with_dunder_versions]}:"
                 f" '__init__.py' must not define '__version__'"
