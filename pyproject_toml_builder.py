@@ -39,7 +39,7 @@ GENERATED_BY_COMMENT = (
 )
 
 NO_DUNDER_VERSION_COMMENT = (
-    "# NOTE: `__version__` is not defined because this package is built using 'setuptools-scm' --"
+    "# NOTE: `__version__` is not defined because this package is built using 'setuptools-scm' --\n"
     "#   use `importlib.metadata.version(...)` if you need to access version info at runtime."
 )
 
