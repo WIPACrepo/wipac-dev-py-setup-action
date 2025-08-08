@@ -247,6 +247,7 @@ class FromFiles:
         if packages_with_dunder_versions:
             # this is unusual, but git-push the comments even though the action failed
             if git_update_these:
+                LOGGER.info(f"git updating __init__.py files in {git_update_these}")
                 subprocess.run(
                     ["git", "add"] + [str(p) for p in git_update_these],
                     check=True,
