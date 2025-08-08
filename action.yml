@@ -190,7 +190,7 @@ runs:
             git push
             echo $msg
             echo "IS_GIT_BEHIND=true" >> $GITHUB_ENV
-            echo "::warn::Auto-created pyproject.toml -- look at most recent commit."
+            echo "::warning::Auto-created pyproject.toml -- look at most recent commit."
             exit 1
         fi
         
