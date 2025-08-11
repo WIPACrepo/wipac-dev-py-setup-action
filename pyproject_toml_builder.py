@@ -634,6 +634,7 @@ def write_toml(
     out = tomlkit.dumps(toml_dict, sort_keys=True)
     # -- check header block comment
     if not out.lstrip().startswith(HEADER_BLOCK_COMMENT):
+        out = out.replace("# pyproject.toml", "")  # the new comment will have this
         out = f"{HEADER_BLOCK_COMMENT}\n{out}"
     # -- common auto-generation whitespace gotchas
     out = MULTI_BLANK_NEWLINE_RE.sub("\n", out)
