@@ -629,6 +629,9 @@ def write_toml(
 
     # all done
     out = tomlkit.dumps(toml_dict)
+    print(f"=============================================================")
+    print(f"`{out}`")
+    print(f"=============================================================")
     # -- check header block comment
     if not out.startswith(HEADER_BLOCK_COMMENT):
         out = f"{HEADER_BLOCK_COMMENT}\n{out}"
