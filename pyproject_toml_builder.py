@@ -671,6 +671,8 @@ def write_toml(
 
     # all done
     out = tomlkit.dumps(toml_dict, sort_keys=True)
+    print("===raw=====================================================================")
+    print(out)
     # -- check header block comment
     if not out.strip().startswith(HEADER_BLOCK_COMMENT.strip()):
         out = out.replace("# pyproject.toml", "")  # the new comment will have this
@@ -680,6 +682,8 @@ def write_toml(
     # -- common auto-generation whitespace gotchas
     out = normalize_toml_whitespace(out)
     # -- write it!
+    print("===done====================================================================")
+    print(out)
     with open(toml_file, "w") as f:
         f.write(out)
 
