@@ -633,7 +633,7 @@ def write_toml(
     print(f"`{out}`")
     print(f"=============================================================")
     # -- check header block comment
-    if not out.startswith(HEADER_BLOCK_COMMENT):
+    if not out.lstrip().startswith(HEADER_BLOCK_COMMENT):
         out = f"{HEADER_BLOCK_COMMENT}\n{out}"
     # -- write it!
     with open(toml_file, "w") as f:
