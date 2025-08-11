@@ -9,7 +9,7 @@ from pathlib import Path
 
 import tomlkit
 
-MIGRATED_BY_COMMENT = " # originally migrated from 'setup.cfg' by 'WIPACrepo/wipac-dev-py-setup-action' github action package"
+MIGRATED_BY_COMMENT = " # (can remove comment) originally migrated from 'setup.cfg' by 'WIPACrepo/wipac-dev-py-setup-action' github action package"
 
 
 def migrate_dependencies(setup_cfg: Path) -> str:
