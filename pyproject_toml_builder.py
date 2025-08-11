@@ -42,7 +42,7 @@ HEADER_BLOCK_COMMENT = (
     "#       and https://github.com/WIPACrepo/wipac-dev-py-setup-action for details.\n"
 )
 
-MULTI_BLANK_NEWLINE_RE = re.compile(r"\n+")
+MULTI_BLANK_NEWLINE_RE = re.compile(r"\n{3,}")
 MULTI_SPACE_INLINE_COMMENT_RE = re.compile(r" +#")
 
 INLINE_DONT_CHANGE_COMMENT = (
@@ -637,7 +637,7 @@ def write_toml(
         out = out.replace("# pyproject.toml", "")  # the new comment will have this
         out = f"{HEADER_BLOCK_COMMENT}\n{out}"
     # -- common auto-generation whitespace gotchas
-    out = MULTI_BLANK_NEWLINE_RE.sub("\n", out)
+    out = MULTI_BLANK_NEWLINE_RE.sub("\n\n", out)
     out = MULTI_SPACE_INLINE_COMMENT_RE.sub(" #", out)
     # -- write it!
     with open(toml_file, "w") as f:
