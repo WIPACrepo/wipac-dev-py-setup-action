@@ -676,7 +676,7 @@ def write_toml(
         out = out.replace("# pyproject.toml", "")  # the new comment will have this
         out = f"{HEADER_BLOCK_COMMENT}\n{out}"
     # -- '[tool.setuptools_scm]' is an empty section, and tomlkit removes the blank line before it
-    out.replace("[tool.setuptools_scm]", "\n[tool.setuptools_scm]")
+    out.replace("[tool.setuptools_scm]", "\n\n[tool.setuptools_scm]")
     # -- common auto-generation whitespace gotchas
     out = normalize_toml_whitespace(out)
     # -- write it!
