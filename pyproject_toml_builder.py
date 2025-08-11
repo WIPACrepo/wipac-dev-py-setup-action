@@ -628,7 +628,7 @@ def write_toml(
     toml_dict["tool"].pop("semantic_release", None)  # type: ignore[union-attr]
 
     # all done
-    out = tomlkit.dumps(toml_dict)
+    out = tomlkit.dumps(toml_dict, sort_keys=True)
     # -- check header block comment
     if not out.lstrip().startswith(HEADER_BLOCK_COMMENT):
         out = f"{HEADER_BLOCK_COMMENT}\n{out}"
