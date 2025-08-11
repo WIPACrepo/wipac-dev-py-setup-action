@@ -627,16 +627,14 @@ def write_toml(
     # -> [tool.semantic_release], [tool.semantic_release.commit_parser_options]
     toml_dict["tool"].pop("semantic_release", None)  # type: ignore[union-attr]
 
-    # all done--write it!
+    # all done
+    out = tomlkit.dumps(toml_dict)
+    # -- check header block comment
+    if not out.startswith(HEADER_BLOCK_COMMENT):
+        out = f"{HEADER_BLOCK_COMMENT}\n{out}"
+    # -- write it!
     with open(toml_file, "w") as f:
-        tomlkit.dump(toml_dict, f)
-
-    # check header block comment
-    with open(toml_file, "r") as f:
-        contents = f.read()
-    if not contents.startswith(HEADER_BLOCK_COMMENT):
-        with open(toml_file, "w") as f:
-            f.write(f"{HEADER_BLOCK_COMMENT}\n{contents}")
+        f.write(out)
 
     return builder.readme_mgr
 
