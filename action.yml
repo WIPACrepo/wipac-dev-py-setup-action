@@ -266,10 +266,6 @@ runs:
           --auto-mypy-option "${{ inputs.auto_mypy_option }}"
         set +x
         
-        # format (inc. sorting sections)
-        pip install toml-sort
-        toml-sort --in-place --ignore-case pyproject.toml
-        
         cat pyproject.toml
         
         # Commits

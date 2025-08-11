@@ -629,15 +629,9 @@ def write_toml(
 
     # all done
     out = tomlkit.dumps(toml_dict)
-    print(f"=============================================================")
-    print(f"`{out}`")
-    print(f"=============================================================")
     # -- check header block comment
     if not out.lstrip().startswith(HEADER_BLOCK_COMMENT):
         out = f"{HEADER_BLOCK_COMMENT}\n{out}"
-    print(f"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    print(f"`{out}`")
-    print(f"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
     # -- write it!
     with open(toml_file, "w") as f:
         f.write(out)
