@@ -488,6 +488,13 @@ class PyProjectTomlBuilder:
         if not toml_dict["tool"].get("setuptools_scm"):
             toml_dict["tool"]["setuptools_scm"] = {}
             self._inline_dont_change_this_comment(toml_dict["tool"]["setuptools_scm"])
+        # Loud sentinel if SCM/tags are missing
+        toml_dict["tool"]["setuptools_scm"]["fallback_version"] = "local"
+        comment = (
+            " # sentinel if SCM and/or tags are missing — "
+            "for GitHub Action builds, always use 'actions/checkout' with 'fetch-depth: 0'"
+        )
+        toml_dict["tool"]["setuptools_scm"]["fallback_version"].trivia.comment = comment
 
         # [project.optional-dependencies][mypy]
         if gha_input.auto_mypy_option:
@@ -714,8 +721,6 @@ def write_toml(
     if not out.strip().startswith(HEADER_BLOCK_COMMENT.strip()):
         out = out.replace("# pyproject.toml", "")  # the new comment will have this
         out = f"{HEADER_BLOCK_COMMENT}\n{out}"
-    # -- '[tool.setuptools_scm]' is an empty section, and tomlkit removes the blank line before it
-    out = out.replace("[tool.setuptools_scm]", "\n\n[tool.setuptools_scm]")
     # -- common auto-generation whitespace gotchas
     out = normalize_toml_whitespace(out)
     # -- write it!
