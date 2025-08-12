@@ -438,72 +438,23 @@ class PyProjectTomlBuilder:
         # [project]
         if "project" not in toml_dict:
             toml_dict["project"] = {}
-        #
-        # for 'setuptools-scm'
+        # -- for 'setuptools-scm'
         toml_dict["project"]["dynamic"] = ["version"]
         self._inline_dont_change_this_comment(toml_dict["project"]["dynamic"])
-        #
-        # if we only want packaging stuff:
+        # -- mode-based updates
         if gha_input.mode == "PACKAGING":
-            #
-            toml_dict["project"]["name"] = "_".join(ffile.packages).replace("_", "-")
-            self._inline_dont_change_this_comment(toml_dict["project"]["name"])
-            #
-            toml_dict["project"]["requires-python"] = gha_input.get_requires_python()
-            self._inline_dont_change_this_comment(
-                toml_dict["project"]["requires-python"]
+            self.insert_packaging_attributes(
+                toml_dict["project"],
+                gha_input,
+                ffile,
             )
-            # add the following if they were given:
-            if gha_input.author or gha_input.author_email:
-                toml_dict["project"]["authors"] = [{}]
-                if gha_input.author:
-                    toml_dict["project"]["authors"][0].update(
-                        {"name": gha_input.author}
-                    )
-                    self._inline_dont_change_this_comment(
-                        toml_dict["project"]["authors"][0]
-                    )
-                if gha_input.author_email:
-                    toml_dict["project"]["authors"][0].update(
-                        {"email": gha_input.author_email}
-                    )
-                    self._inline_dont_change_this_comment(
-                        toml_dict["project"]["authors"][0]
-                    )
-            if gha_input.keywords:
-                toml_dict["project"]["keywords"] = gha_input.keywords
-                self._inline_dont_change_this_comment(toml_dict["project"]["keywords"])
-        #
-        # if we DO want PyPI, then include everything:
         elif gha_input.mode == "PACKAGING_AND_PYPI":
-            updates = {
-                "name": gha_input.pypi_name,
-                "authors": [
-                    {
-                        "name": gha_input.author,
-                        "email": gha_input.author_email,
-                    }
-                ],
-                "description": gh_api.description,
-                "readme": ffile.readme_path.name,
-                "license": gha_input.license_spdx_id,
-                "license-files": (
-                    [gha_input.license_file] if gha_input.license_file else []
-                ),
-                "keywords": gha_input.keywords,
-                "classifiers": gha_input.python_classifiers(),
-                "requires-python": gha_input.get_requires_python(),
-            }
-            toml_dict["project"].update(updates)
-            for u in updates:
-                self._inline_dont_change_this_comment(toml_dict["project"][u])
-            # [project.urls]
-            toml_dict["project"]["urls"] = {
-                "Homepage": f"https://pypi.org/project/{gha_input.pypi_name}/",
-                "Tracker": f"{gh_api.url}/issues",
-                "Source": gh_api.url,
-            }
-            self._inline_dont_change_this_comment(toml_dict["project"]["urls"])
+            self.insert_packaging_and_pypi_attributes(
+                toml_dict["project"],
+                gha_input,
+                ffile,
+                gh_api,
+            )
         else:
             raise RuntimeError(f"Unknown mode: {gha_input.mode}")
 
@@ -539,26 +490,7 @@ class PyProjectTomlBuilder:
 
         # [project.optional-dependencies][mypy]
         if gha_input.auto_mypy_option:
-            try:
-                toml_dict["project"]["optional-dependencies"]["mypy"] = sorted(
-                    set(
-                        itertools.chain.from_iterable(
-                            deps
-                            for opt, deps in toml_dict["project"][
-                                "optional-dependencies"
-                            ].items()
-                            if opt != "mypy"
-                        )
-                    )
-                )
-                self._inline_dont_change_this_comment(
-                    toml_dict["project"]["optional-dependencies"]["mypy"]
-                )
-            except KeyError:
-                # there are no [project.optional-dependencies]
-                # -> this is okay, it means that `WIPACrepo/wipac-dev-mypy-action` will
-                #    just run w/ 'pip install .'
-                pass
+            self.build_mypy_optional_deps(toml_dict["project"]["optional-dependencies"])
 
         # Automate some README stuff
         self.readme_mgr: READMEMarkdownManager | None
@@ -568,6 +500,109 @@ class PyProjectTomlBuilder:
             )
         else:
             self.readme_mgr = None
+
+    @staticmethod
+    def insert_packaging_attributes(
+        toml_project: TOMLDocumentTypeHint,
+        gha_input: GHAInput,
+        ffile: FromFiles,
+    ) -> None:
+        """Add the attributes for the 'PACKAGING' mode."""
+        if gha_input.mode != "PACKAGING":
+            raise RuntimeError(f"cannot add 'PACKAGING' attrs for {gha_input.mode=}")
+
+        toml_project["name"] = "_".join(ffile.packages).replace("_", "-")
+        PyProjectTomlBuilder._inline_dont_change_this_comment(toml_project["name"])
+
+        toml_project["requires-python"] = gha_input.get_requires_python()
+        PyProjectTomlBuilder._inline_dont_change_this_comment(
+            toml_project["requires-python"]
+        )
+
+        # add the following if they were given:
+
+        if gha_input.author or gha_input.author_email:
+            toml_project["authors"] = [{}]
+
+            if gha_input.author:
+                toml_project["authors"][0].update({"name": gha_input.author})
+                PyProjectTomlBuilder._inline_dont_change_this_comment(
+                    toml_project["authors"][0]
+                )
+
+            if gha_input.author_email:
+                toml_project["authors"][0].update({"email": gha_input.author_email})
+                PyProjectTomlBuilder._inline_dont_change_this_comment(
+                    toml_project["authors"][0]
+                )
+
+        if gha_input.keywords:
+            toml_project["keywords"] = gha_input.keywords
+            PyProjectTomlBuilder._inline_dont_change_this_comment(
+                toml_project["keywords"]
+            )
+
+    @staticmethod
+    def insert_packaging_and_pypi_attributes(
+        toml_project: TOMLDocumentTypeHint,
+        gha_input: GHAInput,
+        ffile: FromFiles,
+        gh_api: GitHubAPI,
+    ) -> None:
+        """Add the attributes for the 'PACKAGING_AND_PYPI' mode."""
+        if gha_input.mode != "PACKAGING_AND_PYPI":
+            raise RuntimeError(
+                f"cannot add 'PACKAGING_AND_PYPI' attrs for {gha_input.mode=}"
+            )
+
+        updates = {
+            "name": gha_input.pypi_name,
+            "authors": [
+                {
+                    "name": gha_input.author,
+                    "email": gha_input.author_email,
+                }
+            ],
+            "description": gh_api.description,
+            "readme": ffile.readme_path.name,
+            "license": gha_input.license_spdx_id,
+            "license-files": (
+                [gha_input.license_file] if gha_input.license_file else []
+            ),
+            "keywords": gha_input.keywords,
+            "classifiers": gha_input.python_classifiers(),
+            "requires-python": gha_input.get_requires_python(),
+        }
+        toml_project.update(updates)
+        for u in updates:
+            PyProjectTomlBuilder._inline_dont_change_this_comment(toml_project[u])
+        # [project.urls]
+        toml_project["urls"] = {
+            "Homepage": f"https://pypi.org/project/{gha_input.pypi_name}/",
+            "Tracker": f"{gh_api.url}/issues",
+            "Source": gh_api.url,
+        }
+        PyProjectTomlBuilder._inline_dont_change_this_comment(toml_project["urls"])
+
+    @staticmethod
+    def build_mypy_optional_deps(toml_proj_optdeps: TOMLDocumentTypeHint) -> None:
+        """Make the `toml_dict["project"]["optional-dependencies"]["mypy"]` section."""
+        try:
+            toml_proj_optdeps["mypy"] = sorted(
+                set(
+                    itertools.chain.from_iterable(
+                        deps for opt, deps in toml_proj_optdeps.items() if opt != "mypy"
+                    )
+                )
+            )
+            PyProjectTomlBuilder._inline_dont_change_this_comment(
+                toml_proj_optdeps["mypy"]
+            )
+        except KeyError:
+            # there are no [project.optional-dependencies]
+            # -> this is okay, it means that `WIPACrepo/wipac-dev-mypy-action` will
+            #    just run w/ 'pip install .'
+            pass
 
     @staticmethod
     def _inline_dont_change_this_comment(section: Any) -> None:
