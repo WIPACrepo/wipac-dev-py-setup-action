@@ -319,6 +319,7 @@ class FromFiles:
 
         # end game
         if packages_with_dunder_versions:
+            # THIS SCRIPT WILL NOW ERROR OUT -- SO CLEAN UP AND GET OUT!
             if git_update_these:
                 # -- this is unusual, but git-push the __init__ updates even though the action failed
                 LOGGER.info(f"git pushing '__init__.py' files in {git_update_these}")
