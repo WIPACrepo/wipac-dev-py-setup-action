@@ -983,7 +983,7 @@ def test_70_defined_init_version__error(directory: Path, requests_mock: Any) -> 
     with pytest.raises(
         Exception,
         match=re.escape(
-            "Module (mock_package) '__init__.py' must not define '__version__'."
+            "Module(s) ['mock_package']: '__init__.py' must not define '__version__' -- also, see the auto-inserted python comment(s)."
         ),
     ):
         pyproject_toml_builder.work(
