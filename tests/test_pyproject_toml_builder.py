@@ -222,12 +222,12 @@ def mock_many_requests(requests_mock: Any) -> None:
     )
 
 
-GIT_CALLS = []
-
-
-@pytest.fixture(autouse=True)
-def clear_git_calls():
-    GIT_CALLS.clear()
+# GIT_CALLS = []
+#
+#
+# @pytest.fixture(autouse=True)
+# def clear_git_calls():
+#     GIT_CALLS.clear()
 
 
 # Save original so patch_git_subprocess_calls can call it
@@ -238,7 +238,7 @@ def patch_git_subprocess_calls(cmd, *a, **kw):
     if (isinstance(cmd, list) and cmd and cmd[0] == "git") or (
         isinstance(cmd, str) and cmd.strip().startswith("git ")
     ):
-        GIT_CALLS.append((cmd, kw))
+        # GIT_CALLS.append((cmd, kw))
         return CompletedProcess(cmd, 0)
     return subprocess_orig_run(cmd, *a, **kw)
 
