@@ -1,17 +1,34 @@
 #!/bin/bash
 set -euo pipefail
 
+# -----------------------------------------------------------------------------
+# GitHub Actions / CI Guardrail Script
 #
-# Detect all .gitignore files for '.git'
+# Purpose:
+#   Enforce checks for Python's 'setuptools-scm' builds and Docker best practices.
+#
+# Checks:
+#   1. .dockerignore — fail if it ignores .git
+#   2. Dockerfile    — fail if it contains COPY . .
+#
+# Usage:
+#   Run in CI to fail builds on violations. Emits GitHub Actions error annotations.
+#
+# Exit Codes:
+#   0 - No violations
+#   1 - Violation found
+# -----------------------------------------------------------------------------
+
+#
+# Detect all .dockerignore files for '.git'
 #
 
-find . -type f -name '.gitignore' -print0 |
-    while IFS= read -r -d '' f; do
-        if grep -qE '^[[:space:]]*[^#][[:space:]]*\.git/?[[:space:]]*$' "$f"; then
-            echo "::error file=$f::Forbidden rule ignoring '.git' found — remove for setuptools-scm compliance"
-            exit 1
-        fi
-    done
+while IFS= read -r -d '' f; do # (looping like this, supports whitespaces in names and doesn't need a subshell)
+    if grep -qE '^[[:space:]]*[^#][[:space:]]*\.git/?[[:space:]]*$' "$f"; then
+        echo "::error file=$f::Forbidden rule ignoring '.git' found — remove for setuptools-scm compliance"
+        exit 1
+    fi
+done < <(find . -type f -name '.dockerignore' -print0)
 
 #
 # Detect 'COPY . .' (and variations) in Dockerfiles
@@ -24,36 +41,25 @@ join_continuations() {
 
 emit_copy_dotdot_error() {
     local f="$1"
-    local content="$2"
-
-    # show just the matching lines (with line numbers) for context
-    local matches
-    matches="$(printf "%s\n" "$content" | grep -niE \
-        '^[[:space:]]*[^#].*\<COPY\>([[:space:]]+--[^[:space:]]+)*[[:space:]]+\.[[:space:]]+\.(?:[[:space:]]*(#|$))|^[[:space:]]*[^#].*\<COPY\>[[:space:]]*\[[[:space:]]*"\."[[:space:]]*,[[:space:]]*"\."[[:space:]]*\](?:[[:space:]]*(#|$))' || true)"
 
     {
         echo "::error file=$f,title=Forbidden COPY . .::<<GHA_EOT"
         echo "Found forbidden \`COPY . .\` in: $f"
         echo
-        if [ -n "$matches" ]; then
-            echo "Matched lines:"
-            echo "$matches"
-            echo
-        fi
         echo "Use a narrow, cache-friendly install step instead, e.g.:"
 
         # **** NOTE! THIS IS A HEREDOC ****
         cat <<'SNIP'
-#  .git
 # Mount the entire build context (including '.git/') just for this step
 # NOTE:
+#  - mounting '.git/' allows the Python project to build with 'setuptools-scm'
 #  - no 'COPY' because we don't want to copy extra files (especially '.git/')
 #  - using '/tmp/pip-cache' allows pip to cache
 RUN --mount=type=cache,target=/tmp/pip-cache \
     pip install --upgrade "pip>=25" "setuptools>=80" "wheel>=0.45"
 RUN --mount=type=bind,source=.,target=/src,rw \
     --mount=type=cache,target=/tmp/pip-cache \
-    pip install /src[rabbitmq]
+    pip install /src[<insert your optional dependency name(s) here>]
 SNIP
         # **** END ****
 
@@ -61,30 +67,29 @@ SNIP
     }
 }
 
-find . -type f \( -iname 'dockerfile' -o -iname '*.dockerfile' \) -print0 |
-    while IFS= read -r -d '' f; do
-        content="$(join_continuations <"$f")"
+while IFS= read -r -d '' f; do # (looping like this, supports whitespaces in names and doesn't need a subshell)
+    content="$(join_continuations <"$f")"
 
-        # grep two 'COPY . .' patterns
-        #
-        # shell-form:
-        #    COPY . .
-        #    COPY --chown=1000:1000 . .
-        #    COPY --from=builder . .
-        #    COPY --link . .
-        #    COPY --from=builder --chown=appuser:appgroup . .
-        #
-        # JSON-array form:
-        #    COPY [".", "."]
-        #    COPY --chown=1000:1000 [".", "."]
-        #    COPY --from=builder [".", "."]
-        #    COPY --link [".", "."]
-        #    COPY --from=builder --chown=appuser:appgroup [".", "."]
+    # grep two 'COPY . .' patterns
+    #
+    # shell-form:
+    #    COPY . .
+    #    COPY --chown=1000:1000 . .
+    #    COPY --from=builder . .
+    #    COPY --link . .
+    #    COPY --from=builder --chown=appuser:appgroup . .
+    #
+    # JSON-array form:
+    #    COPY [".", "."]
+    #    COPY --chown=1000:1000 [".", "."]
+    #    COPY --from=builder [".", "."]
+    #    COPY --link [".", "."]
+    #    COPY --from=builder --chown=appuser:appgroup [".", "."]
 
-        if grep -qiE '^[[:space:]]*[^#].*\<COPY\>([[:space:]]+--[^[:space:]]+)*[[:space:]]+\.[[:space:]]+\.(?:[[:space:]]*(#|$))' <<<"$content" ||
-            grep -qiE '^[[:space:]]*[^#].*\<COPY\>([[:space:]]+--[^[:space:]]+)*[[:space:]]*\[[[:space:]]*"\."[[:space:]]*,[[:space:]]*"\."[[:space:]]*\](?:[[:space:]]*(#|$))' <<<"$content"; then
-            # match! echo error message...
-            emit_copy_dotdot_error "$f" "$content"
-            exit 1
-        fi
-    done
+    if grep -qiE '^[[:space:]]*[^#].*\<COPY\>([[:space:]]+--[^[:space:]]+)*[[:space:]]+\.[[:space:]]+\.(?:[[:space:]]*(#|$))' <<<"$content" ||
+        grep -qiE '^[[:space:]]*[^#].*\<COPY\>([[:space:]]+--[^[:space:]]+)*[[:space:]]*\[[[:space:]]*"\."[[:space:]]*,[[:space:]]*"\."[[:space:]]*\](?:[[:space:]]*(#|$))' <<<"$content"; then
+        # match! echo error message...
+        emit_copy_dotdot_error "$f" "$content"
+        exit 1
+    fi
+done < <(find . -type f \( -iname 'dockerfile' -o -iname '*.dockerfile' \) -print0)
