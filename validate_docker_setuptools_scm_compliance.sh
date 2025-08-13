@@ -27,7 +27,7 @@ echo "DEBUG: Searching for .dockerignore files..."
 while IFS= read -r -d '' f; do # (looping like this, supports whitespaces in names and doesn't need a subshell)
     echo "DEBUG: Checking $f for '.git' ignore rule..."
     if grep -qP '^[[:space:]]*[^#][[:space:]]*\.git/?[[:space:]]*$' "$f"; then
-        echo "::error file=$f::Forbidden rule ignoring '.git' found — remove for setuptools-scm compliance"
+        echo "::error file=$f::Forbidden rule ignoring '.git' found — remove for setuptools-scm compliance (see job logs for details)"
         exit 1
     fi
 done < <(find . -type f -name '.dockerignore' -print0)
@@ -45,7 +45,7 @@ emit_copy_dotdot_error() {
     local f="$1"
 
     {
-        echo "::error file=$f,title=Forbidden COPY . .::<<GHA_EOT"
+        echo "::error file=$f,title=Forbidden COPY . .::Found forbidden \`COPY . .\` in: $f — see job logs for the full recommendation"
         echo "Found forbidden \`COPY . .\` in: $f"
         echo
         echo "Use a narrow, cache-friendly install step instead, e.g.:"
@@ -64,8 +64,6 @@ RUN --mount=type=bind,source=.,target=/src,rw \
     pip install /src[<insert your optional dependency name(s) here>]
 SNIP
         # **** END ****
-
-        echo "GHA_EOT"
     }
 }
 
