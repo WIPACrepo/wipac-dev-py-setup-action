@@ -242,8 +242,21 @@ runs:
       run: |
         # step: Check Docker files for setuptools-scm compliance
         set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
-
         ${{ github.action_path }}/validate_docker_setuptools_scm_compliance.sh
+      shell: bash
+
+    - name: Ensure dependabot.yml has canon settings
+      if: env.IS_GIT_BEHIND != 'true'
+      run: |
+        # step: Ensure dependabot.yml has canon settings
+        set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        
+        . "$SETUP_PY_GHA_PYVENV"/bin/activate
+        ${{ github.action_path }}/ensure_dependabot.py .github/dependabot.yml
+        
+        # Commits
+        git add .github/dependabot.yml
+        git commit -m "<bot> update .github/dependabot.yml" || true
 
       shell: bash
 
