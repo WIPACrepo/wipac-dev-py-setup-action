@@ -23,7 +23,9 @@ set -euo pipefail
 # Detect all .dockerignore files for '.git'
 #
 
+echo "DEBUG: Searching for .dockerignore files..."
 while IFS= read -r -d '' f; do # (looping like this, supports whitespaces in names and doesn't need a subshell)
+    echo "DEBUG: Checking $f for '.git' ignore rule..."
     if grep -qE '^[[:space:]]*[^#][[:space:]]*\.git/?[[:space:]]*$' "$f"; then
         echo "::error file=$f::Forbidden rule ignoring '.git' found — remove for setuptools-scm compliance"
         exit 1
@@ -67,8 +69,14 @@ SNIP
     }
 }
 
+echo "DEBUG: Searching for Dockerfiles..."
 while IFS= read -r -d '' f; do # (looping like this, supports whitespaces in names and doesn't need a subshell)
+    echo "DEBUG: Found Dockerfile candidate: $f"
     content="$(join_continuations <"$f")"
+    echo "DEBUG: Content after joining continuations:"
+    echo "--------"
+    echo "$content"
+    echo "--------"
 
     # grep two 'COPY . .' patterns
     #
@@ -88,8 +96,12 @@ while IFS= read -r -d '' f; do # (looping like this, supports whitespaces in nam
 
     if grep -qiE '^[[:space:]]*[^#].*\<COPY\>([[:space:]]+--[^[:space:]]+)*[[:space:]]+\.[[:space:]]+\.(?:[[:space:]]*(#|$))' <<<"$content" ||
         grep -qiE '^[[:space:]]*[^#].*\<COPY\>([[:space:]]+--[^[:space:]]+)*[[:space:]]*\[[[:space:]]*"\."[[:space:]]*,[[:space:]]*"\."[[:space:]]*\](?:[[:space:]]*(#|$))' <<<"$content"; then
-        # match! echo error message...
+        echo "DEBUG: Match found in $f"
         emit_copy_dotdot_error "$f" "$content"
         exit 1
+    else
+        echo "DEBUG: No match in $f"
     fi
 done < <(find . -type f \( -iname 'dockerfile' -o -iname '*.dockerfile' \) -print0)
+
+echo "DEBUG: Guardrail checks completed successfully."
