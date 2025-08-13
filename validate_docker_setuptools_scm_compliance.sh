@@ -26,7 +26,7 @@ set -euo pipefail
 echo "DEBUG: Searching for .dockerignore files..."
 while IFS= read -r -d '' f; do # (looping like this, supports whitespaces in names and doesn't need a subshell)
     echo "DEBUG: Checking $f for '.git' ignore rule..."
-    if grep -qE '^[[:space:]]*[^#][[:space:]]*\.git/?[[:space:]]*$' "$f"; then
+    if grep -qP '^[[:space:]]*[^#][[:space:]]*\.git/?[[:space:]]*$' "$f"; then
         echo "::error file=$f::Forbidden rule ignoring '.git' found — remove for setuptools-scm compliance"
         exit 1
     fi
@@ -94,10 +94,11 @@ while IFS= read -r -d '' f; do # (looping like this, supports whitespaces in nam
     #    COPY --link [".", "."]
     #    COPY --from=builder --chown=appuser:appgroup [".", "."]
 
-    if grep -qiE '^[[:space:]]*[^#].*\<COPY\>([[:space:]]+--[^[:space:]]+)*[[:space:]]+\.[[:space:]]+\.(?:[[:space:]]*(#|$))' <<<"$content" ||
-        grep -qiE '^[[:space:]]*[^#].*\<COPY\>([[:space:]]+--[^[:space:]]+)*[[:space:]]*\[[[:space:]]*"\."[[:space:]]*,[[:space:]]*"\."[[:space:]]*\](?:[[:space:]]*(#|$))' <<<"$content"; then
+    if grep -qiP '^[[:space:]]*[^#].*\bCOPY\b(?:[[:space:]]+--\S+)*[[:space:]]+\.[[:space:]]+\.[[:space:]]*(?:#|$)' <<<"$content" ||
+        grep -qiP '^[[:space:]]*[^#].*\bCOPY\b(?:[[:space:]]+--\S+)*[[:space:]]*\[\s*"\."\s*,\s*"\."\s*\]\s*(?:#|$)' <<<"$content"; then
+        # found one!
         echo "DEBUG: Match found in $f"
-        emit_copy_dotdot_error "$f" "$content"
+        emit_copy_dotdot_error "$f"
         exit 1
     else
         echo "DEBUG: No match in $f"

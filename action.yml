@@ -257,7 +257,6 @@ runs:
         # Commits
         git add .github/dependabot.yml
         git commit -m "<bot> update .github/dependabot.yml" || true
-
       shell: bash
 
     - name: Build pyproject.toml + README.md (and commit)
