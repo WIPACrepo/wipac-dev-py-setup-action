@@ -489,12 +489,14 @@ class PyProjectTomlBuilder:
             toml_dict["tool"]["setuptools_scm"] = {}
             self._inline_dont_change_this_comment(toml_dict["tool"]["setuptools_scm"])
         # Loud sentinel if SCM/tags are missing
-        toml_dict["tool"]["setuptools_scm"]["fallback_version"] = "local"
-        comment = (
-            " # sentinel if SCM and/or tags are missing — "
-            "for GitHub Action builds, always use 'actions/checkout' with 'fetch-depth: 0'"
+        toml_dict["tool"]["setuptools_scm"].add(
+            tomlkit.comment(
+                "# Used only when SCM metadata is completely unavailable (e.g., .git missing).\n"
+                "# Note: in shallow clones without tags, setuptools_scm will still infer a\n"
+                "# commit-based version; this value will NOT be used in that case."
+            )
         )
-        toml_dict["tool"]["setuptools_scm"]["fallback_version"].trivia.comment = comment
+        toml_dict["tool"]["setuptools_scm"]["fallback_version"] = "UNTAGGED"
 
         # [project.optional-dependencies][mypy]
         if gha_input.auto_mypy_option:
