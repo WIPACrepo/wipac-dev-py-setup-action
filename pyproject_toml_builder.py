@@ -491,8 +491,8 @@ class PyProjectTomlBuilder:
         # Loud sentinel if SCM/tags are missing
         toml_dict["tool"]["setuptools_scm"]["fallback_version"] = "UNTAGGED"
         comment = (
-            " # only used when SCM metadata is completely unavailable (e.g., .git/ missing). "
-            "NOTE: in shallow clones without git tags, setuptools_scm will still infer a "
+            " # only used when SCM metadata is completely unavailable (e.g., no '.git/'). "
+            "NOTE: in shallow clones without git tags, setuptools-scm will still infer a "
             "commit-based version (like '0.1.dev1+g79c9b4b'); this value will NOT be used in that case."
         )
         toml_dict["tool"]["setuptools_scm"]["fallback_version"].trivia.comment = comment
