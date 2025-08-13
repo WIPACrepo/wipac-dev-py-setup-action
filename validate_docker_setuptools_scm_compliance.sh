@@ -45,10 +45,10 @@ emit_copy_dotdot_error() {
     local f="$1"
 
     {
-        echo "::error file=$f,title=Forbidden COPY . .::Found forbidden \`COPY . .\` in: $f — see job logs for the full recommendation"
+        echo "::error file=$f,title=Forbidden COPY . .::Found forbidden \`COPY . .\` in: $f — see full recommendation below"
         echo "Found forbidden \`COPY . .\` in: $f"
-        echo
         echo "Use a narrow, cache-friendly install step instead, e.g.:"
+        echo
 
         # **** NOTE! THIS IS A HEREDOC ****
         cat <<'SNIP'
@@ -64,6 +64,8 @@ RUN --mount=type=bind,source=.,target=/src,rw \
     pip install /src[<insert your optional dependency name(s) here>]
 SNIP
         # **** END ****
+
+        echo
     }
 }
 
