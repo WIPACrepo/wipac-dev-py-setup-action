@@ -30,7 +30,7 @@ while IFS= read -r -d '' f; do # (looping like this, supports whitespaces in nam
     # Use -E (ERE) here for max portability; match a line that's exactly ".git" or ".git/"
     if grep -qE '^[[:space:]]*\.git/?[[:space:]]*$' "$f"; then
         echo "DEBUG: Matched offending line(s) in $f:"
-        echo "::error file=$f::Forbidden rule ignoring '.git' found — remove for setuptools-scm compliance"
+        echo "::error file=$f::Forbidden rule ignoring '.git' found in: $f — remove for setuptools-scm compliance"
         exit 1
     fi
 done < <(find . -type f -name '.dockerignore' -print0)
