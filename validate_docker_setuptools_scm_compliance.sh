@@ -9,7 +9,7 @@ set -euo pipefail
 #
 # Checks:
 #   1. .dockerignore — fail if it ignores .git
-#   2. Dockerfile    — fail if it contains COPY . .
+#   2. Dockerfile    — fail if it copies the entire build context (`COPY . ...`)
 #
 # Usage:
 #   Run in CI to fail builds on violations. Emits GitHub Actions error annotations.
@@ -33,7 +33,7 @@ while IFS= read -r -d '' f; do # (looping like this, supports whitespaces in nam
 done < <(find . -type f -name '.dockerignore' -print0)
 
 #
-# Detect 'COPY . .' (and variations) in Dockerfiles
+# Detect 'COPY' that copies the entire context (source is '.')
 #
 
 join_continuations() {
@@ -41,12 +41,12 @@ join_continuations() {
     awk '/\\[[:space:]]*$/{sub(/\\[[:space:]]*$/,""); printf "%s", $0; next}1'
 }
 
-emit_copy_dotdot_error() {
+emit_copy_dot_error() {
     local f="$1"
 
     {
-        echo "::error file=$f,title=Forbidden COPY . .::Found forbidden \`COPY . .\` in: $f — see full recommendation below"
-        echo "Found forbidden \`COPY . .\` in: $f"
+        echo "::error file=$f,title=Forbidden COPY from .::Found forbidden \`COPY . <dest>\` in: $f — see full recommendation below"
+        echo "Found forbidden \`COPY . <dest>\` in: $f"
         echo "Use a narrow, cache-friendly install step instead, e.g.:"
         echo
 
@@ -55,7 +55,7 @@ emit_copy_dotdot_error() {
 # Mount the entire build context (including '.git/') just for this step
 # NOTE:
 #  - mounting '.git/' allows the Python project to build with 'setuptools-scm'
-#  - no 'COPY' because we don't want to copy extra files (especially '.git/')
+#  - no 'COPY .' because we don't want to copy extra files (especially '.git/')
 #  - using '/tmp/pip-cache' allows pip to cache
 RUN --mount=type=cache,target=/tmp/pip-cache \
     pip install --upgrade "pip>=25" "setuptools>=80" "wheel>=0.45"
@@ -78,26 +78,28 @@ while IFS= read -r -d '' f; do # (looping like this, supports whitespaces in nam
     echo "$content"
     echo "--------"
 
-    # grep two 'COPY . .' patterns
+    # grep 'COPY' patterns where the **source** is `.`
     #
-    # shell-form:
+    # shell-form examples (should be flagged):
     #    COPY . .
+    #    COPY . /app
     #    COPY --chown=1000:1000 . .
-    #    COPY --from=builder . .
+    #    COPY --from=builder . /src
     #    COPY --link . .
-    #    COPY --from=builder --chown=appuser:appgroup . .
+    #    COPY --from=builder --chown=appuser:appgroup . /dst
     #
-    # JSON-array form:
+    # JSON-array form examples (should be flagged):
     #    COPY [".", "."]
+    #    COPY [".", "/app"]
     #    COPY --chown=1000:1000 [".", "."]
-    #    COPY --from=builder [".", "."]
+    #    COPY --from=builder [".", "/src"]
     #    COPY --link [".", "."]
     #    COPY --from=builder --chown=appuser:appgroup [".", "."]
 
-    if grep -qiP '^\s*COPY\b(?:\s+--\S+)*\s+\.\s+\.\s*(?:#|$)' <<<"$content" ||
-        grep -qiP '^\s*COPY\b(?:\s+--\S+)*\s*\[\s*"\."\s*,\s*"\."\s*\]\s*(?:#|$)' <<<"$content"; then
+    if grep -qiP '^\s*COPY\b(?:\s+--\S+)*\s+\.(?:\s|$)' <<<"$content" ||
+        grep -qiP '^\s*COPY\b(?:\s+--\S+)*\s*\[\s*"\."\s*,\s*".*"\s*\]' <<<"$content"; then
         echo "DEBUG: Match found in $f"
-        emit_copy_dotdot_error "$f"
+        emit_copy_dot_error "$f"
         exit 1
     else
         echo "DEBUG: No match in $f"
