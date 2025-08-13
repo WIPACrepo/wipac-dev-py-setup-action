@@ -155,6 +155,31 @@ runs:
         git config user.email ${{ inputs.git_committer_email }}
       shell: bash
 
+    - name: Check Docker files for setuptools-scm compliance
+      if: env.IS_GIT_BEHIND != 'true'
+      run: |
+        # step: Check Docker files for setuptools-scm compliance
+        set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        ${{ github.action_path }}/validate_docker_setuptools_scm_compliance.sh
+      shell: bash
+
+    - name: Setup Python Venv
+      if: env.IS_GIT_BEHIND != 'true'
+      run: |
+        # step: Setup Python Venv
+        set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        
+        sudo apt-get update
+        
+        tmpdir=$(mktemp -d)
+        SETUP_PY_GHA_PYVENV="$tmpdir"/action_venv
+        python -m venv $SETUP_PY_GHA_PYVENV
+        . "$SETUP_PY_GHA_PYVENV"/bin/activate
+        pip3 install -r ${{ github.action_path }}/requirements.txt
+        
+        echo "SETUP_PY_GHA_PYVENV=$SETUP_PY_GHA_PYVENV" >> $GITHUB_ENV
+      shell: bash
+
     - name: Check pyproject.toml for project migration
       if: env.IS_GIT_BEHIND != 'true'
       run: |
@@ -164,32 +189,24 @@ runs:
         # if needed: auto-create a minimal pyproject.toml
         if [[ ! -f pyproject.toml ]]; then
             touch pyproject.toml
-            # TODO: update logic when https://github.com/WIPACrepo/wipac-dev-py-setup-action/issues/62
-            # add required fields
-            echo "# WIPACrepo/wipac-dev-py-setup-action@v4+ Migration Helper:" >> pyproject.toml
-            echo "" >> pyproject.toml
-            # add most likely needed fields
-            echo "[project]" >> pyproject.toml
-            echo "dependencies = []  # leave empty if there are no dependencies" >> pyproject.toml
-            echo "" >> pyproject.toml
-            echo "# optional sections:" >> pyproject.toml
-            echo "" >> pyproject.toml
-            echo "# [project.optional-dependencies]" >> pyproject.toml
-            echo "# foo = []" >> pyproject.toml
-            echo "# bar = []" >> pyproject.toml
+            . "$SETUP_PY_GHA_PYVENV"/bin/activate
+            python3 ${{ github.action_path }}/setup_cfg_to_pyproject_toml.py setup.cfg pyproject.toml
             # commit, push, exit
-            msg="added pyproject.toml -- ALERT: user needs to set values for auto-added fields"
+            msg="created `pyproject.toml` -- ALERT: user needs to review!"
             git add .
             git commit -m "<bot> $msg"
             git push
             echo $msg
             echo "IS_GIT_BEHIND=true" >> $GITHUB_ENV
+            echo "::warning::Auto-created pyproject.toml -- look at most recent commit."
+            exit 1
         fi
+        
         # no setup.cfg allowed!
         if [[ -f setup.cfg ]]; then
             echo " "
-            echo "WIPACrepo/wipac-dev-py-setup-action no longer supports 'setup.cfg'"
-            echo "Migration Steps:"
+            echo "::error::WIPACrepo/wipac-dev-py-setup-action does not support 'setup.cfg'"
+            echo "Migration Steps (setup.cfg -> pyproject.toml):"
             echo "  1. Look at 'pyproject.toml'--this action may have auto-added fields."
             echo "     Fill out any needed values."
             echo "  2. Manually move attributes from setup.cfg's [wipac:cicd_setup_builder]"
@@ -228,18 +245,28 @@ runs:
         fi
       shell: bash
 
+    - name: Ensure dependabot.yml has canon settings
+      if: env.IS_GIT_BEHIND != 'true'
+      run: |
+        # step: Ensure dependabot.yml has canon settings
+        set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        
+        . "$SETUP_PY_GHA_PYVENV"/bin/activate
+        ${{ github.action_path }}/ensure_dependabot.py .github/dependabot.yml
+        
+        # Commits
+        git add .github/dependabot.yml
+        git commit -m "<bot> update .github/dependabot.yml" || true
+      shell: bash
+
     - name: Build pyproject.toml + README.md (and commit)
       if: env.IS_GIT_BEHIND != 'true'
       run: |
         # step: Build pyproject.toml + README.md (and commit)
         set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
-        
-        set -e
-        sudo apt-get update
-        python -m venv action_venv
-        . action_venv/bin/activate
-        pip3 install -r ${{ github.action_path }}/requirements.txt
 
+        . "$SETUP_PY_GHA_PYVENV"/bin/activate
+        
         # Build!
         set -x
         export PYPROJECT_KEYWORDS_JSON
@@ -261,13 +288,7 @@ runs:
           --auto-mypy-option "${{ inputs.auto_mypy_option }}"
         set +x
         
-        # format (inc. sorting sections)
-        pip install toml-sort
-        toml-sort --in-place --ignore-case pyproject.toml
-        
         cat pyproject.toml
-        
-        rm -rf action_venv
         
         # Commits
         git add pyproject.toml

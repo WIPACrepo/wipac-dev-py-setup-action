@@ -3,3 +3,4 @@ tomlkit
 coloredlogs
 requests
 typing-extensions
+PyYAML

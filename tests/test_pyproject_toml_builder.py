@@ -4,10 +4,13 @@ import copy
 import logging
 import os
 import re
+import subprocess
 import sys
 import uuid
 from pathlib import Path
+from subprocess import CompletedProcess
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 import tomlkit
@@ -219,11 +222,33 @@ def mock_many_requests(requests_mock: Any) -> None:
     )
 
 
+# GIT_CALLS = []
+#
+#
+# @pytest.fixture(autouse=True)
+# def clear_git_calls():
+#     GIT_CALLS.clear()
+
+
+# Save original so patch_git_subprocess_calls can call it
+subprocess_orig_run = subprocess.run
+
+
+def patch_git_subprocess_calls(cmd, *a, **kw):
+    if (isinstance(cmd, list) and cmd and cmd[0] == "git") or (
+        isinstance(cmd, str) and cmd.strip().startswith("git ")
+    ):
+        # GIT_CALLS.append((cmd, kw))
+        return CompletedProcess(cmd, 0)
+    return subprocess_orig_run(cmd, *a, **kw)
+
+
 ################################################################################
 # TESTS
 ################################################################################
 
 
+@patch("subprocess.run", patch_git_subprocess_calls)
 def test_00_minimum_input(directory: Path, requests_mock: Any) -> None:
     """Test using bare minimum input."""
     mock_many_requests(requests_mock)
@@ -249,7 +274,7 @@ def test_00_minimum_input(directory: Path, requests_mock: Any) -> None:
             **NO_PYPI_VANILLA_PROJECT_KEYVALS_OUT,  # the true minimum is more vanilla than vanilla)
         },
         "tool": {
-            "setuptools_scm": {},
+            "setuptools_scm": {"fallback_version": "UNTAGGED"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
@@ -269,6 +294,7 @@ def test_00_minimum_input(directory: Path, requests_mock: Any) -> None:
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
 
 
+@patch("subprocess.run", patch_git_subprocess_calls)
 def test_01_minimum_input_w_pypi(directory: Path, requests_mock: Any) -> None:
     """Test using the minimum input with pypi attrs."""
     mock_many_requests(requests_mock)
@@ -308,7 +334,7 @@ def test_01_minimum_input_w_pypi(directory: Path, requests_mock: Any) -> None:
             **PYPI_URLS_KEYVALS,
         },
         "tool": {
-            "setuptools_scm": {},
+            "setuptools_scm": {"fallback_version": "UNTAGGED"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
@@ -328,6 +354,7 @@ def test_01_minimum_input_w_pypi(directory: Path, requests_mock: Any) -> None:
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
 
 
+@patch("subprocess.run", patch_git_subprocess_calls)
 def test_10_keywords(directory: Path, requests_mock: Any) -> None:
     """Test using  `keywords`."""
     mock_many_requests(requests_mock)
@@ -387,7 +414,7 @@ def test_10_keywords(directory: Path, requests_mock: Any) -> None:
             **PYPI_URLS_KEYVALS,
         },
         "tool": {
-            "setuptools_scm": {},
+            "setuptools_scm": {"fallback_version": "UNTAGGED"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
@@ -407,6 +434,7 @@ def test_10_keywords(directory: Path, requests_mock: Any) -> None:
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
 
 
+@patch("subprocess.run", patch_git_subprocess_calls)
 def test_20_python_max(directory: Path, requests_mock: Any) -> None:
     """Test using  `python_max`."""
     mock_many_requests(requests_mock)
@@ -462,7 +490,7 @@ def test_20_python_max(directory: Path, requests_mock: Any) -> None:
             **PYPI_URLS_KEYVALS,
         },
         "tool": {
-            "setuptools_scm": {},
+            "setuptools_scm": {"fallback_version": "UNTAGGED"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
@@ -482,6 +510,7 @@ def test_20_python_max(directory: Path, requests_mock: Any) -> None:
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
 
 
+@patch("subprocess.run", patch_git_subprocess_calls)
 def test_30_package_dirs__single(directory: Path, requests_mock: Any) -> None:
     """Test using `package_dirs` & a single desired package."""
     mock_many_requests(requests_mock)
@@ -538,7 +567,7 @@ def test_30_package_dirs__single(directory: Path, requests_mock: Any) -> None:
             **PYPI_URLS_KEYVALS,
         },
         "tool": {
-            "setuptools_scm": {},
+            "setuptools_scm": {"fallback_version": "UNTAGGED"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {
@@ -564,6 +593,7 @@ def test_30_package_dirs__single(directory: Path, requests_mock: Any) -> None:
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
 
 
+@patch("subprocess.run", patch_git_subprocess_calls)
 def test_34_package_dirs__multi_autoname__no_pypi(
     directory: Path, requests_mock: Any
 ) -> None:
@@ -613,7 +643,7 @@ def test_34_package_dirs__multi_autoname__no_pypi(
             ],
         },
         "tool": {
-            "setuptools_scm": {},
+            "setuptools_scm": {"fallback_version": "UNTAGGED"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {
@@ -650,6 +680,7 @@ def test_34_package_dirs__multi_autoname__no_pypi(
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
 
 
+@patch("subprocess.run", patch_git_subprocess_calls)
 def test_35_package_dirs__multi(directory: Path, requests_mock: Any) -> None:
     """Test using `package_dirs` & multiple desired packages."""
     mock_many_requests(requests_mock)
@@ -706,7 +737,7 @@ def test_35_package_dirs__multi(directory: Path, requests_mock: Any) -> None:
             **PYPI_URLS_KEYVALS,
         },
         "tool": {
-            "setuptools_scm": {},
+            "setuptools_scm": {"fallback_version": "UNTAGGED"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {
@@ -743,6 +774,7 @@ def test_35_package_dirs__multi(directory: Path, requests_mock: Any) -> None:
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
 
 
+@patch("subprocess.run", patch_git_subprocess_calls)
 def test_36_package_dirs__multi_missing_init__error(
     directory: Path, requests_mock: Any
 ) -> None:
@@ -799,6 +831,7 @@ def test_36_package_dirs__multi_missing_init__error(
         )
 
 
+@patch("subprocess.run", patch_git_subprocess_calls)
 def test_40_extra_stuff(directory: Path, requests_mock: Any) -> None:
     """Test using extra stuff."""
     mock_many_requests(requests_mock)
@@ -863,7 +896,7 @@ def test_40_extra_stuff(directory: Path, requests_mock: Any) -> None:
             **PYPI_URLS_KEYVALS,
         },
         "tool": {
-            "setuptools_scm": {},
+            "setuptools_scm": {"fallback_version": "UNTAGGED"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
@@ -889,6 +922,7 @@ def test_40_extra_stuff(directory: Path, requests_mock: Any) -> None:
 # NOTE: test 50 was removed -- it tested deprecated functionality
 
 
+@patch("subprocess.run", patch_git_subprocess_calls)
 def test_60_defined_project_version__error(directory: Path, requests_mock: Any) -> None:
     """Test situation where 'project.version' is defined."""
     mock_many_requests(requests_mock)
@@ -922,6 +956,7 @@ def test_60_defined_project_version__error(directory: Path, requests_mock: Any) 
         )
 
 
+@patch("subprocess.run", patch_git_subprocess_calls)
 def test_70_defined_init_version__error(directory: Path, requests_mock: Any) -> None:
     """Test situation where 'project.version' is defined."""
     mock_many_requests(requests_mock)
@@ -948,7 +983,7 @@ def test_70_defined_init_version__error(directory: Path, requests_mock: Any) -> 
     with pytest.raises(
         Exception,
         match=re.escape(
-            "Module (mock_package) '__init__.py' must not define '__version__'."
+            "Module(s) ['mock_package']: '__init__.py' must not define '__version__' -- also, see the auto-inserted python comment(s)."
         ),
     ):
         pyproject_toml_builder.work(
@@ -959,6 +994,7 @@ def test_70_defined_init_version__error(directory: Path, requests_mock: Any) -> 
         )
 
 
+@patch("subprocess.run", patch_git_subprocess_calls)
 def test_80_auto_mypy_option(directory: Path, requests_mock: Any) -> None:
     """Test using auto_mypy_option."""
     mock_many_requests(requests_mock)
@@ -992,7 +1028,7 @@ def test_80_auto_mypy_option(directory: Path, requests_mock: Any) -> None:
             },
         },
         "tool": {
-            "setuptools_scm": {},
+            "setuptools_scm": {"fallback_version": "UNTAGGED"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
