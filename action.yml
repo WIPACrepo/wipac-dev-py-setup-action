@@ -237,6 +237,16 @@ runs:
         fi
       shell: bash
 
+    - name: Check Docker files for setuptools-scm compliance
+      if: env.IS_GIT_BEHIND != 'true'
+      run: |
+        # step: Check Docker files for setuptools-scm compliance
+        set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+
+        ${{ github.action_path }}/validate_docker_setuptools_scm_compliance.sh
+
+      shell: bash
+
     - name: Build pyproject.toml + README.md (and commit)
       if: env.IS_GIT_BEHIND != 'true'
       run: |
