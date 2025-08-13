@@ -274,7 +274,7 @@ def test_00_minimum_input(directory: Path, requests_mock: Any) -> None:
             **NO_PYPI_VANILLA_PROJECT_KEYVALS_OUT,  # the true minimum is more vanilla than vanilla)
         },
         "tool": {
-            "setuptools_scm": {},
+            "setuptools_scm": {"fallback_version": "UNTAGGED"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
@@ -334,7 +334,7 @@ def test_01_minimum_input_w_pypi(directory: Path, requests_mock: Any) -> None:
             **PYPI_URLS_KEYVALS,
         },
         "tool": {
-            "setuptools_scm": {},
+            "setuptools_scm": {"fallback_version": "UNTAGGED"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
@@ -414,7 +414,7 @@ def test_10_keywords(directory: Path, requests_mock: Any) -> None:
             **PYPI_URLS_KEYVALS,
         },
         "tool": {
-            "setuptools_scm": {},
+            "setuptools_scm": {"fallback_version": "UNTAGGED"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
@@ -490,7 +490,7 @@ def test_20_python_max(directory: Path, requests_mock: Any) -> None:
             **PYPI_URLS_KEYVALS,
         },
         "tool": {
-            "setuptools_scm": {},
+            "setuptools_scm": {"fallback_version": "UNTAGGED"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
@@ -567,7 +567,7 @@ def test_30_package_dirs__single(directory: Path, requests_mock: Any) -> None:
             **PYPI_URLS_KEYVALS,
         },
         "tool": {
-            "setuptools_scm": {},
+            "setuptools_scm": {"fallback_version": "UNTAGGED"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {
@@ -643,7 +643,7 @@ def test_34_package_dirs__multi_autoname__no_pypi(
             ],
         },
         "tool": {
-            "setuptools_scm": {},
+            "setuptools_scm": {"fallback_version": "UNTAGGED"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {
@@ -737,7 +737,7 @@ def test_35_package_dirs__multi(directory: Path, requests_mock: Any) -> None:
             **PYPI_URLS_KEYVALS,
         },
         "tool": {
-            "setuptools_scm": {},
+            "setuptools_scm": {"fallback_version": "UNTAGGED"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {
@@ -896,7 +896,7 @@ def test_40_extra_stuff(directory: Path, requests_mock: Any) -> None:
             **PYPI_URLS_KEYVALS,
         },
         "tool": {
-            "setuptools_scm": {},
+            "setuptools_scm": {"fallback_version": "UNTAGGED"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
@@ -1028,7 +1028,7 @@ def test_80_auto_mypy_option(directory: Path, requests_mock: Any) -> None:
             },
         },
         "tool": {
-            "setuptools_scm": {},
+            "setuptools_scm": {"fallback_version": "UNTAGGED"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
                 "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
