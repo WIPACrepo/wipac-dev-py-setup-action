@@ -26,8 +26,11 @@ set -euo pipefail
 echo "DEBUG: Searching for .dockerignore files..."
 while IFS= read -r -d '' f; do # (looping like this, supports whitespaces in names and doesn't need a subshell)
     echo "DEBUG: Checking $f for '.git' ignore rule..."
-    if grep -qP '^[[:space:]]*[^#][[:space:]]*\.git/?[[:space:]]*$' "$f"; then
-        echo "::error file=$f::Forbidden rule ignoring '.git' found — remove for setuptools-scm compliance (see job logs for details)"
+
+    # Use -E (ERE) here for max portability; match a line that's exactly ".git" or ".git/"
+    if grep -qE '^[[:space:]]*\.git/?[[:space:]]*$' "$f"; then
+        echo "DEBUG: Matched offending line(s) in $f:"
+        echo "::error file=$f::Forbidden rule ignoring '.git' found — remove for setuptools-scm compliance"
         exit 1
     fi
 done < <(find . -type f -name '.dockerignore' -print0)
@@ -91,7 +94,7 @@ while IFS= read -r -d '' f; do # (looping like this, supports whitespaces in nam
     # JSON-array form examples (should be flagged):
     #    COPY [".", "."]
     #    COPY [".", "/app"]
-    #    COPY --chown=1000:1000 [".", "."]
+    #    COPY --chown=1000:1000 [".", "."]-
     #    COPY --from=builder [".", "/src"]
     #    COPY --link [".", "."]
     #    COPY --from=builder --chown=appuser:appgroup [".", "."]
