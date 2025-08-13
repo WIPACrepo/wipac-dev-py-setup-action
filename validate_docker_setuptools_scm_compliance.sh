@@ -94,9 +94,8 @@ while IFS= read -r -d '' f; do # (looping like this, supports whitespaces in nam
     #    COPY --link [".", "."]
     #    COPY --from=builder --chown=appuser:appgroup [".", "."]
 
-    if grep -qiP '^[[:space:]]*[^#].*\bCOPY\b(?:[[:space:]]+--\S+)*[[:space:]]+\.[[:space:]]+\.[[:space:]]*(?:#|$)' <<<"$content" ||
-        grep -qiP '^[[:space:]]*[^#].*\bCOPY\b(?:[[:space:]]+--\S+)*[[:space:]]*\[\s*"\."\s*,\s*"\."\s*\]\s*(?:#|$)' <<<"$content"; then
-        # found one!
+    if grep -qiP '^\s*COPY\b(?:\s+--\S+)*\s+\.\s+\.\s*(?:#|$)' <<<"$content" ||
+        grep -qiP '^\s*COPY\b(?:\s+--\S+)*\s*\[\s*"\."\s*,\s*"\."\s*\]\s*(?:#|$)' <<<"$content"; then
         echo "DEBUG: Match found in $f"
         emit_copy_dotdot_error "$f"
         exit 1
