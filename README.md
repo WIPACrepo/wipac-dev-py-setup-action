@@ -2,8 +2,7 @@
 
 A GitHub Action Package for Automating Python-Package Setup & Maintenance
 
-This GitHub Action prepares a repository to be GitHub-released and optionally, PyPI-published by
-the [Python Semantic Release GitHub Action](https://python-semantic-release.readthedocs.io/en/latest/). A user needs
+This GitHub Action prepares a repository to be GitHub-released and optionally, PyPI-published. A user needs
 only to provide a few attributes in the GitHub Action's `with` block (see [*Configuration
 Modes*](#configuration-modes)).
 
