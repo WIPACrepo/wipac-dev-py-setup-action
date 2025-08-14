@@ -192,7 +192,7 @@ runs:
             . "$SETUP_PY_GHA_PYVENV"/bin/activate
             python3 ${{ github.action_path }}/setup_cfg_to_pyproject_toml.py setup.cfg pyproject.toml
             # commit, push, exit
-            msg="created `pyproject.toml` -- ALERT: user needs to review!"
+            msg="created pyproject.toml -- ALERT: user needs to review!"
             git add .
             git commit -m "<bot> $msg"
             git push
