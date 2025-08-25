@@ -55,16 +55,35 @@ emit_copy_dot_error() {
 
         # **** NOTE! THIS IS A HEREDOC ****
         cat <<'SNIP'
-# Mount the entire build context (including '.git/') just for this step
+
+# THERE ARE TWO RECOMMENDED PIP-INSTALL PATTERNS TO REPLACE YOUR 'COPY .' + 'pip install .'
+# NOTE: both patterns are compatible with Dockerfile's `USER ...`
+# -- Uncomment your pick and replace any placeholder strings
+
+# Pip-Install Pattern #1
 # NOTE:
-#  - mounting '.git/' allows the Python project to build with 'setuptools-scm'
-#  - no 'COPY .' because we don't want to copy extra files (especially '.git/')
-#  - using '/tmp/pip-cache' allows pip to cache
-RUN --mount=type=cache,target=/tmp/pip-cache \
-    pip install --upgrade "pip>=25" "setuptools>=80" "wheel>=0.45"
-RUN --mount=type=bind,source=.,target=/src,rw \
-    --mount=type=cache,target=/tmp/pip-cache \
-    pip install /src[<insert your optional dependency name(s) here>]
+#  - Use this pattern if during pip-install, no additional files are written to package (compare to pattern #2)
+#  - No 'COPY .' because we don't want to copy extra files (especially '.git/')
+#  - Mounting source files prevents unnecessary file duplication (compare to pattern #2)
+#  - Mounting '.git/' allows the Python project to build with 'setuptools-scm'
+#RUN --mount=type=bind,source=.git,target=.git,ro \
+#    --mount=type=bind,source=pyproject.toml,target=pyproject.toml,ro \
+#    --mount=type=bind,source=YOUR_PYTHON_PACKAGE,target=YOUR_PYTHON_PACKAGE,ro \
+#    pip install --no-cache .
+
+# Pip-Install Pattern #2
+# NOTE:
+#  - Use this pattern if during pip-install, additional files are written to package (like '_version.py').
+#  - No 'COPY .' because we don't want to copy extra files (especially '.git/')
+#  - Unlike pattern #1, using 'COPY' will duplicate source files -- generally this is not an issue.
+#       > Side Note: Using 'pip install -e .' will prevent duplication BUT can hide packaging issues
+#            such as improperly using '[tool.setuptools.packages.find]' in 'pyproject.toml',
+#            so 'pip install -e .' is not recommended.
+#  - Mounting '.git/' allows the Python project to build with 'setuptools-scm'
+#COPY pyproject.toml [YOUR_WORKDIR/]pyproject.toml
+#COPY YOUR_PYTHON_PACKAGE [YOUR_WORKDIR/]YOUR_PYTHON_PACKAGE
+#RUN --mount=type=bind,source=.git,target=.git,ro pip install --no-cache .
+
 SNIP
         # **** END ****
 
