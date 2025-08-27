@@ -467,7 +467,7 @@ def test_20_python_max(directory: Path, requests_mock: Any) -> None:
         "project": {
             "name": "wipac-mock-package",
             **VANILLA_PROJECT_KEYVALS_OUT,
-            "requires-python": ">=3.10, <3.10",  # override VANILLA_PROJECT_KEYVALS
+            "requires-python": ">=3.10, <3.11",  # override VANILLA_PROJECT_KEYVALS
             "keywords": [
                 "python",
                 "REST",
