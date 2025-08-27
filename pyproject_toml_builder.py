@@ -193,8 +193,10 @@ class GHAInput:
             pystr = f"{py[0]}.{py[1]}"
             if semver_parser_tools.is_python_eol(pystr):
                 raise _log_error_then_get_exception(
-                    f"Python version ('{attr_name}={pystr}') is passed its end-of-life date, "
-                    f"{datetime.date.fromtimestamp(semver_parser_tools.get_python_eol_ts(pystr))}."
+                    f"Python version ('{attr_name}={pystr}') is passed its end-of-life date "
+                    f"("
+                    f"{datetime.date.fromtimestamp(semver_parser_tools.get_python_eol_ts(pystr))}"
+                    f")."
                 )
 
     def get_requires_python(self) -> str:
