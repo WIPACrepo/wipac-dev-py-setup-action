@@ -5,6 +5,7 @@ Used in CI/CD, used by GH Action.
 
 import argparse
 import dataclasses
+import datetime
 import itertools
 import logging
 import os
@@ -189,9 +190,11 @@ class GHAInput:
                 raise _log_error_then_get_exception(
                     f"Python-release automation ('{attr_name}') does not work for python 4+."
                 )
-            if semver_parser_tools.is_python_eol(f"{py[0]}.{py[1]}"):
+            pystr = f"{py[0]}.{py[1]}"
+            if semver_parser_tools.is_python_eol(pystr):
                 raise _log_error_then_get_exception(
-                    f"Python version ('{attr_name}') is passed its end-of-life date."
+                    f"Python version ('{attr_name}') is passed its end-of-life date, "
+                    f"{datetime.date.fromtimestamp(semver_parser_tools.get_python_eol_ts(pystr))}."
                 )
 
     def get_requires_python(self) -> str:
