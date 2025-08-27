@@ -92,7 +92,7 @@ VANILLA_PROJECT_KEYVALS_OUT = {
     "readme": "README.md",
     "license": "MIT",
     "license-files": ["MY_LICENSE"],
-    "requires-python": ">=3.6, <3.12",
+    "requires-python": ">=3.10, <3.12",
     "dynamic": ["version"],
 }
 NO_PYPI_VANILLA_PROJECT_KEYVALS_OUT = {  # even MORE vanilla than vanilla
@@ -258,7 +258,7 @@ def test_00_minimum_input(directory: Path, requests_mock: Any) -> None:
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
         mode="PACKAGING",
-        python_min=(3, 6),
+        python_min=(3, 10),
         license_spdx_id="MIT",
         license_file="MY_LICENSE",
     )
@@ -305,7 +305,7 @@ def test_01_minimum_input_w_pypi(directory: Path, requests_mock: Any) -> None:
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         mode="PACKAGING_AND_PYPI",
-        python_min=(3, 6),
+        python_min=(3, 10),
         license_spdx_id="MIT",
         license_file="MY_LICENSE",
         keywords=["WIPAC", "IceCube"],
@@ -324,10 +324,6 @@ def test_01_minimum_input_w_pypi(directory: Path, requests_mock: Any) -> None:
             **VANILLA_PROJECT_KEYVALS_OUT,
             "keywords": ["WIPAC", "IceCube"],
             "classifiers": [
-                "Programming Language :: Python :: 3.6",
-                "Programming Language :: Python :: 3.7",
-                "Programming Language :: Python :: 3.8",
-                "Programming Language :: Python :: 3.9",
                 "Programming Language :: Python :: 3.10",
                 "Programming Language :: Python :: 3.11",
             ],
@@ -365,7 +361,7 @@ def test_10_keywords(directory: Path, requests_mock: Any) -> None:
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         mode="PACKAGING_AND_PYPI",
-        python_min=(3, 6),
+        python_min=(3, 10),
         license_spdx_id="MIT",
         license_file="MY_LICENSE",
         author=AUTHOR,
@@ -404,10 +400,6 @@ def test_10_keywords(directory: Path, requests_mock: Any) -> None:
                 "3+ word string keywords",
             ],
             "classifiers": [
-                "Programming Language :: Python :: 3.6",
-                "Programming Language :: Python :: 3.7",
-                "Programming Language :: Python :: 3.8",
-                "Programming Language :: Python :: 3.9",
                 "Programming Language :: Python :: 3.10",
                 "Programming Language :: Python :: 3.11",
             ],
@@ -445,10 +437,10 @@ def test_20_python_max(directory: Path, requests_mock: Any) -> None:
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         mode="PACKAGING_AND_PYPI",
-        python_min=(3, 6),
+        python_min=(3, 10),
         license_spdx_id="MIT",
         license_file="MY_LICENSE",
-        python_max=(3, 9),
+        python_max=(3, 10),
         author=AUTHOR,
         author_email=AUTHOR_EMAIL,
         keywords=[
@@ -471,7 +463,7 @@ def test_20_python_max(directory: Path, requests_mock: Any) -> None:
         "project": {
             "name": "wipac-mock-package",
             **VANILLA_PROJECT_KEYVALS_OUT,
-            "requires-python": ">=3.6, <3.10",  # override VANILLA_PROJECT_KEYVALS
+            "requires-python": ">=3.10, <3.10",  # override VANILLA_PROJECT_KEYVALS
             "keywords": [
                 "python",
                 "REST",
@@ -482,10 +474,7 @@ def test_20_python_max(directory: Path, requests_mock: Any) -> None:
                 "telemetry",
             ],
             "classifiers": [
-                "Programming Language :: Python :: 3.6",
-                "Programming Language :: Python :: 3.7",
-                "Programming Language :: Python :: 3.8",
-                "Programming Language :: Python :: 3.9",
+                "Programming Language :: Python :: 3.10",
             ],
             **PYPI_URLS_KEYVALS,
         },
@@ -521,7 +510,7 @@ def test_30_package_dirs__single(directory: Path, requests_mock: Any) -> None:
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         mode="PACKAGING_AND_PYPI",
-        python_min=(3, 6),
+        python_min=(3, 10),
         license_spdx_id="MIT",
         license_file="MY_LICENSE",
         author=AUTHOR,
@@ -557,10 +546,6 @@ def test_30_package_dirs__single(directory: Path, requests_mock: Any) -> None:
                 "telemetry",
             ],
             "classifiers": [
-                "Programming Language :: Python :: 3.6",
-                "Programming Language :: Python :: 3.7",
-                "Programming Language :: Python :: 3.8",
-                "Programming Language :: Python :: 3.9",
                 "Programming Language :: Python :: 3.10",
                 "Programming Language :: Python :: 3.11",
             ],
@@ -605,7 +590,7 @@ def test_34_package_dirs__multi_autoname__no_pypi(
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
         mode="PACKAGING",
-        python_min=(3, 6),
+        python_min=(3, 10),
         license_spdx_id="MIT",
         license_file="MY_LICENSE",
         author=AUTHOR,
@@ -691,7 +676,7 @@ def test_35_package_dirs__multi(directory: Path, requests_mock: Any) -> None:
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         mode="PACKAGING_AND_PYPI",
-        python_min=(3, 6),
+        python_min=(3, 10),
         license_spdx_id="MIT",
         license_file="MY_LICENSE",
         author=AUTHOR,
@@ -727,10 +712,6 @@ def test_35_package_dirs__multi(directory: Path, requests_mock: Any) -> None:
                 "telemetry",
             ],
             "classifiers": [
-                "Programming Language :: Python :: 3.6",
-                "Programming Language :: Python :: 3.7",
-                "Programming Language :: Python :: 3.8",
-                "Programming Language :: Python :: 3.9",
                 "Programming Language :: Python :: 3.10",
                 "Programming Language :: Python :: 3.11",
             ],
@@ -787,7 +768,7 @@ def test_36_package_dirs__multi_missing_init__error(
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         mode="PACKAGING_AND_PYPI",
-        python_min=(3, 6),
+        python_min=(3, 10),
         license_spdx_id="MIT",
         license_file="MY_LICENSE",
         author=AUTHOR,
@@ -842,7 +823,7 @@ def test_40_extra_stuff(directory: Path, requests_mock: Any) -> None:
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         mode="PACKAGING_AND_PYPI",
-        python_min=(3, 6),
+        python_min=(3, 10),
         license_spdx_id="MIT",
         license_file="MY_LICENSE",
         author=AUTHOR,
@@ -886,10 +867,6 @@ def test_40_extra_stuff(directory: Path, requests_mock: Any) -> None:
                 "telemetry",
             ],
             "classifiers": [
-                "Programming Language :: Python :: 3.6",
-                "Programming Language :: Python :: 3.7",
-                "Programming Language :: Python :: 3.8",
-                "Programming Language :: Python :: 3.9",
                 "Programming Language :: Python :: 3.10",
                 "Programming Language :: Python :: 3.11",
             ],
@@ -932,7 +909,7 @@ def test_60_defined_project_version__error(directory: Path, requests_mock: Any) 
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
         mode="PACKAGING",
-        python_min=(3, 6),
+        python_min=(3, 10),
         license_spdx_id="MIT",
         license_file="MY_LICENSE",
     )
@@ -966,7 +943,7 @@ def test_70_defined_init_version__error(directory: Path, requests_mock: Any) -> 
     gha_input = pyproject_toml_builder.GHAInput(
         auto_mypy_option=False,
         mode="PACKAGING",
-        python_min=(3, 6),
+        python_min=(3, 10),
         license_spdx_id="MIT",
         license_file="MY_LICENSE",
     )
@@ -1003,7 +980,7 @@ def test_80_auto_mypy_option(directory: Path, requests_mock: Any) -> None:
 
     gha_input = pyproject_toml_builder.GHAInput(
         mode="PACKAGING",
-        python_min=(3, 6),
+        python_min=(3, 10),
         license_spdx_id="MIT",
         license_file="MY_LICENSE",
         auto_mypy_option=True,
