@@ -177,17 +177,21 @@ class GHAInput:
             )
 
         # validate python min/max
-        for major, attr_name in [
-            (self.python_min[0], "python_min"),
-            (self.python_max[0], "python_max"),
+        for py, attr_name in [
+            (self.python_min, "python_min"),
+            (self.python_max, "python_max"),
         ]:
-            if major < 3:
+            if py[0] < 3:
                 raise _log_error_then_get_exception(
                     f"Python-release automation ('{attr_name}') does not work for python <3."
                 )
-            elif major >= 4:
+            elif py[0] >= 4:
                 raise _log_error_then_get_exception(
                     f"Python-release automation ('{attr_name}') does not work for python 4+."
+                )
+            if semver_parser_tools.is_python_eol(f"{py[0]}.{py[1]}"):
+                raise _log_error_then_get_exception(
+                    f"Python version ('{attr_name}') is passed its end-of-life date."
                 )
 
     def get_requires_python(self) -> str:
