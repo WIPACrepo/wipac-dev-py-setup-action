@@ -41,12 +41,14 @@ In order to use the action, a few files need to have the following:
 
 ```
   py-setup:
+    if: ${{ github.actor != 'dependabot[bot]' }} # dependabot cannot access PAT
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          ref: ${{ github.ref }}  # dont lock to sha (action needs to push)
       - uses: WIPACrepo/wipac-dev-py-setup-action@v5.#
         with:
           mode: ...
