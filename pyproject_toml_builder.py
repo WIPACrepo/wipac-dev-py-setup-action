@@ -768,7 +768,7 @@ def work(
 def main() -> None:
     """Read and write all necessary files."""
     parser = argparse.ArgumentParser(
-        description=f"Read/transform 'pyproject.toml' and 'README.md' files",
+        description="Read/transform 'pyproject.toml' and 'README.md' files",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
