@@ -691,7 +691,7 @@ def write_toml(
     token: str,
     gha_input: GHAInput,
 ) -> READMEMarkdownManager | None:
-    """Build/write the `pyproject.toml` sections according to `BUILDER_SECTION_NAME`.
+    """Build/write the `pyproject.toml` sections.
 
     Return a 'READMEMarkdownManager' instance to write out. If, necessary.
     """
@@ -768,8 +768,7 @@ def work(
 def main() -> None:
     """Read and write all necessary files."""
     parser = argparse.ArgumentParser(
-        description=f"Read/transform 'pyproject.toml' and 'README.md' files. "
-        f"Builds out 'pyproject.toml' sections according to [{BUILDER_SECTION_NAME}].",
+        description=f"Read/transform 'pyproject.toml' and 'README.md' files",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
