@@ -229,16 +229,15 @@ class FromFiles:
             raise NotADirectoryError(root)
         self.gha_input = gha_input
         self.root = root.resolve()
-        self._pkg_paths = self._get_package_paths(self.gha_input.exclude_dirs)
-        self.packages = [p.name for p in self._pkg_paths]
+        self.package_paths = self._get_package_paths()
         self.readme_path = self._get_readme_path()
 
         self.check_no_version_dunders()  # do now so we don't forget to
 
-    def _get_package_paths(self, dirs_exclude: list[str]) -> list[Path]:
+    def _get_package_paths(self) -> list[Path]:
         """Find the package path(s)."""
-
-        if not (available_pkgs := list(iterate_dirnames(self.root, dirs_exclude))):
+        available_pkgs = list(iterate_dirnames(self.root, self.gha_input.exclude_dirs))
+        if not available_pkgs:
             raise _log_error_then_get_exception(
                 f"No package found in '{self.root}'. Are you missing an __init__.py?"
             )
@@ -288,7 +287,7 @@ class FromFiles:
         git_update_these = []
 
         # detect
-        for pkg in self._pkg_paths:
+        for pkg in self.package_paths:
             init_py = pkg / "__init__.py"
 
             # use a regex subn to detect __version__ and do a replace at same time
@@ -477,9 +476,7 @@ class PyProjectTomlBuilder:
             toml_dict["tool"]["setuptools"] = {}
         toml_dict["tool"]["setuptools"].update(
             {
-                "packages": {
-                    "find": self._tool_setuptools_packages_find(gha_input),
-                },
+                "packages": self._tool_setuptools_packages(ffile),
                 "package-data": {
                     **toml_dict["tool"].get("setuptools", {}).get("package-data", {}),
                     "*": self._tool_setuptools_packagedata_star(toml_dict),
@@ -529,7 +526,9 @@ class PyProjectTomlBuilder:
         if gha_input.mode != "PACKAGING":
             raise RuntimeError(f"cannot add 'PACKAGING' attrs for {gha_input.mode=}")
 
-        toml_project["name"] = "_".join(ffile.packages).replace("_", "-")
+        toml_project["name"] = "-".join(
+            p.name.replace("_", "-") for p in ffile.package_paths
+        )
         PyProjectTomlBuilder._inline_dont_change_this_comment(toml_project["name"])
 
         toml_project["requires-python"] = gha_input.get_requires_python()
@@ -638,18 +637,27 @@ class PyProjectTomlBuilder:
         # <none>
 
     @staticmethod
-    def _tool_setuptools_packages_find(gha_input: GHAInput) -> dict[str, Any]:
-        # only allow these...
-        if gha_input.package_dirs:
-            return {
-                "include": gha_input.package_dirs
-                + [f"{p}.*" for p in gha_input.package_dirs]
-            }
-        # disallow these...
-        dicto: dict[str, Any] = {"namespaces": False}
-        if gha_input.exclude_dirs:
-            dicto.update({"exclude": gha_input.exclude_dirs})
-        return dicto
+    def _tool_setuptools_packages(ffile: FromFiles) -> list[str]:
+        """
+        Recursively collect package and subpackage names from the given base paths.
+        A package is any directory under the base that contains Python files
+        (classic __init__.py packages or implicit namespace packages).
+        """
+        listo: list[str] = []
+
+        for pkg in ffile.package_paths:
+            base = pkg.name
+            # always include the top-level package itself
+            listo.append(base)
+
+            for path in pkg.rglob("*"):
+                if path.is_dir():
+                    # build dotted name relative to the base
+                    rel = str(path.relative_to(pkg))
+                    if rel:  # skip the empty string for the base itself
+                        listo.append(f'{base}.{rel.replace("/", ".")}')
+
+        return listo
 
     @staticmethod
     def _tool_setuptools_packagedata_star(toml_dict: TOMLDocumentTypeHint) -> list[str]:
