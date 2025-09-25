@@ -24,7 +24,7 @@ from wipac_dev_tools import (
     strtobool,
 )
 
-from find_packages import is_classical_package, is_namespace_package, iterate_dirnames
+from find_packages import is_classical_package, is_namespace_package, iter_packages
 
 REAMDE_BADGES_START_DELIMITER = "<!--- Top of README Badges (automated) --->"
 REAMDE_BADGES_END_DELIMITER = "<!--- End of README Badges (automated) --->"
@@ -236,41 +236,41 @@ class FromFiles:
 
     def _get_package_paths(self) -> list[Path]:
         """Find the package path(s)."""
-        available_pkgs = list(iterate_dirnames(self.root, self.gha_input.exclude_dirs))
-        if not available_pkgs:
+        found_pkgs = list(iter_packages(self.root, self.gha_input.exclude_dirs))
+        if not found_pkgs:
             raise _log_error_then_get_exception(
                 f"No package found in '{self.root}'. Are you missing an __init__.py?"
             )
 
         # check the pyproject.toml: package_dirs
         if self.gha_input.package_dirs:
-            if not_ins := [
-                p for p in self.gha_input.package_dirs if p not in available_pkgs
+            if missings := [
+                p for p in self.gha_input.package_dirs if p not in found_pkgs
             ]:
-                if len(not_ins) == 1:
+                if len(missings) == 1:
                     raise _log_error_then_get_exception(
                         f"Package directory not found: "
-                        f"{not_ins[0]} (defined in pyproject.toml). "
+                        f"{missings[0]} (defined in pyproject.toml). "
                         f"Is the directory missing an __init__.py?"
                     )
                 raise _log_error_then_get_exception(
                     f"Package directories not found: "
-                    f"{', '.join(not_ins)} (defined in pyproject.toml). "
+                    f"{', '.join(missings)} (defined in pyproject.toml). "
                     f"Are the directories missing __init__.py files?"
                 )
-
-            return [self.root / p for p in self.gha_input.package_dirs]
+            else:
+                return [self.root / p for p in self.gha_input.package_dirs]
         # use the auto-detected package (if there's ONE)
         else:
-            if len(available_pkgs) > 1:
+            if len(found_pkgs) > 1:
                 raise _log_error_then_get_exception(
-                    f"More than one package found in '{self.root}': {', '.join(available_pkgs)}. "
+                    f"More than one package found in '{self.root}': {', '.join(found_pkgs)}. "
                     f"Either "
                     f"[1] list *all* your desired packages in your pyproject.toml's 'package_dirs', "
                     f"[2] remove the extra __init__.py file(s), "
                     f"or [3] list which packages to ignore in your GitHub Action step's 'with.exclude-dirs'."
                 )
-            return [self.root / available_pkgs[0]]
+            return [self.root / found_pkgs[0]]
 
     def check_no_version_dunders(self) -> None:
         """Check that no modules' __init__.py define a __version__ attribute."""
@@ -640,25 +640,22 @@ class PyProjectTomlBuilder:
     def _tool_setuptools_packages(ffile: FromFiles) -> list[str]:
         """
         Recursively collect package and subpackage names from the given base paths.
-        Includes either classic packages (with __init__.py) or implicit namespaces
-        (dirs containing at least one .py file).
+        Includes classic packages (__init__.py) and PEP 420 namespaces (dirs with .py files).
         """
         names: set[str] = set()
 
-        def _to_dot_name(pkg: str, path: Path) -> str:
-            rel = path.relative_to(pkg)
-            return str(rel).replace("/", ".")
+        for pkg in ffile.package_paths:  # each is a Path
+            names.add(pkg.name)
 
-        for pkg in ffile.package_paths:
-            base = pkg.name
-            # always include the top-level
-            names.add(base)
-
-            # now, add sub-packages
+            # Walk all subdirs
             for path in pkg.rglob("*"):
+                if not path.is_dir():
+                    continue
+
                 if is_classical_package(path) or is_namespace_package(path):
-                    if name := _to_dot_name(base, path):
-                        names.add(f"{base}.{name}")
+                    rel = str(path.relative_to(pkg))  # e.g., "api/utils"
+                    if rel:  # skip the parent
+                        names.add(f"{pkg.name}.{rel.replace('/', '.')}")
 
         return sorted(names)
 

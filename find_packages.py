@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Iterator
 
 
-def iterate_dirnames(
+def iter_packages(
     root_dir: Path,
     dirs_exclude: list[str] | None = None,
 ) -> Iterator[str]:
