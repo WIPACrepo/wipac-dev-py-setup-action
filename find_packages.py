@@ -17,5 +17,21 @@ def iterate_dirnames(
     for directory in [p for p in root_dir.iterdir() if p.is_dir()]:
         if directory.name in dirs_exclude:
             continue
-        if "__init__.py" in [p.name for p in directory.iterdir()]:
+        if is_classical_package(directory):
             yield directory.name
+
+
+def is_namespace_package(path: Path) -> bool:
+    """Return True if the path is a namespace package."""
+    if not path.is_dir():
+        return False
+
+    return any(f.suffix == ".py" for f in path.iterdir() if f.is_file())
+
+
+def is_classical_package(path: Path) -> bool:
+    """Return True if the path is a classical package."""
+    if not path.is_dir():
+        return False
+
+    return (path / "__init__.py").exists()

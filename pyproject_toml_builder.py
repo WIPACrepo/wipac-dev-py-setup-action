@@ -24,7 +24,7 @@ from wipac_dev_tools import (
     strtobool,
 )
 
-from find_packages import iterate_dirnames
+from find_packages import is_classical_package, is_namespace_package, iterate_dirnames
 
 REAMDE_BADGES_START_DELIMITER = "<!--- Top of README Badges (automated) --->"
 REAMDE_BADGES_END_DELIMITER = "<!--- End of README Badges (automated) --->"
@@ -640,24 +640,27 @@ class PyProjectTomlBuilder:
     def _tool_setuptools_packages(ffile: FromFiles) -> list[str]:
         """
         Recursively collect package and subpackage names from the given base paths.
-        A package is any directory under the base that contains Python files
-        (classic __init__.py packages or implicit namespace packages).
+        Includes either classic packages (with __init__.py) or implicit namespaces
+        (dirs containing at least one .py file).
         """
-        listo: list[str] = []
+        names: set[str] = set()
+
+        def _to_dot_name(pkg: str, path: Path) -> str:
+            rel = path.relative_to(pkg)
+            return str(rel).replace("/", ".")
 
         for pkg in ffile.package_paths:
             base = pkg.name
-            # always include the top-level package itself
-            listo.append(base)
+            # always include the top-level
+            names.add(base)
 
+            # now, add sub-packages
             for path in pkg.rglob("*"):
-                if path.is_dir():
-                    # build dotted name relative to the base
-                    rel = str(path.relative_to(pkg))
-                    if rel:  # skip the empty string for the base itself
-                        listo.append(f'{base}.{rel.replace("/", ".")}')
+                if is_classical_package(path) or is_namespace_package(path):
+                    if name := _to_dot_name(base, path):
+                        names.add(f"{base}.{name}")
 
-        return listo
+        return sorted(names)
 
     @staticmethod
     def _tool_setuptools_packagedata_star(toml_dict: TOMLDocumentTypeHint) -> list[str]:
