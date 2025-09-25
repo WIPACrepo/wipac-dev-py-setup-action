@@ -662,7 +662,7 @@ def test_340_package_dirs__multi_autoname__no_pypi(
 
 @patch("subprocess.run", patch_git_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
-def test_350_package_dirs__multi(directory: Path, requests_mock: Any) -> None:
+def test_341_package_dirs__multi(directory: Path, requests_mock: Any) -> None:
     """Test using `package_dirs` & multiple desired packages."""
     mock_many_requests(requests_mock)
 
@@ -744,7 +744,111 @@ def test_350_package_dirs__multi(directory: Path, requests_mock: Any) -> None:
 
 @patch("subprocess.run", patch_git_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
-def test_360_package_dirs__multi_missing_init__error(
+def test_342_package_dirs__multi_subpackages(
+    directory: Path, requests_mock: Any
+) -> None:
+    """Test using `package_dirs` & multiple desired packages and subpackages."""
+    mock_many_requests(requests_mock)
+
+    pyproject_toml_path = directory / "pyproject.toml"
+
+    gha_input = pyproject_toml_builder.GHAInput(
+        auto_mypy_option=False,
+        pypi_name="wipac-mock-package",
+        mode="PACKAGING_AND_PYPI",
+        python_min=(3, 10),
+        license_spdx_id="MIT",
+        license_file="MY_LICENSE",
+        author=AUTHOR,
+        author_email=AUTHOR_EMAIL,
+        package_dirs=["mock_package", "another_one"],
+        keywords=[
+            "python",
+            "REST",
+            "tools",
+            "utilities",
+            "OpenTelemetry",
+            "tracing",
+            "telemetry",
+        ],
+    )
+
+    # write the original pyproject.toml
+    with open(pyproject_toml_path, "w") as f:
+        tomlkit.dump(VANILLA_SECTIONS_IN, f)
+
+    pyproject_toml_expected = {
+        **BUILD_SYSTEM_SECTION,
+        "project": {
+            "name": "wipac-mock-package",
+            **VANILLA_PROJECT_KEYVALS_OUT,
+            "keywords": [
+                "python",
+                "REST",
+                "tools",
+                "utilities",
+                "OpenTelemetry",
+                "tracing",
+                "telemetry",
+            ],
+            "classifiers": [
+                "Programming Language :: Python :: 3.10",
+                "Programming Language :: Python :: 3.11",
+            ],
+            **PYPI_URLS_KEYVALS,
+        },
+        "tool": {
+            "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
+            "setuptools": {
+                "package-data": {"*": ["py.typed"]},
+                "packages": [
+                    "another_one",
+                    "another_one.sub_another",
+                    "another_one.sub_another.super_nested",
+                    "another_one.sub_another_namespace",
+                    "mock_package",
+                ],
+            },
+        },
+    }
+
+    # make an extra package *not* to be included
+    os.mkdir(directory / "mock_package_test")
+    Path(directory / "mock_package_test/__init__.py").touch()
+
+    # make an extra package *TO BE* included
+    os.mkdir(directory / "another_one")
+    Path(directory / "another_one/__init__.py").touch()
+    # subpackage (classical)
+    os.mkdir(directory / "another_one/sub_another")
+    Path(directory / "another_one/sub_another/__init__.py").touch()
+    # sub-sub-package (classical)
+    os.mkdir(directory / "another_one/sub_another/super_nested")
+    Path(directory / "another_one/sub_another/super_nested/__init__.py").touch()
+    # subpackage (namespace)
+    os.mkdir(directory / "another_one/sub_another_namespace")
+    Path(directory / "another_one/sub_another_namespace/foo.py").touch()
+    # not a subpackage
+    os.mkdir(directory / "another_one/not-a-subpackage")
+    # also not a subpackage
+    os.mkdir(directory / "another_one/also-not-a-subpackage")
+    Path(directory / "another_one/also-not-a-subpackage/bar.txt").touch()
+
+    # run pyproject_toml_builder
+    pyproject_toml_builder.work(
+        pyproject_toml_path,
+        GITHUB_FULL_REPO,
+        TOKEN,
+        gha_input,
+    )
+
+    # assert outputted pyproject.toml
+    assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
+
+
+@patch("subprocess.run", patch_git_subprocess_calls)
+@patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
+def test_345_package_dirs__multi_missing_init__error(
     directory: Path, requests_mock: Any
 ) -> None:
     """Test using `package_dirs` & multiple desired packages."""
