@@ -21,17 +21,17 @@ def iterate_dirnames(
             yield directory.name
 
 
-def is_namespace_package(path: Path) -> bool:
-    """Return True if the path is a namespace package."""
-    if not path.is_dir():
-        return False
-
-    return any(f.suffix == ".py" for f in path.iterdir() if f.is_file())
-
-
 def is_classical_package(path: Path) -> bool:
-    """Return True if the path is a classical package."""
-    if not path.is_dir():
+    """Return True if the path is a classical package (has __init__.py)."""
+    return path.is_dir() and (path / "__init__.py").exists()
+
+
+def is_namespace_package(path: Path) -> bool:
+    """
+    Return True if the path is an implicit namespace package (PEP 420):
+    directory with no __init__.py that contains at least one .py file directly.
+    """
+    if not path.is_dir() or (path / "__init__.py").exists():
         return False
 
-    return (path / "__init__.py").exists()
+    return any(p.suffix == ".py" for p in path.iterdir() if p.is_file())
