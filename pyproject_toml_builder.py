@@ -725,6 +725,7 @@ def write_toml(
     optional_deps = toml_dict.get("project", {}).get("optional-dependencies", {})
     for key in optional_deps:
         set_multiline_array(optional_deps, key, sort=True)
+    set_multiline_array(toml_dict, "tool", "setuptools", "packages", sort=True)
 
     # remove sections that used to be auto-added but are now not needed
     # -> [tool.semantic_release], [tool.semantic_release.commit_parser_options]
