@@ -308,9 +308,9 @@ runs:
         from pathlib import Path
         
         sys.path.append(os.path.abspath("${{ github.action_path }}"))
-        from find_packages import iterate_dirnames
+        from find_packages import iter_packages
         
-        for pkg_dname in iterate_dirnames(Path("."), "${{ inputs.exclude_dirs }}".split()):
+        for pkg_dname in iter_packages(Path("."), "${{ inputs.exclude_dirs }}".split()):
           print(pkg_dname)
           fpath = Path(pkg_dname) / "py.typed"
           print(fpath)

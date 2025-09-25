@@ -24,7 +24,7 @@ from wipac_dev_tools import (
     strtobool,
 )
 
-from find_packages import iterate_dirnames
+from find_packages import is_classical_package, is_namespace_package, iter_packages
 
 REAMDE_BADGES_START_DELIMITER = "<!--- Top of README Badges (automated) --->"
 REAMDE_BADGES_END_DELIMITER = "<!--- End of README Badges (automated) --->"
@@ -229,49 +229,48 @@ class FromFiles:
             raise NotADirectoryError(root)
         self.gha_input = gha_input
         self.root = root.resolve()
-        self._pkg_paths = self._get_package_paths(self.gha_input.exclude_dirs)
-        self.packages = [p.name for p in self._pkg_paths]
+        self.package_paths = self._get_package_paths()
         self.readme_path = self._get_readme_path()
 
         self.check_no_version_dunders()  # do now so we don't forget to
 
-    def _get_package_paths(self, dirs_exclude: list[str]) -> list[Path]:
+    def _get_package_paths(self) -> list[Path]:
         """Find the package path(s)."""
-
-        if not (available_pkgs := list(iterate_dirnames(self.root, dirs_exclude))):
+        found_pkgs = list(iter_packages(self.root, self.gha_input.exclude_dirs))
+        if not found_pkgs:
             raise _log_error_then_get_exception(
                 f"No package found in '{self.root}'. Are you missing an __init__.py?"
             )
 
         # check the pyproject.toml: package_dirs
         if self.gha_input.package_dirs:
-            if not_ins := [
-                p for p in self.gha_input.package_dirs if p not in available_pkgs
+            if missings := [
+                p for p in self.gha_input.package_dirs if p not in found_pkgs
             ]:
-                if len(not_ins) == 1:
+                if len(missings) == 1:
                     raise _log_error_then_get_exception(
                         f"Package directory not found: "
-                        f"{not_ins[0]} (defined in pyproject.toml). "
+                        f"{missings[0]} (defined in pyproject.toml). "
                         f"Is the directory missing an __init__.py?"
                     )
                 raise _log_error_then_get_exception(
                     f"Package directories not found: "
-                    f"{', '.join(not_ins)} (defined in pyproject.toml). "
+                    f"{', '.join(missings)} (defined in pyproject.toml). "
                     f"Are the directories missing __init__.py files?"
                 )
-
-            return [self.root / p for p in self.gha_input.package_dirs]
+            else:
+                return [self.root / p for p in self.gha_input.package_dirs]
         # use the auto-detected package (if there's ONE)
         else:
-            if len(available_pkgs) > 1:
+            if len(found_pkgs) > 1:
                 raise _log_error_then_get_exception(
-                    f"More than one package found in '{self.root}': {', '.join(available_pkgs)}. "
+                    f"More than one package found in '{self.root}': {', '.join(found_pkgs)}. "
                     f"Either "
                     f"[1] list *all* your desired packages in your pyproject.toml's 'package_dirs', "
                     f"[2] remove the extra __init__.py file(s), "
                     f"or [3] list which packages to ignore in your GitHub Action step's 'with.exclude-dirs'."
                 )
-            return [self.root / available_pkgs[0]]
+            return [self.root / found_pkgs[0]]
 
     def check_no_version_dunders(self) -> None:
         """Check that no modules' __init__.py define a __version__ attribute."""
@@ -288,7 +287,7 @@ class FromFiles:
         git_update_these = []
 
         # detect
-        for pkg in self._pkg_paths:
+        for pkg in self.package_paths:
             init_py = pkg / "__init__.py"
 
             # use a regex subn to detect __version__ and do a replace at same time
@@ -477,9 +476,7 @@ class PyProjectTomlBuilder:
             toml_dict["tool"]["setuptools"] = {}
         toml_dict["tool"]["setuptools"].update(
             {
-                "packages": {
-                    "find": self._tool_setuptools_packages_find(gha_input),
-                },
+                "packages": self._tool_setuptools_packages(ffile),
                 "package-data": {
                     **toml_dict["tool"].get("setuptools", {}).get("package-data", {}),
                     "*": self._tool_setuptools_packagedata_star(toml_dict),
@@ -487,7 +484,7 @@ class PyProjectTomlBuilder:
             }
         )
         self._inline_dont_change_this_comment(
-            toml_dict["tool"]["setuptools"]["packages"]["find"]
+            toml_dict["tool"]["setuptools"]["packages"]
         )
         self._inline_dont_change_this_comment(
             toml_dict["tool"]["setuptools"]["package-data"]["*"]
@@ -529,7 +526,9 @@ class PyProjectTomlBuilder:
         if gha_input.mode != "PACKAGING":
             raise RuntimeError(f"cannot add 'PACKAGING' attrs for {gha_input.mode=}")
 
-        toml_project["name"] = "_".join(ffile.packages).replace("_", "-")
+        toml_project["name"] = "-".join(
+            p.name.replace("_", "-") for p in ffile.package_paths
+        )
         PyProjectTomlBuilder._inline_dont_change_this_comment(toml_project["name"])
 
         toml_project["requires-python"] = gha_input.get_requires_python()
@@ -638,18 +637,27 @@ class PyProjectTomlBuilder:
         # <none>
 
     @staticmethod
-    def _tool_setuptools_packages_find(gha_input: GHAInput) -> dict[str, Any]:
-        # only allow these...
-        if gha_input.package_dirs:
-            return {
-                "include": gha_input.package_dirs
-                + [f"{p}.*" for p in gha_input.package_dirs]
-            }
-        # disallow these...
-        dicto: dict[str, Any] = {"namespaces": False}
-        if gha_input.exclude_dirs:
-            dicto.update({"exclude": gha_input.exclude_dirs})
-        return dicto
+    def _tool_setuptools_packages(ffile: FromFiles) -> list[str]:
+        """
+        Recursively collect package and subpackage names from the given base paths.
+        Includes classic packages (__init__.py) and PEP 420 namespaces (dirs with .py files).
+        """
+        names: set[str] = set()
+
+        for pkg in ffile.package_paths:  # each is a Path
+            names.add(pkg.name)
+
+            # Walk all subdirs
+            for path in pkg.rglob("*"):
+                if not path.is_dir():
+                    continue
+
+                if is_classical_package(path) or is_namespace_package(path):
+                    rel = str(path.relative_to(pkg))  # e.g., "api/utils"
+                    if rel:  # skip the parent
+                        names.add(f"{pkg.name}.{rel.replace('/', '.')}")
+
+        return sorted(names)
 
     @staticmethod
     def _tool_setuptools_packagedata_star(toml_dict: TOMLDocumentTypeHint) -> list[str]:
@@ -717,6 +725,7 @@ def write_toml(
     optional_deps = toml_dict.get("project", {}).get("optional-dependencies", {})
     for key in optional_deps:
         set_multiline_array(optional_deps, key, sort=True)
+    set_multiline_array(toml_dict, "tool", "setuptools", "packages", sort=True)
 
     # remove sections that used to be auto-added but are now not needed
     # -> [tool.semantic_release], [tool.semantic_release.commit_parser_options]

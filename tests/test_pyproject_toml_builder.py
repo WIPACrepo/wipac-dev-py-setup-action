@@ -250,7 +250,7 @@ def patch_git_subprocess_calls(cmd, *a, **kw):
 
 @patch("subprocess.run", patch_git_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
-def test_00_minimum_input(directory: Path, requests_mock: Any) -> None:
+def test_000_minimum_input(directory: Path, requests_mock: Any) -> None:
     """Test using bare minimum input."""
     mock_many_requests(requests_mock)
 
@@ -278,7 +278,7 @@ def test_00_minimum_input(directory: Path, requests_mock: Any) -> None:
             "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
+                "packages": ["mock_package"],
             },
         },
     }
@@ -297,7 +297,7 @@ def test_00_minimum_input(directory: Path, requests_mock: Any) -> None:
 
 @patch("subprocess.run", patch_git_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
-def test_01_minimum_input_w_pypi(directory: Path, requests_mock: Any) -> None:
+def test_010_minimum_input_w_pypi(directory: Path, requests_mock: Any) -> None:
     """Test using the minimum input with pypi attrs."""
     mock_many_requests(requests_mock)
 
@@ -335,7 +335,7 @@ def test_01_minimum_input_w_pypi(directory: Path, requests_mock: Any) -> None:
             "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
+                "packages": ["mock_package"],
             },
         },
     }
@@ -354,7 +354,7 @@ def test_01_minimum_input_w_pypi(directory: Path, requests_mock: Any) -> None:
 
 @patch("subprocess.run", patch_git_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
-def test_10_keywords(directory: Path, requests_mock: Any) -> None:
+def test_100_keywords(directory: Path, requests_mock: Any) -> None:
     """Test using  `keywords`."""
     mock_many_requests(requests_mock)
 
@@ -412,7 +412,7 @@ def test_10_keywords(directory: Path, requests_mock: Any) -> None:
             "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
+                "packages": ["mock_package"],
             },
         },
     }
@@ -431,7 +431,7 @@ def test_10_keywords(directory: Path, requests_mock: Any) -> None:
 
 @patch("subprocess.run", patch_git_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
-def test_20_python_max(directory: Path, requests_mock: Any) -> None:
+def test_200_python_max(directory: Path, requests_mock: Any) -> None:
     """Test using  `python_max`."""
     mock_many_requests(requests_mock)
 
@@ -486,7 +486,7 @@ def test_20_python_max(directory: Path, requests_mock: Any) -> None:
             "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
+                "packages": ["mock_package"],
             },
         },
     }
@@ -505,7 +505,7 @@ def test_20_python_max(directory: Path, requests_mock: Any) -> None:
 
 @patch("subprocess.run", patch_git_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
-def test_30_package_dirs__single(directory: Path, requests_mock: Any) -> None:
+def test_300_package_dirs__single(directory: Path, requests_mock: Any) -> None:
     """Test using `package_dirs` & a single desired package."""
     mock_many_requests(requests_mock)
 
@@ -560,9 +560,7 @@ def test_30_package_dirs__single(directory: Path, requests_mock: Any) -> None:
             "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {
-                    "find": {"include": ["mock_package", "mock_package.*"]},
-                },
+                "packages": ["mock_package"],
             },
         },
     }
@@ -585,7 +583,7 @@ def test_30_package_dirs__single(directory: Path, requests_mock: Any) -> None:
 
 @patch("subprocess.run", patch_git_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
-def test_34_package_dirs__multi_autoname__no_pypi(
+def test_340_package_dirs__multi_autoname__no_pypi(
     directory: Path, requests_mock: Any
 ) -> None:
     """Test using `package_dirs` & multiple desired packages."""
@@ -637,16 +635,7 @@ def test_34_package_dirs__multi_autoname__no_pypi(
             "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {
-                    "find": {
-                        "include": [
-                            "mock_package",
-                            "another_one",
-                            "mock_package.*",
-                            "another_one.*",
-                        ]
-                    },
-                },
+                "packages": ["another_one", "mock_package"],
             },
         },
     }
@@ -673,7 +662,7 @@ def test_34_package_dirs__multi_autoname__no_pypi(
 
 @patch("subprocess.run", patch_git_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
-def test_35_package_dirs__multi(directory: Path, requests_mock: Any) -> None:
+def test_341_package_dirs__multi(directory: Path, requests_mock: Any) -> None:
     """Test using `package_dirs` & multiple desired packages."""
     mock_many_requests(requests_mock)
 
@@ -728,16 +717,7 @@ def test_35_package_dirs__multi(directory: Path, requests_mock: Any) -> None:
             "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {
-                    "find": {
-                        "include": [
-                            "mock_package",
-                            "another_one",
-                            "mock_package.*",
-                            "another_one.*",
-                        ]
-                    },
-                },
+                "packages": ["another_one", "mock_package"],
             },
         },
     }
@@ -764,7 +744,111 @@ def test_35_package_dirs__multi(directory: Path, requests_mock: Any) -> None:
 
 @patch("subprocess.run", patch_git_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
-def test_36_package_dirs__multi_missing_init__error(
+def test_342_package_dirs__multi_subpackages(
+    directory: Path, requests_mock: Any
+) -> None:
+    """Test using `package_dirs` & multiple desired packages and subpackages."""
+    mock_many_requests(requests_mock)
+
+    pyproject_toml_path = directory / "pyproject.toml"
+
+    gha_input = pyproject_toml_builder.GHAInput(
+        auto_mypy_option=False,
+        pypi_name="wipac-mock-package",
+        mode="PACKAGING_AND_PYPI",
+        python_min=(3, 10),
+        license_spdx_id="MIT",
+        license_file="MY_LICENSE",
+        author=AUTHOR,
+        author_email=AUTHOR_EMAIL,
+        package_dirs=["mock_package", "another_one"],
+        keywords=[
+            "python",
+            "REST",
+            "tools",
+            "utilities",
+            "OpenTelemetry",
+            "tracing",
+            "telemetry",
+        ],
+    )
+
+    # write the original pyproject.toml
+    with open(pyproject_toml_path, "w") as f:
+        tomlkit.dump(VANILLA_SECTIONS_IN, f)
+
+    pyproject_toml_expected = {
+        **BUILD_SYSTEM_SECTION,
+        "project": {
+            "name": "wipac-mock-package",
+            **VANILLA_PROJECT_KEYVALS_OUT,
+            "keywords": [
+                "python",
+                "REST",
+                "tools",
+                "utilities",
+                "OpenTelemetry",
+                "tracing",
+                "telemetry",
+            ],
+            "classifiers": [
+                "Programming Language :: Python :: 3.10",
+                "Programming Language :: Python :: 3.11",
+            ],
+            **PYPI_URLS_KEYVALS,
+        },
+        "tool": {
+            "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
+            "setuptools": {
+                "package-data": {"*": ["py.typed"]},
+                "packages": [
+                    "another_one",
+                    "another_one.sub_another",
+                    "another_one.sub_another.super_nested",
+                    "another_one.sub_another_namespace",
+                    "mock_package",
+                ],
+            },
+        },
+    }
+
+    # make an extra package *not* to be included
+    os.mkdir(directory / "mock_package_test")
+    Path(directory / "mock_package_test/__init__.py").touch()
+
+    # make an extra package *TO BE* included
+    os.mkdir(directory / "another_one")
+    Path(directory / "another_one/__init__.py").touch()
+    # subpackage (classical)
+    os.mkdir(directory / "another_one/sub_another")
+    Path(directory / "another_one/sub_another/__init__.py").touch()
+    # sub-sub-package (classical)
+    os.mkdir(directory / "another_one/sub_another/super_nested")
+    Path(directory / "another_one/sub_another/super_nested/__init__.py").touch()
+    # subpackage (namespace)
+    os.mkdir(directory / "another_one/sub_another_namespace")
+    Path(directory / "another_one/sub_another_namespace/foo.py").touch()
+    # not a subpackage
+    os.mkdir(directory / "another_one/not-a-subpackage")
+    # also not a subpackage
+    os.mkdir(directory / "another_one/also-not-a-subpackage")
+    Path(directory / "another_one/also-not-a-subpackage/bar.txt").touch()
+
+    # run pyproject_toml_builder
+    pyproject_toml_builder.work(
+        pyproject_toml_path,
+        GITHUB_FULL_REPO,
+        TOKEN,
+        gha_input,
+    )
+
+    # assert outputted pyproject.toml
+    assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
+
+
+@patch("subprocess.run", patch_git_subprocess_calls)
+@patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
+def test_345_package_dirs__multi_missing_init__error(
     directory: Path, requests_mock: Any
 ) -> None:
     """Test using `package_dirs` & multiple desired packages."""
@@ -822,7 +906,7 @@ def test_36_package_dirs__multi_missing_init__error(
 
 @patch("subprocess.run", patch_git_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
-def test_40_extra_stuff(directory: Path, requests_mock: Any) -> None:
+def test_400_extra_stuff(directory: Path, requests_mock: Any) -> None:
     """Test using extra stuff."""
     mock_many_requests(requests_mock)
 
@@ -885,7 +969,7 @@ def test_40_extra_stuff(directory: Path, requests_mock: Any) -> None:
             "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
+                "packages": ["mock_package"],
             },
         },
         # the extra sections
@@ -905,12 +989,14 @@ def test_40_extra_stuff(directory: Path, requests_mock: Any) -> None:
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
 
 
-# NOTE: test 50 was removed -- it tested deprecated functionality
+# NOTE: test 500 was removed -- it tested deprecated functionality
 
 
 @patch("subprocess.run", patch_git_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
-def test_60_defined_project_version__error(directory: Path, requests_mock: Any) -> None:
+def test_600_defined_project_version__error(
+    directory: Path, requests_mock: Any
+) -> None:
     """Test situation where 'project.version' is defined."""
     mock_many_requests(requests_mock)
 
@@ -945,7 +1031,7 @@ def test_60_defined_project_version__error(directory: Path, requests_mock: Any) 
 
 @patch("subprocess.run", patch_git_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
-def test_70_defined_init_version__error(directory: Path, requests_mock: Any) -> None:
+def test_700_defined_init_version__error(directory: Path, requests_mock: Any) -> None:
     """Test situation where 'project.version' is defined."""
     mock_many_requests(requests_mock)
 
@@ -984,7 +1070,7 @@ def test_70_defined_init_version__error(directory: Path, requests_mock: Any) -> 
 
 @patch("subprocess.run", patch_git_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
-def test_80_auto_mypy_option(directory: Path, requests_mock: Any) -> None:
+def test_800_auto_mypy_option(directory: Path, requests_mock: Any) -> None:
     """Test using auto_mypy_option."""
     mock_many_requests(requests_mock)
 
@@ -1020,7 +1106,7 @@ def test_80_auto_mypy_option(directory: Path, requests_mock: Any) -> None:
             "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
+                "packages": ["mock_package"],
             },
         },
     }
