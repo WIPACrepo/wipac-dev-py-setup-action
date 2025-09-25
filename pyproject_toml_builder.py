@@ -484,7 +484,7 @@ class PyProjectTomlBuilder:
             }
         )
         self._inline_dont_change_this_comment(
-            toml_dict["tool"]["setuptools"]["packages"]["find"]
+            toml_dict["tool"]["setuptools"]["packages"]
         )
         self._inline_dont_change_this_comment(
             toml_dict["tool"]["setuptools"]["package-data"]["*"]
