@@ -278,7 +278,7 @@ def test_00_minimum_input(directory: Path, requests_mock: Any) -> None:
             "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
+                "packages": ["mock_package"],
             },
         },
     }
@@ -335,7 +335,7 @@ def test_01_minimum_input_w_pypi(directory: Path, requests_mock: Any) -> None:
             "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
+                "packages": ["mock_package"],
             },
         },
     }
@@ -412,7 +412,7 @@ def test_10_keywords(directory: Path, requests_mock: Any) -> None:
             "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
+                "packages": ["mock_package"],
             },
         },
     }
@@ -486,7 +486,7 @@ def test_20_python_max(directory: Path, requests_mock: Any) -> None:
             "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
+                "packages": ["mock_package"],
             },
         },
     }
@@ -560,9 +560,7 @@ def test_30_package_dirs__single(directory: Path, requests_mock: Any) -> None:
             "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {
-                    "find": {"include": ["mock_package", "mock_package.*"]},
-                },
+                "packages": ["mock_package"],
             },
         },
     }
@@ -637,16 +635,7 @@ def test_34_package_dirs__multi_autoname__no_pypi(
             "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {
-                    "find": {
-                        "include": [
-                            "mock_package",
-                            "another_one",
-                            "mock_package.*",
-                            "another_one.*",
-                        ]
-                    },
-                },
+                "packages": ["another_one", "mock_package"],
             },
         },
     }
@@ -728,16 +717,7 @@ def test_35_package_dirs__multi(directory: Path, requests_mock: Any) -> None:
             "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {
-                    "find": {
-                        "include": [
-                            "mock_package",
-                            "another_one",
-                            "mock_package.*",
-                            "another_one.*",
-                        ]
-                    },
-                },
+                "packages": ["another_one", "mock_package"],
             },
         },
     }
@@ -885,7 +865,7 @@ def test_40_extra_stuff(directory: Path, requests_mock: Any) -> None:
             "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
+                "packages": ["mock_package"],
             },
         },
         # the extra sections
@@ -1020,7 +1000,7 @@ def test_80_auto_mypy_option(directory: Path, requests_mock: Any) -> None:
             "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
-                "packages": {"find": {"exclude": EXCLUDE_DIRS, "namespaces": False}},
+                "packages": ["mock_package"],
             },
         },
     }
