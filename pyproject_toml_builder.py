@@ -132,9 +132,8 @@ class GHAInput:
     python_min: tuple[int, int]
 
     # OPTIONAL (python)
-    python_max: tuple[int, int] = dataclasses.field(
-        default_factory=semver_parser_tools.get_latest_py3_release  # called only if no val
-    )
+    python_max: tuple[int, int] | None = None
+
     # OPTIONAL (packaging)
     package_dirs: list[str] = dataclasses.field(default_factory=list)
     exclude_dirs: list[str] = dataclasses.field(
@@ -149,8 +148,10 @@ class GHAInput:
             "examples",
         ]
     )
+
     # OPTIONAL (releases)
     pypi_name: str = ""
+
     # OPTIONAL (meta)
     keywords: list[str] = dataclasses.field(default_factory=list)
     author: str = ""
@@ -177,27 +178,59 @@ class GHAInput:
                 f"(current mode: {self.mode})"
             )
 
-        # validate python min/max
-        for py, attr_name in [
-            (self.python_min, "python_min"),
-            (self.python_max, "python_max"),
-        ]:
-            if py[0] < 3:
+
+class PythonVersion:
+    """A class for handling python version logic."""
+
+    def __init__(
+        self,
+        python_min: tuple[int, int],
+        python_max: tuple[int, int] | None,
+    ):
+        if python_max is None:
+            python_max = semver_parser_tools.get_latest_py3_release()
+            did_autoconfig_python_max = True
+        else:
+            did_autoconfig_python_max = False
+
+        def _maj_validate(maj: int, attr_name: str):
+            if maj < 3:
                 raise _log_error_then_get_exception(
                     f"Python-release automation ('{attr_name}') does not work for python <3."
                 )
-            elif py[0] >= 4:
+            elif maj >= 4:
                 raise _log_error_then_get_exception(
                     f"Python-release automation ('{attr_name}') does not work for python 4+."
                 )
-            pystr = f"{py[0]}.{py[1]}"
-            if semver_parser_tools.is_python_eol(pystr):
+
+        def _eol_check(py: tuple[int, int], attr_name: str):
+            pystr = f"{py[0]}.{py[1]}"  # ex: "3.14"
+            if semver_parser_tools.is_python_eol(pystr):  # -> ValueError if not found
                 raise _log_error_then_get_exception(
                     f"Python version ('{attr_name}={pystr}') is passed its end-of-life date "
                     f"("
                     f"{datetime.date.fromtimestamp(semver_parser_tools.get_python_eol_ts(pystr))}"
                     f")."
                 )
+
+        # validate python min
+        _maj_validate(python_min[0], "python_min")
+        _eol_check(python_min, "python_min")
+        # validate python max
+        _maj_validate(python_max[0], "python_max")
+        try:
+            _eol_check(python_max, "python_max")
+        except ValueError:
+            # backup-plan: the auto python max is too new, so use the prev version
+            #              note -- no loop; if this one backup doesn't work, then err
+            if did_autoconfig_python_max:
+                python_max = (python_max[0], python_max[1] - 1)  # ex: (3,14) -> (3,13)
+                _eol_check(python_max, "python_max")
+            else:
+                raise
+
+        self.python_min = python_min
+        self.python_max = python_max
 
     def get_requires_python(self) -> str:
         """Get a `[project]/python_requires` string from `self.python_range`.
@@ -387,7 +420,7 @@ class READMEMarkdownManager:
 
         # PyPI badge
         if self.bsec.pypi_name:
-            badges_line += f"[![PyPI](https://img.shields.io/pypi/v/{self.bsec.pypi_name})](https://pypi.org/project/{self.bsec.pypi_name}/) "
+            badges_line += f"[![PyPI](https://img.shields.io/pypi/v/{self.bsec.pypi_name})](https://pypi.org/project/{seelf.bsec.pypi_name}/) "
 
         # GitHub Release badge
         badges_line += f"[![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/{self.github_full_repo}?include_prereleases)]({self.gh_api.url}/) "
@@ -435,6 +468,7 @@ class PyProjectTomlBuilder:
             gha_input,
         )
         gh_api = GitHubAPI(github_full_repo, oauth_token=token)
+        py_ver = PythonVersion(gha_input.python_min, gha_input.python_max)
         self._validate_repo_initial_state(toml_dict)
 
         # [build-system]
@@ -456,6 +490,7 @@ class PyProjectTomlBuilder:
                 toml_dict["project"],
                 gha_input,
                 ffile,
+                py_ver,
             )
         elif gha_input.mode == "PACKAGING_AND_PYPI":
             self.insert_packaging_and_pypi_attributes(
@@ -463,6 +498,7 @@ class PyProjectTomlBuilder:
                 gha_input,
                 ffile,
                 gh_api,
+                py_ver,
             )
         else:
             raise RuntimeError(f"Unknown mode: {gha_input.mode}")
@@ -521,6 +557,7 @@ class PyProjectTomlBuilder:
         toml_project: TOMLDocumentTypeHint,
         gha_input: GHAInput,
         ffile: FromFiles,
+        py_ver: PythonVersion,
     ) -> None:
         """Add the attributes for the 'PACKAGING' mode."""
         if gha_input.mode != "PACKAGING":
@@ -531,7 +568,7 @@ class PyProjectTomlBuilder:
         )
         PyProjectTomlBuilder._inline_dont_change_this_comment(toml_project["name"])
 
-        toml_project["requires-python"] = gha_input.get_requires_python()
+        toml_project["requires-python"] = py_ver.get_requires_python()
         PyProjectTomlBuilder._inline_dont_change_this_comment(
             toml_project["requires-python"]
         )
@@ -565,6 +602,7 @@ class PyProjectTomlBuilder:
         gha_input: GHAInput,
         ffile: FromFiles,
         gh_api: GitHubAPI,
+        py_ver: PythonVersion,
     ) -> None:
         """Add the attributes for the 'PACKAGING_AND_PYPI' mode."""
         if gha_input.mode != "PACKAGING_AND_PYPI":
@@ -587,8 +625,8 @@ class PyProjectTomlBuilder:
                 [gha_input.license_file] if gha_input.license_file else []
             ),
             "keywords": gha_input.keywords,
-            "classifiers": gha_input.python_classifiers(),
-            "requires-python": gha_input.get_requires_python(),
+            "classifiers": py_ver.python_classifiers(),
+            "requires-python": py_ver.get_requires_python(),
         }
         toml_project.update(updates)
         for u in updates:
