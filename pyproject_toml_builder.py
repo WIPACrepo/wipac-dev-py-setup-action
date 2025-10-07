@@ -420,7 +420,7 @@ class READMEMarkdownManager:
 
         # PyPI badge
         if self.bsec.pypi_name:
-            badges_line += f"[![PyPI](https://img.shields.io/pypi/v/{self.bsec.pypi_name})](https://pypi.org/project/{seelf.bsec.pypi_name}/) "
+            badges_line += f"[![PyPI](https://img.shields.io/pypi/v/{self.bsec.pypi_name})](https://pypi.org/project/{self.bsec.pypi_name}/) "
 
         # GitHub Release badge
         badges_line += f"[![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/{self.github_full_repo}?include_prereleases)]({self.gh_api.url}/) "
