@@ -343,18 +343,18 @@ class PythonVersioning:
 
         try:
             # Run the command
-            result = subprocess.run(
+            subprocess.run(
                 pip_command,
                 check=True,  # Raise an exception for non-zero exit codes (i.e., failure)
                 capture_output=True,
                 text=True,
             )
             # If successful, it means the package is compatible with the target version
-            LOGGER.debug(result.stdout)
+            # LOGGER.debug(result.stdout)
             return True
         except subprocess.CalledProcessError as e:
             # If it fails, pip will usually output a dependency conflict error
-            LOGGER.debug(e.stderr)
+            # LOGGER.debug(e.stderr)
             return False
 
 
