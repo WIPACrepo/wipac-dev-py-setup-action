@@ -555,7 +555,7 @@ class PyProjectTomlBuilder:
                 # base deps
                 [toml_dict.get("project", {}).get("dependencies", [])]
                 # plus optional deps
-                + toml_dict.get("project", {}).get("optional-dependencies", {}).items()
+                + toml_dict.get("project", {}).get("optional-dependencies", {}).values()
             ),
         )
         self._validate_repo_initial_state(toml_dict)
