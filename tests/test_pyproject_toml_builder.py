@@ -222,25 +222,32 @@ def mock_many_requests(requests_mock: Any) -> None:
     )
 
 
-# GIT_CALLS = []
-#
-#
-# @pytest.fixture(autouse=True)
-# def clear_git_calls():
-#     GIT_CALLS.clear()
-
-
-# Save original so patch_git_subprocess_calls can call it
+# Save original so patch_subprocess_calls can call it
 subprocess_orig_run = subprocess.run
 
 
-def patch_git_subprocess_calls(cmd, *a, **kw):
-    if (isinstance(cmd, list) and cmd and cmd[0] == "git") or (
-        isinstance(cmd, str) and cmd.strip().startswith("git ")
-    ):
-        # GIT_CALLS.append((cmd, kw))
+def patch_subprocess_calls(cmd, *a, **kw):
+    """Patch the subprocess calls function for various situations, default to actual call."""
+    if isinstance(cmd, str):
+        _cmd_str = cmd
+    elif isinstance(cmd, list):
+        _cmd_str = " ".join(cmd)
+    else:
+        raise RuntimeError(
+            f"testing bug: doesn't account for 'subprocess.run' cmd type: {cmd=}"
+        )
+
+    # the 'git' commands
+    if _cmd_str.startswith("git "):
         return CompletedProcess(cmd, 0)
-    return subprocess_orig_run(cmd, *a, **kw)
+    # the pip package compatibility commands
+    elif _cmd_str.startswith("python -m pip install") and _cmd_str.endswith(
+        "--ignore-installed"
+    ):
+        return CompletedProcess(cmd, 0)
+    # some other command
+    else:
+        return subprocess_orig_run(cmd, *a, **kw)
 
 
 ################################################################################
@@ -248,7 +255,7 @@ def patch_git_subprocess_calls(cmd, *a, **kw):
 ################################################################################
 
 
-@patch("subprocess.run", patch_git_subprocess_calls)
+@patch("subprocess.run", patch_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
 def test_000_minimum_input(directory: Path, requests_mock: Any) -> None:
     """Test using bare minimum input."""
@@ -295,7 +302,7 @@ def test_000_minimum_input(directory: Path, requests_mock: Any) -> None:
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
 
 
-@patch("subprocess.run", patch_git_subprocess_calls)
+@patch("subprocess.run", patch_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
 def test_010_minimum_input_w_pypi(directory: Path, requests_mock: Any) -> None:
     """Test using the minimum input with pypi attrs."""
@@ -352,7 +359,7 @@ def test_010_minimum_input_w_pypi(directory: Path, requests_mock: Any) -> None:
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
 
 
-@patch("subprocess.run", patch_git_subprocess_calls)
+@patch("subprocess.run", patch_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
 def test_100_keywords(directory: Path, requests_mock: Any) -> None:
     """Test using  `keywords`."""
@@ -429,7 +436,7 @@ def test_100_keywords(directory: Path, requests_mock: Any) -> None:
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
 
 
-@patch("subprocess.run", patch_git_subprocess_calls)
+@patch("subprocess.run", patch_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
 def test_200_python_max(directory: Path, requests_mock: Any) -> None:
     """Test using  `python_max`."""
@@ -503,7 +510,7 @@ def test_200_python_max(directory: Path, requests_mock: Any) -> None:
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
 
 
-@patch("subprocess.run", patch_git_subprocess_calls)
+@patch("subprocess.run", patch_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
 def test_300_package_dirs__single(directory: Path, requests_mock: Any) -> None:
     """Test using `package_dirs` & a single desired package."""
@@ -581,7 +588,7 @@ def test_300_package_dirs__single(directory: Path, requests_mock: Any) -> None:
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
 
 
-@patch("subprocess.run", patch_git_subprocess_calls)
+@patch("subprocess.run", patch_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
 def test_340_package_dirs__multi_autoname__no_pypi(
     directory: Path, requests_mock: Any
@@ -660,7 +667,7 @@ def test_340_package_dirs__multi_autoname__no_pypi(
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
 
 
-@patch("subprocess.run", patch_git_subprocess_calls)
+@patch("subprocess.run", patch_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
 def test_341_package_dirs__multi(directory: Path, requests_mock: Any) -> None:
     """Test using `package_dirs` & multiple desired packages."""
@@ -742,7 +749,7 @@ def test_341_package_dirs__multi(directory: Path, requests_mock: Any) -> None:
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
 
 
-@patch("subprocess.run", patch_git_subprocess_calls)
+@patch("subprocess.run", patch_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
 def test_342_package_dirs__multi_subpackages(
     directory: Path, requests_mock: Any
@@ -846,7 +853,7 @@ def test_342_package_dirs__multi_subpackages(
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
 
 
-@patch("subprocess.run", patch_git_subprocess_calls)
+@patch("subprocess.run", patch_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
 def test_345_package_dirs__multi_missing_init__error(
     directory: Path, requests_mock: Any
@@ -904,7 +911,7 @@ def test_345_package_dirs__multi_missing_init__error(
         )
 
 
-@patch("subprocess.run", patch_git_subprocess_calls)
+@patch("subprocess.run", patch_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
 def test_400_extra_stuff(directory: Path, requests_mock: Any) -> None:
     """Test using extra stuff."""
@@ -992,7 +999,7 @@ def test_400_extra_stuff(directory: Path, requests_mock: Any) -> None:
 # NOTE: test 500 was removed -- it tested deprecated functionality
 
 
-@patch("subprocess.run", patch_git_subprocess_calls)
+@patch("subprocess.run", patch_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
 def test_600_defined_project_version__error(
     directory: Path, requests_mock: Any
@@ -1029,7 +1036,7 @@ def test_600_defined_project_version__error(
         )
 
 
-@patch("subprocess.run", patch_git_subprocess_calls)
+@patch("subprocess.run", patch_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
 def test_700_defined_init_version__error(directory: Path, requests_mock: Any) -> None:
     """Test situation where 'project.version' is defined."""
@@ -1068,7 +1075,7 @@ def test_700_defined_init_version__error(directory: Path, requests_mock: Any) ->
         )
 
 
-@patch("subprocess.run", patch_git_subprocess_calls)
+@patch("subprocess.run", patch_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
 def test_800_auto_mypy_option(directory: Path, requests_mock: Any) -> None:
     """Test using auto_mypy_option."""
