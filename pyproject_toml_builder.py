@@ -189,7 +189,7 @@ class PythonVersioning:
         dependencies: list[str],
     ):
         if python_max is None:
-            python_max = self._figure_max_python(dependencies)
+            python_max = self._figure_max_python(dependencies, python_min)
 
         def _maj_validate(maj: int, attr_name: str):
             if maj < 3:
