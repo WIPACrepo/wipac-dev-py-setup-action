@@ -311,16 +311,22 @@ class PythonVersioning:
         dependencies: list[str], python: tuple[int, int]
     ) -> bool:
         """Get the first incompatible dependency, else None."""
+        print(
+            f"##[group]python {PythonVersioning.pystr(python)} dependency compatibility",
+            flush=True,
+        )
         for dep in dependencies:
             if not PythonVersioning._is_dep_compatible_w_python(dep, python):
+                print("##[endgroup]", flush=True)
                 print(
                     (
                         f"::warning::dependency is incompatible with "
-                        f"python {python[0]}.{python[1]}: {dep}"
+                        f"python {PythonVersioning.pystr(python)}: {dep}"
                     ),
                     flush=True,
                 )
                 return False
+        print("##[endgroup]", flush=True)
         return True
 
     @staticmethod
@@ -350,11 +356,11 @@ class PythonVersioning:
                 text=True,
             )
             # If successful, it means the package is compatible with the target version
-            LOGGER.debug(result.stdout)
+            print(result.stdout, flush=True)
             return True
         except subprocess.CalledProcessError as e:
             # If it fails, pip will usually output a dependency conflict error
-            LOGGER.debug(e.stderr)
+            print(e.stderr, flush=True)
             return False
 
 
