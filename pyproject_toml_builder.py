@@ -275,7 +275,7 @@ class PythonVersioning:
         # now, check that the version is compatible with the dependencies
         while python_max != python_min:  # this is the floor
             # if this version is not, decrement and try that
-            if PythonVersioning._are_all_deps_compatible_w_python(deps, python_max):
+            if not PythonVersioning._are_all_deps_compatible_w_python(deps, python_max):
                 python_max = PythonVersioning._decrement_python(python_max)
                 LOGGER.info(f"testing {python_max}...")
                 continue
