@@ -306,6 +306,7 @@ class PythonVersioning:
             "--dry-run",
             f"--python-version={python_version[0]}.{python_version[1]}",
             "--ignore-installed",  # Forces pip to re-evaluate the package resolution
+            "--no-deps",  # required by pip for isolation/security reasons
         ]
 
         try:

@@ -241,9 +241,7 @@ def patch_subprocess_calls(cmd, *a, **kw):
     if _cmd_str.startswith("git "):
         return CompletedProcess(cmd, 0)
     # the pip package compatibility commands
-    elif _cmd_str.startswith("python -m pip install") and _cmd_str.endswith(
-        "--ignore-installed"
-    ):
+    elif _cmd_str.startswith("python -m pip install") and "--no-deps" in _cmd_str:
         return CompletedProcess(cmd, 0)
     # some other command
     else:
