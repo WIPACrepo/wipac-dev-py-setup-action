@@ -12,7 +12,7 @@ import os
 import re
 import subprocess
 from pathlib import Path
-from typing import Any, Iterable, Literal, cast
+from typing import Any, Final, Iterable, Literal, cast
 
 import requests
 import tomlkit
@@ -229,9 +229,15 @@ class PythonVersioning:
         ]
 
     @staticmethod
-    def _eol_check(py: tuple[int, int], attr_name: str, log_error: bool = True) -> None:
-        pystr = f"{py[0]}.{py[1]}"  # ex: "3.14"
+    def pystr(python: tuple[int, int]) -> str:
+        """Get the python version tuple as a string."""
+        return f"{python[0]}.{python[1]}"  # ex: "3.14"
 
+    @staticmethod
+    def _eol_check(
+        python: tuple[int, int], attr_name: str, log_error: bool = True
+    ) -> None:
+        pystr = PythonVersioning.pystr(python)
         try:
             is_eol = semver_parser_tools.is_python_eol(pystr)
         except semver_parser_tools.PythonVersionNotFoundException as e:
@@ -260,13 +266,18 @@ class PythonVersioning:
         LOGGER.info("Figure out the maximum compatible Python version...")
 
         # start with latest
-        python_max = semver_parser_tools.get_latest_py3_release()
+        latest: Final = semver_parser_tools.get_latest_py3_release()
+        python_max = latest  # mutable
         LOGGER.info(f"testing {python_max}...")
 
         # check that the latest is on the EOL site
         try:
             PythonVersioning._eol_check(python_max, "python_max", log_error=False)
         except ValueError:
+            print(
+                f"::warning::python {PythonVersioning.pystr(python_max)} is not yet on EOL site",
+                flush=True,
+            )
             # backup-plan: the auto python max is too new, so use the prev version
             #              note -- no loop; if this one backup doesn't work, then err
             python_max = PythonVersioning._decrement_python(python_max)
@@ -284,6 +295,15 @@ class PythonVersioning:
 
         # our winner!
         LOGGER.info(f"Using {python_max}.")
+        if python_max != latest:
+            print(
+                (
+                    f"::warning::auto python-max: "
+                    f"could not use latest python ({PythonVersioning.pystr(latest)}) "
+                    f"— using python {PythonVersioning.pystr(python_max)} instead"
+                ),
+                flush=True,
+            )
         return python_max
 
     @staticmethod
@@ -457,7 +477,7 @@ class FromFiles:
             raise _log_error_then_get_exception(
                 f"Module(s) {[p.name for p in packages_with_dunder_versions]}:"
                 f" '__init__.py' must not define '__version__'"
-                f" -- also, see the auto-inserted python comment(s)."
+                f" — also, see the auto-inserted python comment(s)."
             )
 
     def _get_readme_path(self) -> Path:
