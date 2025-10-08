@@ -483,7 +483,7 @@ class FromFiles:
             raise _log_error_then_get_exception(
                 f"Module(s) {[p.name for p in packages_with_dunder_versions]}:"
                 f" '__init__.py' must not define '__version__'"
-                f" — also, see the auto-inserted python comment(s)."
+                f" — see the auto-inserted python comment(s)."
             )
 
     def _get_readme_path(self) -> Path:
