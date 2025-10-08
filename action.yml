@@ -160,7 +160,9 @@ runs:
       run: |
         # step: Check Docker files for setuptools-scm compliance
         set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        echo "##[group]validate_docker_setuptools_scm_compliance.sh"
         ${{ github.action_path }}/validate_docker_setuptools_scm_compliance.sh
+        echo "##[endgroup]"
       shell: bash
 
     - name: Setup Python Venv
@@ -168,6 +170,8 @@ runs:
       run: |
         # step: Setup Python Venv
         set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        
+        echo "##[group]venv installs"
         
         sudo apt-get update
         
@@ -178,6 +182,8 @@ runs:
         pip3 install -r ${{ github.action_path }}/requirements.txt
         
         echo "SETUP_PY_GHA_PYVENV=$SETUP_PY_GHA_PYVENV" >> $GITHUB_ENV
+        
+        echo "##[endgroup]"
       shell: bash
 
     - name: Check pyproject.toml for project migration
