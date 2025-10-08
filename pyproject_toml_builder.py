@@ -288,15 +288,15 @@ class PythonVersioning:
 
     @staticmethod
     def _are_all_deps_compatible_w_python(
-        deps: list[str], python_version: tuple[int, int]
-    ) -> True:
+        dependencies: list[str], python: tuple[int, int]
+    ) -> bool:
         """Get the first incompatible dependency, else None."""
-        for dep in deps:
-            if not PythonVersioning._is_dep_compatible_w_python(dep, python_version):
+        for dep in dependencies:
+            if not PythonVersioning._is_dep_compatible_w_python(dep, python):
                 print(
                     (
                         f"::warning::dependency is incompatible with "
-                        f"python {python_version[0]}.{python_version[1]}: {dep}"
+                        f"python {python[0]}.{python[1]}: {dep}"
                     ),
                     flush=True,
                 )
@@ -304,9 +304,7 @@ class PythonVersioning:
         return True
 
     @staticmethod
-    def _is_dep_compatible_w_python(
-        dependency: str, python_version: tuple[int, int]
-    ) -> bool:
+    def _is_dep_compatible_w_python(dependency: str, python: tuple[int, int]) -> bool:
         """
         Performs a dry-run install, forcing a compatibility check
         for an installed package against a target Python version.
@@ -318,7 +316,7 @@ class PythonVersioning:
             "install",
             dependency,
             "--dry-run",
-            f"--python-version={python_version[0]}.{python_version[1]}",
+            f"--python-version={python[0]}.{python[1]}",
             "--ignore-installed",  # Forces pip to re-evaluate the package resolution
             "--no-deps",  # required by pip for isolation/security reasons
         ]
