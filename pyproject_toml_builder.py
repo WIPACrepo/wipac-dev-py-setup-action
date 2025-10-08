@@ -186,10 +186,10 @@ class PythonVersioning:
         self,
         python_min: tuple[int, int],
         python_max: tuple[int, int] | None,
-        dependencies: list[str],
+        deps: list[str],
     ):
         if python_max is None:
-            python_max = self._figure_max_python(dependencies, python_min)
+            python_max = self._figure_max_python(deps, python_min)
 
         def _maj_validate(maj: int, attr_name: str):
             if maj < 3:
@@ -254,7 +254,7 @@ class PythonVersioning:
 
     @staticmethod
     def _figure_max_python(
-        dependencies: list[str], python_min: tuple[int, int]
+        deps: list[str], python_min: tuple[int, int]
     ) -> tuple[int, int]:
         """Figure out the maximum compatible Python version."""
         LOGGER.info("Figure out the maximum compatible Python version...")
@@ -275,10 +275,7 @@ class PythonVersioning:
         # now, check that the version is compatible with the dependencies
         while python_max != python_min:  # this is the floor
             # if this version is not, decrement and try that
-            if any(
-                not PythonVersioning._is_dependency_compatible(d, python_max)
-                for d in dependencies
-            ):
+            if PythonVersioning._are_all_deps_compatible_w_python(deps, python_max):
                 python_max = PythonVersioning._decrement_python(python_max)
                 LOGGER.info(f"testing {python_max}...")
                 continue
@@ -290,7 +287,24 @@ class PythonVersioning:
         return python_max
 
     @staticmethod
-    def _is_dependency_compatible(
+    def _are_all_deps_compatible_w_python(
+        deps: list[str], python_version: tuple[int, int]
+    ) -> True:
+        """Get the first incompatible dependency, else None."""
+        for dep in deps:
+            if not PythonVersioning._is_dep_compatible_w_python(dep, python_version):
+                print(
+                    (
+                        f"::warning::dependency is incompatible with "
+                        f"python {python_version[0]}.{python_version[1]}: {dep}"
+                    ),
+                    flush=True,
+                )
+                return False
+        return True
+
+    @staticmethod
+    def _is_dep_compatible_w_python(
         dependency: str, python_version: tuple[int, int]
     ) -> bool:
         """
