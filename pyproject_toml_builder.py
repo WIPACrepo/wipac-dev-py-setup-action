@@ -12,7 +12,7 @@ import os
 import re
 import subprocess
 from pathlib import Path
-from typing import Any, Literal, cast
+from typing import Any, Final, Iterable, Literal, cast
 
 import requests
 import tomlkit
@@ -179,19 +179,17 @@ class GHAInput:
             )
 
 
-class PythonVersion:
+class PythonVersioning:
     """A class for handling python version logic."""
 
     def __init__(
         self,
         python_min: tuple[int, int],
         python_max: tuple[int, int] | None,
+        deps: list[str],
     ):
         if python_max is None:
-            python_max = semver_parser_tools.get_latest_py3_release()
-            did_autoconfig_python_max = True
-        else:
-            did_autoconfig_python_max = False
+            python_max = self._figure_max_python(deps, python_min)
 
         def _maj_validate(maj: int, attr_name: str):
             if maj < 3:
@@ -203,31 +201,12 @@ class PythonVersion:
                     f"Python-release automation ('{attr_name}') does not work for python 4+."
                 )
 
-        def _eol_check(py: tuple[int, int], attr_name: str):
-            pystr = f"{py[0]}.{py[1]}"  # ex: "3.14"
-            if semver_parser_tools.is_python_eol(pystr):  # -> ValueError if not found
-                raise _log_error_then_get_exception(
-                    f"Python version ('{attr_name}={pystr}') is passed its end-of-life date "
-                    f"("
-                    f"{datetime.date.fromtimestamp(semver_parser_tools.get_python_eol_ts(pystr))}"
-                    f")."
-                )
-
         # validate python min
         _maj_validate(python_min[0], "python_min")
-        _eol_check(python_min, "python_min")
+        self._eol_check(python_min, "python_min")
         # validate python max
         _maj_validate(python_max[0], "python_max")
-        try:
-            _eol_check(python_max, "python_max")
-        except ValueError:
-            # backup-plan: the auto python max is too new, so use the prev version
-            #              note -- no loop; if this one backup doesn't work, then err
-            if did_autoconfig_python_max:
-                python_max = (python_max[0], python_max[1] - 1)  # ex: (3,14) -> (3,13)
-                _eol_check(python_max, "python_max")
-            else:
-                raise
+        self._eol_check(python_max, "python_max")
 
         self.python_min = python_min
         self.python_max = python_max
@@ -248,6 +227,141 @@ class PythonVersion:
             f"Programming Language :: Python :: 3.{r}"
             for r in range(self.python_min[1], self.python_max[1] + 1)
         ]
+
+    @staticmethod
+    def pystr(python: tuple[int, int]) -> str:
+        """Get the python version tuple as a string."""
+        return f"{python[0]}.{python[1]}"  # ex: "3.14"
+
+    @staticmethod
+    def _eol_check(
+        python: tuple[int, int], attr_name: str, log_error: bool = True
+    ) -> None:
+        pystr = PythonVersioning.pystr(python)
+        try:
+            is_eol = semver_parser_tools.is_python_eol(pystr)
+        except semver_parser_tools.PythonVersionNotFoundException as e:
+            if log_error:
+                raise _log_error_then_get_exception(repr(e))
+            else:
+                raise e
+
+        if is_eol:
+            raise _log_error_then_get_exception(
+                f"Python version ('{attr_name}={pystr}') is passed its end-of-life date "
+                f"("
+                f"{datetime.date.fromtimestamp(semver_parser_tools.get_python_eol_ts(pystr))}"
+                f")."
+            )
+
+    @staticmethod
+    def _decrement_python(python: tuple[int, int]) -> tuple[int, int]:
+        return python[0], python[1] - 1  # ex: (3,14) -> (3,13)
+
+    @staticmethod
+    def _figure_max_python(
+        deps: list[str], python_min: tuple[int, int]
+    ) -> tuple[int, int]:
+        """Figure out the maximum compatible Python version."""
+        LOGGER.info("Figure out the maximum compatible Python version...")
+
+        # start with latest
+        latest: Final = semver_parser_tools.get_latest_py3_release()
+        python_max = latest  # mutable
+        LOGGER.info(f"testing {python_max}...")
+
+        # check that the latest is on the EOL site
+        try:
+            PythonVersioning._eol_check(python_max, "python_max", log_error=False)
+        except ValueError:
+            print(
+                f"::warning::python {PythonVersioning.pystr(python_max)} is not yet on EOL site",
+                flush=True,
+            )
+            # backup-plan: the auto python max is too new, so use the prev version
+            #              note -- no loop; if this one backup doesn't work, then err
+            python_max = PythonVersioning._decrement_python(python_max)
+            LOGGER.info(f"testing {python_max}...")
+
+        # now, check that the version is compatible with the dependencies
+        while python_max != python_min:  # this is the floor
+            # if this version is not, decrement and try that
+            if not PythonVersioning._are_all_deps_compatible_w_python(deps, python_max):
+                python_max = PythonVersioning._decrement_python(python_max)
+                LOGGER.info(f"testing {python_max}...")
+                continue
+            else:
+                break
+
+        # our winner!
+        LOGGER.info(f"Using {python_max}.")
+        if python_max != latest:
+            print(
+                (
+                    f"::warning::auto python-max: "
+                    f"could not use latest python ({PythonVersioning.pystr(latest)}) "
+                    f"— using python {PythonVersioning.pystr(python_max)} instead"
+                ),
+                flush=True,
+            )
+        return python_max
+
+    @staticmethod
+    def _are_all_deps_compatible_w_python(
+        dependencies: list[str], python: tuple[int, int]
+    ) -> bool:
+        """Get the first incompatible dependency, else None."""
+        print(
+            f"##[group]python {PythonVersioning.pystr(python)} dependency compatibility",
+            flush=True,
+        )
+        for dep in dependencies:
+            if not PythonVersioning._is_dep_compatible_w_python(dep, python):
+                print("##[endgroup]", flush=True)
+                print(
+                    (
+                        f"::warning::dependency is incompatible with "
+                        f"python {PythonVersioning.pystr(python)}: {dep}"
+                    ),
+                    flush=True,
+                )
+                return False
+        print("##[endgroup]", flush=True)
+        return True
+
+    @staticmethod
+    def _is_dep_compatible_w_python(dependency: str, python: tuple[int, int]) -> bool:
+        """
+        Performs a dry-run install, forcing a compatibility check
+        for an installed package against a target Python version.
+        """
+        pip_command = [
+            "python",
+            "-m",
+            "pip",
+            "install",
+            dependency,
+            "--dry-run",
+            f"--python-version={python[0]}.{python[1]}",
+            "--ignore-installed",  # Forces pip to re-evaluate the package resolution
+            "--no-deps",  # required by pip for isolation/security reasons
+        ]
+
+        try:
+            # Run the command
+            result = subprocess.run(
+                pip_command,
+                check=True,  # Raise an exception for non-zero exit codes (i.e., failure)
+                capture_output=True,
+                text=True,
+            )
+            # If successful, it means the package is compatible with the target version
+            print(result.stdout, flush=True)
+            return True
+        except subprocess.CalledProcessError as e:
+            # If it fails, pip will usually output a dependency conflict error
+            print(e.stderr, flush=True)
+            return False
 
 
 class FromFiles:
@@ -369,7 +483,7 @@ class FromFiles:
             raise _log_error_then_get_exception(
                 f"Module(s) {[p.name for p in packages_with_dunder_versions]}:"
                 f" '__init__.py' must not define '__version__'"
-                f" -- also, see the auto-inserted python comment(s)."
+                f" — see the auto-inserted python comment(s)."
             )
 
     def _get_readme_path(self) -> Path:
@@ -449,6 +563,11 @@ class READMEMarkdownManager:
         ]
 
 
+def unique_list_chain(lists: Iterable[list[str]]) -> list[str]:
+    """Return a single sorted/unique'd/combined list."""
+    return sorted(set(itertools.chain.from_iterable(lists)))
+
+
 class PyProjectTomlBuilder:
     """Build out the `[project]`, `[semantic_release]`, and `[options]` sections in `toml_dict`.
 
@@ -468,7 +587,20 @@ class PyProjectTomlBuilder:
             gha_input,
         )
         gh_api = GitHubAPI(github_full_repo, oauth_token=token)
-        py_ver = PythonVersion(gha_input.python_min, gha_input.python_max)
+        py_ver = PythonVersioning(
+            gha_input.python_min,
+            gha_input.python_max,
+            unique_list_chain(
+                # base deps
+                [toml_dict.get("project", {}).get("dependencies", [])]
+                # plus optional deps
+                + list(
+                    toml_dict.get("project", {})
+                    .get("optional-dependencies", {})
+                    .values()
+                )
+            ),
+        )
         self._validate_repo_initial_state(toml_dict)
 
         # [build-system]
@@ -557,7 +689,7 @@ class PyProjectTomlBuilder:
         toml_project: TOMLDocumentTypeHint,
         gha_input: GHAInput,
         ffile: FromFiles,
-        py_ver: PythonVersion,
+        py_ver: PythonVersioning,
     ) -> None:
         """Add the attributes for the 'PACKAGING' mode."""
         if gha_input.mode != "PACKAGING":
@@ -602,7 +734,7 @@ class PyProjectTomlBuilder:
         gha_input: GHAInput,
         ffile: FromFiles,
         gh_api: GitHubAPI,
-        py_ver: PythonVersion,
+        py_ver: PythonVersioning,
     ) -> None:
         """Add the attributes for the 'PACKAGING_AND_PYPI' mode."""
         if gha_input.mode != "PACKAGING_AND_PYPI":
@@ -643,12 +775,8 @@ class PyProjectTomlBuilder:
     def build_mypy_optional_deps(toml_proj_optdeps: TOMLDocumentTypeHint) -> None:
         """Make the `toml_dict["project"]["optional-dependencies"]["mypy"]` section."""
         try:
-            toml_proj_optdeps["mypy"] = sorted(
-                set(
-                    itertools.chain.from_iterable(
-                        deps for opt, deps in toml_proj_optdeps.items() if opt != "mypy"
-                    )
-                )
+            toml_proj_optdeps["mypy"] = unique_list_chain(
+                deps for opt, deps in toml_proj_optdeps.items() if opt != "mypy"
             )
             PyProjectTomlBuilder._inline_dont_change_this_comment(
                 toml_proj_optdeps["mypy"]
