@@ -672,7 +672,10 @@ class PyProjectTomlBuilder:
         toml_dict["tool"]["setuptools_scm"]["fallback_version"].trivia.comment = comment
 
         # [project.optional-dependencies][mypy]
-        if gha_input.auto_mypy_option:
+        if (
+            gha_input.auto_mypy_option
+            and "optional-dependencies" in toml_dict["project"]  # only if there's deps
+        ):
             self.build_mypy_optional_deps(toml_dict["project"]["optional-dependencies"])
 
         # Automate some README stuff
