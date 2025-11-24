@@ -24,7 +24,7 @@ from wipac_dev_tools import (
     strtobool,
 )
 
-from find_packages import all_packages_everywhere
+from find_packages import all_package_relpath
 
 REAMDE_BADGES_START_DELIMITER = "<!--- Top of README Badges (automated) --->"
 REAMDE_BADGES_END_DELIMITER = "<!--- End of README Badges (automated) --->"
@@ -383,7 +383,7 @@ class FromFiles:
 
     def _get_package_paths(self) -> list[Path]:
         """Find the package path(s)."""
-        found_pkgs = all_packages_everywhere(
+        found_pkgs = all_package_relpath(
             self.root,
             dirs_exclude=self.gha_input.exclude_dirs,
             include_namespace_packages=False,
@@ -650,7 +650,6 @@ class PyProjectTomlBuilder:
             toml_dict["tool"]["setuptools"] = {}
         toml_dict["tool"]["setuptools"].update(
             {
-                "package-dir": self._tool_setuptools_package_dir(ffile),
                 "packages": self._tool_setuptools_packages(ffile),
                 "package-data": {
                     **toml_dict["tool"].get("setuptools", {}).get("package-data", {}),
@@ -658,6 +657,8 @@ class PyProjectTomlBuilder:
                 },
             }
         )
+        if _pkg_dir_map := self._tool_setuptools_package_dir(ffile):
+            toml_dict["tool"]["setuptools"]["package-dir"] = _pkg_dir_map
         self._inline_dont_change_this_comment(
             toml_dict["tool"]["setuptools"]["packages"]
         )
@@ -825,7 +826,7 @@ class PyProjectTomlBuilder:
             names.add(pkg_root.name)
 
             # Find all subpackages under this root (relative paths as strings)
-            subpackages = all_packages_everywhere(
+            subpackages = all_package_relpath(
                 root_dir=pkg_root,
                 dirs_exclude=None,
                 include_namespace_packages=True,
@@ -841,13 +842,30 @@ class PyProjectTomlBuilder:
         return sorted(names)
 
     @staticmethod
-    def _tool_setuptools_package_dir(ffile: FromFiles) -> dict[str,str]:
-        """Get the package root mapping for all the packages."""
-        mapping = {}
+    def _tool_setuptools_package_dir(ffile: FromFiles) -> dict[str, str]:
+        """Derive setuptools [tool.setuptools].package-dir mapping from package paths."""
 
-        for pkg_root in ffile.package_paths:  # each is a Path
-            # TODO -- pkg may be multi-
+        # Normalize to paths relative to the project root
+        rel_paths = [p.relative_to(ffile.root) for p in ffile.package_paths]
 
+        # Case 1: all packages are directly under the root directory
+        # e.g., ["foo", "bar"]
+        if all(len(p.parts) == 1 for p in rel_paths):
+            return {}
+
+        # Partition: root-level vs nested
+        root_level = [p for p in rel_paths if len(p.parts) == 1]
+        nested = [p for p in rel_paths if len(p.parts) >= 2]
+
+        # Case 2: all nested under a single prefix (e.g. src/foo, src/bar)
+        # → emit the short form: {"": "src"}
+        if not root_level:
+            prefixes = {p.parts[0] for p in nested}
+            if len(prefixes) == 1:
+                return {"": next(iter(prefixes))}
+
+        # Case 3: mixed or multi-root → explicit mapping per package
+        return {p.name: str(p) for p in rel_paths}
 
     @staticmethod
     def _tool_setuptools_packagedata_star(toml_dict: TOMLDocumentTypeHint) -> list[str]:

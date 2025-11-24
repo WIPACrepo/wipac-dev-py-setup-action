@@ -911,6 +911,7 @@ def test_345_package_dirs__multi_missing_init__error(
             gha_input,
         )
 
+
 @patch("subprocess.run", patch_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
 def test_350_package_dirs__src_layout_single(
@@ -974,7 +975,6 @@ def test_350_package_dirs__src_layout_single(
                 "package-dir": {"": "src"},
                 # Critical assertion: we get the *package name* `foo`, not `src/foo`
                 "packages": ["foo"],
-
             },
         },
     }
@@ -1006,6 +1006,199 @@ def test_350_package_dirs__src_layout_single(
 
     # assert outputted pyproject.toml
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
+
+
+@patch("subprocess.run", patch_subprocess_calls)
+@patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
+def test_351_package_dirs__src_layout_single_implicit(
+    directory: Path, requests_mock: Any
+) -> None:
+    """Test using `package_dirs` with a single package under `src/`."""
+    mock_many_requests(requests_mock)
+
+    pyproject_toml_path = directory / "pyproject.toml"
+
+    gha_input = pyproject_toml_builder.GHAInput(
+        auto_mypy_option=False,
+        pypi_name="wipac-mock-package",
+        mode="PACKAGING_AND_PYPI",
+        python_min=(3, 10),
+        license_spdx_id="MIT",
+        license_file="MY_LICENSE",
+        author=AUTHOR,
+        author_email=AUTHOR_EMAIL,
+        keywords=[
+            "python",
+            "REST",
+            "tools",
+            "utilities",
+            "OpenTelemetry",
+            "tracing",
+            "telemetry",
+        ],
+    )
+
+    # write the original pyproject.toml
+    with open(pyproject_toml_path, "w") as f:
+        tomlkit.dump(VANILLA_SECTIONS_IN, f)
+
+    pyproject_toml_expected = {
+        **BUILD_SYSTEM_SECTION,
+        "project": {
+            "name": "wipac-mock-package",
+            **VANILLA_PROJECT_KEYVALS_OUT,
+            "keywords": [
+                "python",
+                "REST",
+                "tools",
+                "utilities",
+                "OpenTelemetry",
+                "tracing",
+                "telemetry",
+            ],
+            "classifiers": [
+                "Programming Language :: Python :: 3.10",
+                "Programming Language :: Python :: 3.11",
+            ],
+            **PYPI_URLS_KEYVALS,
+        },
+        "tool": {
+            "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
+            "setuptools": {
+                "package-data": {"*": ["py.typed"]},
+                "package-dir": {"": "src"},
+                # Critical assertion: we get the *package name* `foo`, not `src/foo`
+                "packages": ["foo"],
+            },
+        },
+    }
+
+    # create src/foo layout
+    os.mkdir(directory / "src")
+    os.mkdir(directory / "src" / "foo")
+    Path(directory / "src" / "foo" / "__init__.py").touch()
+    # extra dirs under src that should NOT be detected as packages
+    os.mkdir(directory / "src" / "scripts")
+    Path(directory / "src" / "scripts" / "build.sh").touch()
+    # non-package subdirs under foo (no __init__.py, no .py files)
+    os.mkdir(directory / "src" / "foo" / "not_a_package")
+    Path(directory / "src" / "foo" / "not_a_package" / "data.txt").touch()
+    #
+    os.mkdir(directory / "src" / "foo" / "also_not_a_package")
+    Path(directory / "src" / "foo" / "also_not_a_package" / "config.yaml").touch()
+    # a real package elsewhere that should be ignored (not listed in package_dirs)
+    # os.mkdir(directory / "other_ignored_pkg")
+    # Path(directory / "other_ignored_pkg" / "__init__.py").touch()
+    shutil.rmtree(directory / "mock_package")  # added by fixture
+
+    # run pyproject_toml_builder
+    pyproject_toml_builder.work(
+        pyproject_toml_path,
+        GITHUB_FULL_REPO,
+        TOKEN,
+        gha_input,
+    )
+
+    # assert outputted pyproject.toml
+    assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
+
+
+@patch("subprocess.run", patch_subprocess_calls)
+@patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
+def test_355_package_dirs__src_layout_mixed_explicit(
+    directory: Path, requests_mock: Any
+) -> None:
+    """Test using `package_dirs` with a single package under `src/`."""
+    mock_many_requests(requests_mock)
+
+    pyproject_toml_path = directory / "pyproject.toml"
+
+    gha_input = pyproject_toml_builder.GHAInput(
+        auto_mypy_option=False,
+        pypi_name="wipac-mock-package",
+        mode="PACKAGING_AND_PYPI",
+        python_min=(3, 10),
+        license_spdx_id="MIT",
+        license_file="MY_LICENSE",
+        author=AUTHOR,
+        author_email=AUTHOR_EMAIL,
+        # NOTE: path is relative to repo root, but the package name must be `foo`
+        package_dirs=["src/foo", "mock_package"],
+        keywords=[
+            "python",
+            "REST",
+            "tools",
+            "utilities",
+            "OpenTelemetry",
+            "tracing",
+            "telemetry",
+        ],
+    )
+
+    # write the original pyproject.toml
+    with open(pyproject_toml_path, "w") as f:
+        tomlkit.dump(VANILLA_SECTIONS_IN, f)
+
+    pyproject_toml_expected = {
+        **BUILD_SYSTEM_SECTION,
+        "project": {
+            "name": "wipac-mock-package",
+            **VANILLA_PROJECT_KEYVALS_OUT,
+            "keywords": [
+                "python",
+                "REST",
+                "tools",
+                "utilities",
+                "OpenTelemetry",
+                "tracing",
+                "telemetry",
+            ],
+            "classifiers": [
+                "Programming Language :: Python :: 3.10",
+                "Programming Language :: Python :: 3.11",
+            ],
+            **PYPI_URLS_KEYVALS,
+        },
+        "tool": {
+            "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
+            "setuptools": {
+                "package-data": {"*": ["py.typed"]},
+                "package-dir": {"foo": "src/foo", "mock_package": "mock_package"},
+                # Critical assertion: we get the *package name* `foo`, not `src/foo`
+                "packages": ["foo", "mock_package"],
+            },
+        },
+    }
+
+    # create src/foo layout
+    os.mkdir(directory / "src")
+    os.mkdir(directory / "src" / "foo")
+    Path(directory / "src" / "foo" / "__init__.py").touch()
+    # extra dirs under src that should NOT be detected as packages
+    os.mkdir(directory / "src" / "scripts")
+    Path(directory / "src" / "scripts" / "build.sh").touch()
+    # non-package subdirs under foo (no __init__.py, no .py files)
+    os.mkdir(directory / "src" / "foo" / "not_a_package")
+    Path(directory / "src" / "foo" / "not_a_package" / "data.txt").touch()
+    #
+    os.mkdir(directory / "src" / "foo" / "also_not_a_package")
+    Path(directory / "src" / "foo" / "also_not_a_package" / "config.yaml").touch()
+    # a real package elsewhere that should be ignored (not listed in package_dirs)
+    # os.mkdir(directory / "other_ignored_pkg")
+    # Path(directory / "other_ignored_pkg" / "__init__.py").touch()
+    # shutil.rmtree(directory / "mock_package")  # added by fixture
+
+    # run pyproject_toml_builder
+    pyproject_toml_builder.work(
+        pyproject_toml_path,
+        GITHUB_FULL_REPO,
+        TOKEN,
+        gha_input,
+    )
+
+    # assert outputted pyproject.toml
+    assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
+
 
 @patch("subprocess.run", patch_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
