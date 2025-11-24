@@ -24,7 +24,7 @@ from wipac_dev_tools import (
     strtobool,
 )
 
-from find_packages import is_classical_package, is_namespace_package, iter_packages
+from find_packages import all_packages_relpath
 
 REAMDE_BADGES_START_DELIMITER = "<!--- Top of README Badges (automated) --->"
 REAMDE_BADGES_END_DELIMITER = "<!--- End of README Badges (automated) --->"
@@ -383,7 +383,12 @@ class FromFiles:
 
     def _get_package_paths(self) -> list[Path]:
         """Find the package path(s)."""
-        found_pkgs = list(iter_packages(self.root, self.gha_input.exclude_dirs))
+        found_pkgs = all_packages_relpath(
+            self.root,
+            dirs_exclude=self.gha_input.exclude_dirs,
+            include_namespace_packages=False,
+            omit_subpackages=True,
+        )
         if not found_pkgs:
             raise _log_error_then_get_exception(
                 f"No package found in '{self.root}'. Are you missing an __init__.py?"
@@ -400,11 +405,12 @@ class FromFiles:
                         f"{missings[0]} (defined in pyproject.toml). "
                         f"Is the directory missing an __init__.py?"
                     )
-                raise _log_error_then_get_exception(
-                    f"Package directories not found: "
-                    f"{', '.join(missings)} (defined in pyproject.toml). "
-                    f"Are the directories missing __init__.py files?"
-                )
+                else:  # pluralize message
+                    raise _log_error_then_get_exception(
+                        f"Package directories not found: "
+                        f"{', '.join(missings)} (defined in pyproject.toml). "
+                        f"Are the directories missing __init__.py files?"
+                    )
             else:
                 return [self.root / p for p in self.gha_input.package_dirs]
         # use the auto-detected package (if there's ONE)
@@ -657,6 +663,11 @@ class PyProjectTomlBuilder:
         self._inline_dont_change_this_comment(
             toml_dict["tool"]["setuptools"]["package-data"]["*"]
         )
+        if _pkg_dir_map := self._tool_setuptools_package_dir(ffile):
+            toml_dict["tool"]["setuptools"]["package-dir"] = _pkg_dir_map
+            self._inline_dont_change_this_comment(
+                toml_dict["tool"]["setuptools"]["package-dir"]
+            )
 
         # [tool.setuptools_scm] -- an empty section is the bare minimum
         if not toml_dict["tool"].get("setuptools_scm"):
@@ -813,20 +824,53 @@ class PyProjectTomlBuilder:
         """
         names: set[str] = set()
 
-        for pkg in ffile.package_paths:  # each is a Path
-            names.add(pkg.name)
+        for pkg_root in ffile.package_paths:  # each is a Path
+            # Always include the top-level package itself
+            names.add(pkg_root.name)
 
-            # Walk all subdirs
-            for path in pkg.rglob("*"):
-                if not path.is_dir():
-                    continue
+            # Find all subpackages under this root (relative paths as strings)
+            subpackages = all_packages_relpath(
+                root_dir=pkg_root,
+                dirs_exclude=None,
+                include_namespace_packages=True,
+                omit_subpackages=False,
+            )
 
-                if is_classical_package(path) or is_namespace_package(path):
-                    rel = str(path.relative_to(pkg))  # e.g., "api/utils"
-                    if rel:  # skip the parent
-                        names.add(f"{pkg.name}.{rel.replace('/', '.')}")
+            # Normalize to dotted import form
+            for sub in subpackages:
+                # ex: "api"       -> "foo.api"
+                # ex: "api/utils" -> "foo.api.utils"
+                names.add(f"{pkg_root.name}.{sub.replace('/', '.')}")
 
         return sorted(names)
+
+    @staticmethod
+    def _tool_setuptools_package_dir(ffile: FromFiles) -> dict[str, str]:
+        """Derive setuptools [tool.setuptools].package-dir mapping from package paths."""
+
+        # Normalize to paths relative to the project root
+        rel_paths = [p.relative_to(ffile.root) for p in ffile.package_paths]
+
+        # Case 1: all packages are directly under the root directory
+        # e.g., ["foo", "bar"]  ->  {}
+        if all(len(p.parts) == 1 for p in rel_paths):
+            return {}
+
+        # Partition: root-level vs nested
+        root_level = [p for p in rel_paths if len(p.parts) == 1]
+
+        # Case 2: all nested under a single prefix
+        # e.g., ["src/foo",    "src/bar"]       ->  {"": "src"}
+        #       ["python/pkg", "python/other"]  ->  {"": "python_src"}
+        if not root_level:
+            prefixes = {p.parts[0] for p in rel_paths if len(p.parts) >= 2}
+            if len(prefixes) == 1:
+                return {"": next(iter(prefixes))}
+
+        # Case 3: mixed or multi-root
+        # e.g., ["src/foo", "bax"]      ->  {"foo": "src/foo", "bax": "bax"}
+        #       ["src/foo", "lib/bar"]  ->  {"foo": "src/foo", "bar": "lib/bar"}
+        return {p.name: str(p) for p in rel_paths}
 
     @staticmethod
     def _tool_setuptools_packagedata_star(toml_dict: TOMLDocumentTypeHint) -> list[str]:
@@ -1008,14 +1052,14 @@ def main() -> None:
     parser.add_argument(
         "--package-dirs",
         nargs="*",
-        type=str,
+        type=str,  # not Path b/c relative
         default=[],
         help="List of directories to release. If not provided, all packages in the repository's root directory will be used.",
     )
     parser.add_argument(
         "--exclude-dirs",
         nargs="*",
-        type=str,
+        type=str,  # not Path b/c relative
         default=[],
         help="List of directories to exclude from release, relative to the repository's root directory.",
     )
