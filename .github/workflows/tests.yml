@@ -15,7 +15,7 @@ jobs:
         with:
           ref: ${{ github.sha }}  # lock to triggered commit (github.ref is dynamic)
       - uses: actions/setup-python@v5
-      - uses: WIPACrepo/wipac-dev-flake8-action@v1.2
+      - uses: WIPACrepo/wipac-dev-flake8-action@v1.3
 
   mypy:
     runs-on: ubuntu-latest
