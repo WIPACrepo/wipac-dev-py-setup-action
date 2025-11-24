@@ -24,7 +24,7 @@ from wipac_dev_tools import (
     strtobool,
 )
 
-from find_packages import is_classical_package, is_namespace_package, iter_packages
+from find_packages import all_packages, is_classical_package, is_namespace_package
 
 REAMDE_BADGES_START_DELIMITER = "<!--- Top of README Badges (automated) --->"
 REAMDE_BADGES_END_DELIMITER = "<!--- End of README Badges (automated) --->"
@@ -135,17 +135,20 @@ class GHAInput:
     python_max: tuple[int, int] | None = None
 
     # OPTIONAL (packaging)
-    package_dirs: list[str] = dataclasses.field(default_factory=list)
-    exclude_dirs: list[str] = dataclasses.field(
+    package_dirs: list[Path] = dataclasses.field(default_factory=list)
+    exclude_dirs: list[Path] = dataclasses.field(
         default_factory=lambda: [  # cannot use mutable type
-            "test",
-            "tests",
-            "doc",
-            "docs",
-            "resource",
-            "resources",
-            "example",
-            "examples",
+            Path(d)
+            for d in [
+                "test",
+                "tests",
+                "doc",
+                "docs",
+                "resource",
+                "resources",
+                "example",
+                "examples",
+            ]
         ]
     )
 
@@ -383,7 +386,11 @@ class FromFiles:
 
     def _get_package_paths(self) -> list[Path]:
         """Find the package path(s)."""
-        found_pkgs = list(iter_packages(self.root, self.gha_input.exclude_dirs))
+        found_pkgs = all_packages(
+            self.root,
+            self.gha_input.exclude_dirs,
+            no_subpackages=True,
+        )
         if not found_pkgs:
             raise _log_error_then_get_exception(
                 f"No package found in '{self.root}'. Are you missing an __init__.py?"
@@ -1008,14 +1015,14 @@ def main() -> None:
     parser.add_argument(
         "--package-dirs",
         nargs="*",
-        type=str,
+        type=Path,
         default=[],
         help="List of directories to release. If not provided, all packages in the repository's root directory will be used.",
     )
     parser.add_argument(
         "--exclude-dirs",
         nargs="*",
-        type=str,
+        type=Path,
         default=[],
         help="List of directories to exclude from release, relative to the repository's root directory.",
     )
