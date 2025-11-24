@@ -403,15 +403,16 @@ class FromFiles:
             ]:
                 if len(missings) == 1:
                     raise _log_error_then_get_exception(
-                        f"Package directory not found: "
+                        f"Package director{'y' if len(missings) == 1 else 'ies'} not found: "
                         f"{missings[0]} (defined in pyproject.toml). "
                         f"Is the directory missing an __init__.py?"
                     )
-                raise _log_error_then_get_exception(
-                    f"Package directories not found: "
-                    f"{', '.join(missings)} (defined in pyproject.toml). "
-                    f"Are the directories missing __init__.py files?"
-                )
+                else:  # pluralize message
+                    raise _log_error_then_get_exception(
+                        f"Package directories not found: "
+                        f"{', '.join(missings)} (defined in pyproject.toml). "
+                        f"Are the directories missing __init__.py files?"
+                    )
             else:
                 return [self.root / p for p in self.gha_input.package_dirs]
         # use the auto-detected package (if there's ONE)
