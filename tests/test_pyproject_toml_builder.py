@@ -10,7 +10,7 @@ import sys
 import uuid
 from pathlib import Path
 from subprocess import CompletedProcess
-from typing import Any
+from typing import Any, Generator
 from unittest.mock import patch
 
 import pytest
@@ -138,7 +138,7 @@ def assert_outputted_pyproject_toml(
 
 
 @pytest.fixture
-def directory() -> Path:
+def directory() -> Generator[Path, None, None]:
     """Get path to pyproject.toml in a random testing directory."""
     _dir = Path(f"test-dir-{uuid.uuid1()}")
 
