@@ -852,22 +852,24 @@ class PyProjectTomlBuilder:
         rel_paths = [p.relative_to(ffile.root) for p in ffile.package_paths]
 
         # Case 1: all packages are directly under the root directory
-        # e.g., ["foo", "bar"]
+        # e.g., ["foo", "bar"]  ->  {}
         if all(len(p.parts) == 1 for p in rel_paths):
             return {}
 
         # Partition: root-level vs nested
         root_level = [p for p in rel_paths if len(p.parts) == 1]
 
-        # Case 2: all nested under a single prefix (e.g. src/foo, src/bar)
-        # -- emit the short form: {"": "src"}
+        # Case 2: all nested under a single prefix
+        # e.g., ["src/foo",    "src/bar"]       ->  {"": "src"}
+        #       ["python/pkg", "python/other"]  ->  {"": "python_src"}
         if not root_level:
             prefixes = {p.parts[0] for p in rel_paths if len(p.parts) >= 2}
-            if len(prefixes) == 1:  # all share the same prefix?
+            if len(prefixes) == 1:
                 return {"": next(iter(prefixes))}
 
         # Case 3: mixed or multi-root
-        # -- explicit mapping per package
+        # e.g., ["src/foo", "bax"]      ->  {"foo": "src/foo", "bax": "bax"}
+        #       ["src/foo", "lib/bar"]  ->  {"foo": "src/foo", "bar": "lib/bar"}
         return {p.name: str(p) for p in rel_paths}
 
     @staticmethod
