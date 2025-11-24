@@ -11,7 +11,7 @@ jobs:
   flake8:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.sha }}  # lock to triggered commit (github.ref is dynamic)
       - uses: actions/setup-python@v5
@@ -20,7 +20,7 @@ jobs:
   mypy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.sha }}  # lock to triggered commit (github.ref is dynamic)
       - uses: actions/setup-python@v5
@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - if: github.actor != 'dependabot[bot]'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}  # fyi, dependabot can't access normal secrets
           ref: ${{ github.ref }}  # dont lock to sha (action needs to push)
@@ -62,7 +62,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.sha }}  # lock to triggered commit (github.ref is dynamic)
       - uses: actions/setup-python@v5
