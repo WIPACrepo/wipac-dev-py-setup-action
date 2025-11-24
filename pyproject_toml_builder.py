@@ -24,7 +24,7 @@ from wipac_dev_tools import (
     strtobool,
 )
 
-from find_packages import all_packages, is_classical_package, is_namespace_package
+from find_packages import all_packages
 
 REAMDE_BADGES_START_DELIMITER = "<!--- Top of README Badges (automated) --->"
 REAMDE_BADGES_END_DELIMITER = "<!--- End of README Badges (automated) --->"
@@ -385,8 +385,9 @@ class FromFiles:
         """Find the package path(s)."""
         found_pkgs = all_packages(
             self.root,
-            self.gha_input.exclude_dirs,
-            no_subpackages=True,
+            dirs_exclude=self.gha_input.exclude_dirs,
+            include_namespace_packages=False,
+            omit_subpackages=True,
         )
         if not found_pkgs:
             raise _log_error_then_get_exception(
@@ -818,18 +819,23 @@ class PyProjectTomlBuilder:
         """
         names: set[str] = set()
 
-        for pkg in ffile.package_paths:  # each is a Path
-            names.add(pkg.name)
+        for pkg_root in ffile.package_paths:  # each is a Path
+            # Always include the top-level package itself
+            names.add(pkg_root.name)
 
-            # Walk all subdirs
-            for path in pkg.rglob("*"):
-                if not path.is_dir():
-                    continue
+            # Find all subpackages under this root (relative paths as strings)
+            subpackages = all_packages(
+                root_dir=pkg_root,
+                dirs_exclude=None,
+                include_namespace_packages=True,
+                omit_subpackages=False,
+            )
 
-                if is_classical_package(path) or is_namespace_package(path):
-                    rel = str(path.relative_to(pkg))  # e.g., "api/utils"
-                    if rel:  # skip the parent
-                        names.add(f"{pkg.name}.{rel.replace('/', '.')}")
+            # Normalize to dotted import form
+            for sub in subpackages:
+                # ex: "api"       -> "foo.api"
+                # ex: "api/utils" -> "foo.api.utils"
+                names.add(f"{pkg_root.name}.{sub.replace('/', '.')}")
 
         return sorted(names)
 

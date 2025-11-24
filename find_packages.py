@@ -14,9 +14,10 @@ def iter_all_dirs(root_dir: Path) -> Iterator[Path]:
 
 def all_packages(
     root_dir: Path,
-    dirs_exclude: list[str] | None = None,
-    include_namespace_packages: bool = False,
-    no_subpackages: bool = False,
+    *,
+    dirs_exclude: list[str] | None,
+    include_namespace_packages: bool,
+    omit_subpackages: bool,
 ) -> list[str]:
     """
     Retrieves all the packages under a given root directory, excluding any
@@ -50,7 +51,7 @@ def all_packages(
             pass  # not a package
 
     # optionally, don't include any subpackages
-    if no_subpackages:
+    if omit_subpackages:
         collected = [
             c
             for c in collected
