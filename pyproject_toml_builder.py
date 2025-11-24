@@ -24,7 +24,7 @@ from wipac_dev_tools import (
     strtobool,
 )
 
-from find_packages import all_package_relpath
+from find_packages import all_packages_relpath
 
 REAMDE_BADGES_START_DELIMITER = "<!--- Top of README Badges (automated) --->"
 REAMDE_BADGES_END_DELIMITER = "<!--- End of README Badges (automated) --->"
@@ -383,7 +383,7 @@ class FromFiles:
 
     def _get_package_paths(self) -> list[Path]:
         """Find the package path(s)."""
-        found_pkgs = all_package_relpath(
+        found_pkgs = all_packages_relpath(
             self.root,
             dirs_exclude=self.gha_input.exclude_dirs,
             include_namespace_packages=False,
@@ -826,7 +826,7 @@ class PyProjectTomlBuilder:
             names.add(pkg_root.name)
 
             # Find all subpackages under this root (relative paths as strings)
-            subpackages = all_package_relpath(
+            subpackages = all_packages_relpath(
                 root_dir=pkg_root,
                 dirs_exclude=None,
                 include_namespace_packages=True,
