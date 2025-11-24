@@ -24,7 +24,7 @@ from wipac_dev_tools import (
     strtobool,
 )
 
-from find_packages import all_packages
+from find_packages import all_packages_everywhere
 
 REAMDE_BADGES_START_DELIMITER = "<!--- Top of README Badges (automated) --->"
 REAMDE_BADGES_END_DELIMITER = "<!--- End of README Badges (automated) --->"
@@ -383,7 +383,7 @@ class FromFiles:
 
     def _get_package_paths(self) -> list[Path]:
         """Find the package path(s)."""
-        found_pkgs = all_packages(
+        found_pkgs = all_packages_everywhere(
             self.root,
             dirs_exclude=self.gha_input.exclude_dirs,
             include_namespace_packages=False,
@@ -650,6 +650,7 @@ class PyProjectTomlBuilder:
             toml_dict["tool"]["setuptools"] = {}
         toml_dict["tool"]["setuptools"].update(
             {
+                "package-dir": self._tool_setuptools_package_dir(ffile),
                 "packages": self._tool_setuptools_packages(ffile),
                 "package-data": {
                     **toml_dict["tool"].get("setuptools", {}).get("package-data", {}),
@@ -824,7 +825,7 @@ class PyProjectTomlBuilder:
             names.add(pkg_root.name)
 
             # Find all subpackages under this root (relative paths as strings)
-            subpackages = all_packages(
+            subpackages = all_packages_everywhere(
                 root_dir=pkg_root,
                 dirs_exclude=None,
                 include_namespace_packages=True,
@@ -838,6 +839,15 @@ class PyProjectTomlBuilder:
                 names.add(f"{pkg_root.name}.{sub.replace('/', '.')}")
 
         return sorted(names)
+
+    @staticmethod
+    def _tool_setuptools_package_dir(ffile: FromFiles) -> dict[str,str]:
+        """Get the package root mapping for all the packages."""
+        mapping = {}
+
+        for pkg_root in ffile.package_paths:  # each is a Path
+            # TODO -- pkg may be multi-
+
 
     @staticmethod
     def _tool_setuptools_packagedata_star(toml_dict: TOMLDocumentTypeHint) -> list[str]:

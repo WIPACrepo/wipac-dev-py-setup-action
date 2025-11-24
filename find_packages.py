@@ -12,7 +12,7 @@ def iter_all_dirs(root_dir: Path) -> Iterator[Path]:
             yield Path(parent) / d
 
 
-def all_packages(
+def all_packages_everywhere(
     root_dir: Path,
     *,
     dirs_exclude: list[str] | None,
