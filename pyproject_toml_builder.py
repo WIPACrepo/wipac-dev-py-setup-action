@@ -858,16 +858,16 @@ class PyProjectTomlBuilder:
 
         # Partition: root-level vs nested
         root_level = [p for p in rel_paths if len(p.parts) == 1]
-        nested = [p for p in rel_paths if len(p.parts) >= 2]
 
         # Case 2: all nested under a single prefix (e.g. src/foo, src/bar)
-        # → emit the short form: {"": "src"}
+        # -- emit the short form: {"": "src"}
         if not root_level:
-            prefixes = {p.parts[0] for p in nested}
-            if len(prefixes) == 1:
+            prefixes = {p.parts[0] for p in rel_paths if len(p.parts) >= 2}
+            if len(prefixes) == 1:  # all share the same prefix?
                 return {"": next(iter(prefixes))}
 
-        # Case 3: mixed or multi-root → explicit mapping per package
+        # Case 3: mixed or multi-root
+        # -- explicit mapping per package
         return {p.name: str(p) for p in rel_paths}
 
     @staticmethod
