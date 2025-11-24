@@ -4,6 +4,7 @@ import copy
 import logging
 import os
 import re
+import shutil
 import subprocess
 import sys
 import uuid
@@ -149,7 +150,9 @@ def directory() -> Path:
     Path(_dir / "mock_package/__init__.py").touch()
 
     print(_dir)
-    return _dir
+    yield _dir
+
+    shutil.rmtree(_dir)
 
 
 def mock_many_requests(requests_mock: Any) -> None:
@@ -968,8 +971,10 @@ def test_350_package_dirs__src_layout_single(
             "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
             "setuptools": {
                 "package-data": {"*": ["py.typed"]},
+                "package-dir": {"": "src"},
                 # Critical assertion: we get the *package name* `foo`, not `src/foo`
                 "packages": ["foo"],
+
             },
         },
     }
