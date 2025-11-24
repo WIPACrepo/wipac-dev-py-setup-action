@@ -401,7 +401,7 @@ class FromFiles:
             ]:
                 if len(missings) == 1:
                     raise _log_error_then_get_exception(
-                        f"Package director{'y' if len(missings) == 1 else 'ies'} not found: "
+                        f"Package directory not found: "
                         f"{missings[0]} (defined in pyproject.toml). "
                         f"Is the directory missing an __init__.py?"
                     )
