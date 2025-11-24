@@ -657,14 +657,17 @@ class PyProjectTomlBuilder:
                 },
             }
         )
-        if _pkg_dir_map := self._tool_setuptools_package_dir(ffile):
-            toml_dict["tool"]["setuptools"]["package-dir"] = _pkg_dir_map
         self._inline_dont_change_this_comment(
             toml_dict["tool"]["setuptools"]["packages"]
         )
         self._inline_dont_change_this_comment(
             toml_dict["tool"]["setuptools"]["package-data"]["*"]
         )
+        if _pkg_dir_map := self._tool_setuptools_package_dir(ffile):
+            toml_dict["tool"]["setuptools"]["package-dir"] = _pkg_dir_map
+            self._inline_dont_change_this_comment(
+                toml_dict["tool"]["setuptools"]["package-dir"]
+            )
 
         # [tool.setuptools_scm] -- an empty section is the bare minimum
         if not toml_dict["tool"].get("setuptools_scm"):
