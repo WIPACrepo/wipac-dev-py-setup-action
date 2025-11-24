@@ -135,20 +135,17 @@ class GHAInput:
     python_max: tuple[int, int] | None = None
 
     # OPTIONAL (packaging)
-    package_dirs: list[Path] = dataclasses.field(default_factory=list)
-    exclude_dirs: list[Path] = dataclasses.field(
+    package_dirs: list[str] = dataclasses.field(default_factory=list)
+    exclude_dirs: list[str] = dataclasses.field(
         default_factory=lambda: [  # cannot use mutable type
-            Path(d)
-            for d in [
-                "test",
-                "tests",
-                "doc",
-                "docs",
-                "resource",
-                "resources",
-                "example",
-                "examples",
-            ]
+            "test",
+            "tests",
+            "doc",
+            "docs",
+            "resource",
+            "resources",
+            "example",
+            "examples",
         ]
     )
 
@@ -1016,14 +1013,14 @@ def main() -> None:
     parser.add_argument(
         "--package-dirs",
         nargs="*",
-        type=Path,
+        type=str,  # not Path b/c relative
         default=[],
         help="List of directories to release. If not provided, all packages in the repository's root directory will be used.",
     )
     parser.add_argument(
         "--exclude-dirs",
         nargs="*",
-        type=Path,
+        type=str,  # not Path b/c relative
         default=[],
         help="List of directories to exclude from release, relative to the repository's root directory.",
     )

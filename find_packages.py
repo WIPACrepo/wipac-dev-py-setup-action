@@ -14,10 +14,10 @@ def iter_all_dirs(root_dir: Path) -> Iterator[Path]:
 
 def all_packages(
     root_dir: Path,
-    dirs_exclude: list[Path] | None = None,
+    dirs_exclude: list[str] | None = None,
     include_namespace_packages: bool = False,
     no_subpackages: bool = False,
-) -> list[Path]:
+) -> list[str]:
     """
     Retrieves all the packages under a given root directory, excluding any
     listed under `dirs_exclude` (whose paths are relative to `root_dir`).
@@ -30,15 +30,15 @@ def all_packages(
     package are returned.
     """
     if dirs_exclude is None:
-        exclude_set: set[Path] = set()
+        exclude_abs_set: set[Path] = set()
     else:
-        exclude_set = {root_dir / d for d in dirs_exclude}
+        exclude_abs_set = {root_dir / d for d in dirs_exclude}
 
     # recursively find all packages and subpackages
     collected: list[Path] = []
     for dpath in iter_all_dirs(root_dir):
         # exclude whole subtrees
-        if any(dpath.is_relative_to(ex_dir) for ex_dir in exclude_set):
+        if any(dpath.is_relative_to(x) for x in exclude_abs_set):
             continue
 
         # package detection
@@ -58,7 +58,8 @@ def all_packages(
             if not any(c != other and c.is_relative_to(other) for other in collected)
         ]
 
-    return sorted(collected)
+    # convert absolute paths (Path) -> relative (str)
+    return sorted(str(c.relative_to(root_dir)) for c in collected)
 
 
 def is_classical_package(path: Path) -> bool:
