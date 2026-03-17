@@ -348,6 +348,8 @@ class PythonVersioning:
                 dependency,
             ]
 
+        print(f"Running: {' '.join(uv_command)}", flush=True)
+
         try:
             # Run the command
             result = subprocess.run(
