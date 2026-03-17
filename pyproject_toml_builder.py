@@ -700,8 +700,13 @@ class PyProjectTomlBuilder:
         if gha_input.mode not in ["PACKAGING_AND_PYPI", "PACKAGING"]:
             raise RuntimeError(f"Unknown mode: {gha_input.mode}")
 
-        def _remove_empties(dicto: dict[str, Any]) -> dict[str, Any]:
-            return {k: v for k, v in dicto.items() if v}
+        # NOTE - mode-specific required field logic is handled upstream
+
+        author_entry = {}
+        if gha_input.author:
+            author_entry["name"] = gha_input.author
+        if gha_input.author_email:
+            author_entry["email"] = gha_input.author_email
 
         updates = {
             "name": (
@@ -709,27 +714,23 @@ class PyProjectTomlBuilder:
                 if gha_input.mode == "PACKAGING_AND_PYPI"
                 else "-".join(p.name.replace("_", "-") for p in ffile.package_paths)
             ),
-            "authors": [
-                _remove_empties(
-                    {
-                        "name": gha_input.author,
-                        "email": gha_input.author_email,
-                    }
-                )
-            ],
+            "authors": (  # we currently only support 1 author
+                [author_entry] if author_entry else []
+            ),
             "description": gh_api.description,
             "readme": ffile.readme_path.name,
             "license": gha_input.license_spdx_id,
-            "license-files": (
+            "license-files": (  # we currently only support 1 license file
                 [gha_input.license_file] if gha_input.license_file else []
             ),
             "keywords": gha_input.keywords,
             "classifiers": py_ver.python_classifiers(),
             "requires-python": py_ver.get_requires_python(),
         }
-        toml_project.update(_remove_empties(updates))
+        toml_project.update({k: v for k, v in updates.items() if v})
         for u in updates:
             PyProjectTomlBuilder._inline_dont_change_this_comment(toml_project[u])
+
         # [project.urls]
         toml_project["urls"] = {
             "Homepage": (
