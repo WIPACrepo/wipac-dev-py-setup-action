@@ -700,6 +700,9 @@ class PyProjectTomlBuilder:
         if gha_input.mode not in ["PACKAGING_AND_PYPI", "PACKAGING"]:
             raise RuntimeError(f"Unknown mode: {gha_input.mode}")
 
+        def _remove_empties(dicto: dict[str, Any]) -> dict[str, Any]:
+            return {k: v for k, v in dicto.items() if v}
+
         updates = {
             "name": (
                 gha_input.pypi_name
@@ -707,10 +710,12 @@ class PyProjectTomlBuilder:
                 else "-".join(p.name.replace("_", "-") for p in ffile.package_paths)
             ),
             "authors": [
-                {
-                    "name": gha_input.author,
-                    "email": gha_input.author_email,
-                }
+                _remove_empties(
+                    {
+                        "name": gha_input.author,
+                        "email": gha_input.author_email,
+                    }
+                )
             ],
             "description": gh_api.description,
             "readme": ffile.readme_path.name,
@@ -722,7 +727,7 @@ class PyProjectTomlBuilder:
             "classifiers": py_ver.python_classifiers(),
             "requires-python": py_ver.get_requires_python(),
         }
-        toml_project.update(updates)
+        toml_project.update(_remove_empties(updates))
         for u in updates:
             PyProjectTomlBuilder._inline_dont_change_this_comment(toml_project[u])
         # [project.urls]
