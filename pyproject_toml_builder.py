@@ -623,23 +623,13 @@ class PyProjectTomlBuilder:
         toml_dict["project"]["dynamic"] = ["version"]
         self._inline_dont_change_this_comment(toml_dict["project"]["dynamic"])
         # -- mode-based updates
-        if gha_input.mode == "PACKAGING":
-            self.insert_packaging_attributes(
-                toml_dict["project"],
-                gha_input,
-                ffile,
-                py_ver,
-            )
-        elif gha_input.mode == "PACKAGING_AND_PYPI":
-            self.insert_packaging_and_pypi_attributes(
-                toml_dict["project"],
-                gha_input,
-                ffile,
-                gh_api,
-                py_ver,
-            )
-        else:
-            raise RuntimeError(f"Unknown mode: {gha_input.mode}")
+        self.insert_project_metadata(
+            toml_dict["project"],
+            gha_input,
+            ffile,
+            gh_api,
+            py_ver,
+        )
 
         # [tool]
         if not toml_dict.get("tool"):
@@ -699,65 +689,23 @@ class PyProjectTomlBuilder:
             self.readme_mgr = None
 
     @staticmethod
-    def insert_packaging_attributes(
-        toml_project: TOMLDocumentTypeHint,
-        gha_input: GHAInput,
-        ffile: FromFiles,
-        py_ver: PythonVersioning,
-    ) -> None:
-        """Add the attributes for the 'PACKAGING' mode."""
-        if gha_input.mode != "PACKAGING":
-            raise RuntimeError(f"cannot add 'PACKAGING' attrs for {gha_input.mode=}")
-
-        toml_project["name"] = "-".join(
-            p.name.replace("_", "-") for p in ffile.package_paths
-        )
-        PyProjectTomlBuilder._inline_dont_change_this_comment(toml_project["name"])
-
-        toml_project["requires-python"] = py_ver.get_requires_python()
-        PyProjectTomlBuilder._inline_dont_change_this_comment(
-            toml_project["requires-python"]
-        )
-
-        # add the following if they were given:
-
-        if gha_input.author or gha_input.author_email:
-            toml_project["authors"] = [{}]
-
-            if gha_input.author:
-                toml_project["authors"][0].update({"name": gha_input.author})
-                PyProjectTomlBuilder._inline_dont_change_this_comment(
-                    toml_project["authors"][0]
-                )
-
-            if gha_input.author_email:
-                toml_project["authors"][0].update({"email": gha_input.author_email})
-                PyProjectTomlBuilder._inline_dont_change_this_comment(
-                    toml_project["authors"][0]
-                )
-
-        if gha_input.keywords:
-            toml_project["keywords"] = gha_input.keywords
-            PyProjectTomlBuilder._inline_dont_change_this_comment(
-                toml_project["keywords"]
-            )
-
-    @staticmethod
-    def insert_packaging_and_pypi_attributes(
+    def insert_project_metadata(
         toml_project: TOMLDocumentTypeHint,
         gha_input: GHAInput,
         ffile: FromFiles,
         gh_api: GitHubAPI,
         py_ver: PythonVersioning,
     ) -> None:
-        """Add the attributes for the 'PACKAGING_AND_PYPI' mode."""
-        if gha_input.mode != "PACKAGING_AND_PYPI":
-            raise RuntimeError(
-                f"cannot add 'PACKAGING_AND_PYPI' attrs for {gha_input.mode=}"
-            )
+        """Add project metadata, w/ additional optional handling for PACKAGING_AND_PYPI."""
+        if gha_input.mode not in ["PACKAGING_AND_PYPI", "PACKAGING"]:
+            raise RuntimeError(f"Unknown mode: {gha_input.mode}")
 
         updates = {
-            "name": gha_input.pypi_name,
+            "name": (
+                gha_input.pypi_name
+                if gha_input.mode == "PACKAGING_AND_PYPI"
+                else "-".join(p.name.replace("_", "-") for p in ffile.package_paths)
+            ),
             "authors": [
                 {
                     "name": gha_input.author,
@@ -779,7 +727,11 @@ class PyProjectTomlBuilder:
             PyProjectTomlBuilder._inline_dont_change_this_comment(toml_project[u])
         # [project.urls]
         toml_project["urls"] = {
-            "Homepage": f"https://pypi.org/project/{gha_input.pypi_name}/",
+            "Homepage": (
+                f"https://pypi.org/project/{gha_input.pypi_name}/"
+                if gha_input.mode == "PACKAGING_AND_PYPI"
+                else gh_api.url
+            ),
             "Tracker": f"{gh_api.url}/issues",
             "Source": gh_api.url,
         }
