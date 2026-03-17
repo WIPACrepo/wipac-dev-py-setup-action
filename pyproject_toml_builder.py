@@ -310,57 +310,40 @@ class PythonVersioning:
     def _are_all_deps_compatible_w_python(
         dependencies: list[str], python: tuple[int, int]
     ) -> bool:
-        """Get the first incompatible dependency, else None."""
+        """Check whether the full dependency set resolves for a target Python version."""
         print(
             f"##[group]python {PythonVersioning.pystr(python)} dependency compatibility",
             flush=True,
         )
-        for dep in dependencies:
-            if not PythonVersioning._is_dep_compatible_w_python(dep, python):
-                print("##[endgroup]", flush=True)
-                print(
-                    (
-                        f"::warning::dependency is incompatible with "
-                        f"python {PythonVersioning.pystr(python)}: {dep}"
-                    ),
-                    flush=True,
-                )
-                return False
-        print("##[endgroup]", flush=True)
-        return True
 
-    @staticmethod
-    def _is_dep_compatible_w_python(dependency: str, python: tuple[int, int]) -> bool:
-        """
-        Performs a dry-run install, forcing a compatibility check
-        for an installed package against a target Python version.
-        """
         pip_command = [
             "python",
             "-m",
             "pip",
             "install",
-            dependency,
             "--dry-run",
             f"--python-version={python[0]}.{python[1]}",
             "--ignore-installed",  # Forces pip to re-evaluate the package resolution
-            "--no-deps",  # required by pip for isolation/security reasons
+            "--only-binary=:all:",  # only consider wheel files, don't involve sdists
+            *dependencies,
         ]
 
+        print(f"Running: {' '.join(pip_command)}", flush=True)
+
         try:
-            # Run the command
             result = subprocess.run(
                 pip_command,
-                check=True,  # Raise an exception for non-zero exit codes (i.e., failure)
+                check=True,
                 capture_output=True,
                 text=True,
             )
-            # If successful, it means the package is compatible with the target version
             print(result.stdout, flush=True)
+            print("##[endgroup]", flush=True)
             return True
         except subprocess.CalledProcessError as e:
-            # If it fails, pip will usually output a dependency conflict error
+            print(e.stdout, flush=True)
             print(e.stderr, flush=True)
+            print("##[endgroup]", flush=True)
             return False
 
 
@@ -623,23 +606,13 @@ class PyProjectTomlBuilder:
         toml_dict["project"]["dynamic"] = ["version"]
         self._inline_dont_change_this_comment(toml_dict["project"]["dynamic"])
         # -- mode-based updates
-        if gha_input.mode == "PACKAGING":
-            self.insert_packaging_attributes(
-                toml_dict["project"],
-                gha_input,
-                ffile,
-                py_ver,
-            )
-        elif gha_input.mode == "PACKAGING_AND_PYPI":
-            self.insert_packaging_and_pypi_attributes(
-                toml_dict["project"],
-                gha_input,
-                ffile,
-                gh_api,
-                py_ver,
-            )
-        else:
-            raise RuntimeError(f"Unknown mode: {gha_input.mode}")
+        self.insert_project_metadata(
+            toml_dict["project"],
+            gha_input,
+            ffile,
+            gh_api,
+            py_ver,
+        )
 
         # [tool]
         if not toml_dict.get("tool"):
@@ -699,87 +672,56 @@ class PyProjectTomlBuilder:
             self.readme_mgr = None
 
     @staticmethod
-    def insert_packaging_attributes(
-        toml_project: TOMLDocumentTypeHint,
-        gha_input: GHAInput,
-        ffile: FromFiles,
-        py_ver: PythonVersioning,
-    ) -> None:
-        """Add the attributes for the 'PACKAGING' mode."""
-        if gha_input.mode != "PACKAGING":
-            raise RuntimeError(f"cannot add 'PACKAGING' attrs for {gha_input.mode=}")
-
-        toml_project["name"] = "-".join(
-            p.name.replace("_", "-") for p in ffile.package_paths
-        )
-        PyProjectTomlBuilder._inline_dont_change_this_comment(toml_project["name"])
-
-        toml_project["requires-python"] = py_ver.get_requires_python()
-        PyProjectTomlBuilder._inline_dont_change_this_comment(
-            toml_project["requires-python"]
-        )
-
-        # add the following if they were given:
-
-        if gha_input.author or gha_input.author_email:
-            toml_project["authors"] = [{}]
-
-            if gha_input.author:
-                toml_project["authors"][0].update({"name": gha_input.author})
-                PyProjectTomlBuilder._inline_dont_change_this_comment(
-                    toml_project["authors"][0]
-                )
-
-            if gha_input.author_email:
-                toml_project["authors"][0].update({"email": gha_input.author_email})
-                PyProjectTomlBuilder._inline_dont_change_this_comment(
-                    toml_project["authors"][0]
-                )
-
-        if gha_input.keywords:
-            toml_project["keywords"] = gha_input.keywords
-            PyProjectTomlBuilder._inline_dont_change_this_comment(
-                toml_project["keywords"]
-            )
-
-    @staticmethod
-    def insert_packaging_and_pypi_attributes(
+    def insert_project_metadata(
         toml_project: TOMLDocumentTypeHint,
         gha_input: GHAInput,
         ffile: FromFiles,
         gh_api: GitHubAPI,
         py_ver: PythonVersioning,
     ) -> None:
-        """Add the attributes for the 'PACKAGING_AND_PYPI' mode."""
-        if gha_input.mode != "PACKAGING_AND_PYPI":
-            raise RuntimeError(
-                f"cannot add 'PACKAGING_AND_PYPI' attrs for {gha_input.mode=}"
-            )
+        """Add project metadata, w/ additional optional handling for PACKAGING_AND_PYPI."""
+        if gha_input.mode not in ["PACKAGING_AND_PYPI", "PACKAGING"]:
+            raise RuntimeError(f"Unknown mode: {gha_input.mode}")
+
+        # NOTE - mode-specific required field logic is handled upstream
+
+        author_entry = {}
+        if gha_input.author:
+            author_entry["name"] = gha_input.author
+        if gha_input.author_email:
+            author_entry["email"] = gha_input.author_email
 
         updates = {
-            "name": gha_input.pypi_name,
-            "authors": [
-                {
-                    "name": gha_input.author,
-                    "email": gha_input.author_email,
-                }
-            ],
+            "name": (
+                gha_input.pypi_name
+                if gha_input.mode == "PACKAGING_AND_PYPI"
+                else "-".join(p.name.replace("_", "-") for p in ffile.package_paths)
+            ),
+            "authors": (  # we currently only support 1 author
+                [author_entry] if author_entry else []
+            ),
             "description": gh_api.description,
             "readme": ffile.readme_path.name,
             "license": gha_input.license_spdx_id,
-            "license-files": (
+            "license-files": (  # we currently only support 1 license file
                 [gha_input.license_file] if gha_input.license_file else []
             ),
             "keywords": gha_input.keywords,
             "classifiers": py_ver.python_classifiers(),
             "requires-python": py_ver.get_requires_python(),
         }
+        updates = {k: v for k, v in updates.items() if v}  # remove empties
         toml_project.update(updates)
         for u in updates:
             PyProjectTomlBuilder._inline_dont_change_this_comment(toml_project[u])
+
         # [project.urls]
         toml_project["urls"] = {
-            "Homepage": f"https://pypi.org/project/{gha_input.pypi_name}/",
+            "Homepage": (
+                f"https://pypi.org/project/{gha_input.pypi_name}/"
+                if gha_input.mode == "PACKAGING_AND_PYPI"
+                else gh_api.url
+            ),
             "Tracker": f"{gh_api.url}/issues",
             "Source": gh_api.url,
         }
