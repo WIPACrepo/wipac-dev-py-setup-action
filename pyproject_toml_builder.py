@@ -316,23 +316,23 @@ class PythonVersioning:
             flush=True,
         )
 
-        uv_command = [
+        pip_command = [
             "python",
             "-m",
             "pip",
             "install",
             "--dry-run",
-            f"--python-version {python[0]}.{python[1]}",
+            f"--python-version={python[0]}.{python[1]}",
             "--ignore-installed",  # Forces pip to re-evaluate the package resolution
             "--only-binary=:all:",  # only consider wheel files, don't involve sdists
             *dependencies,
         ]
 
-        print(f"Running: {' '.join(uv_command)}", flush=True)
+        print(f"Running: {' '.join(pip_command)}", flush=True)
 
         try:
             result = subprocess.run(
-                uv_command,
+                pip_command,
                 check=True,
                 capture_output=True,
                 text=True,
