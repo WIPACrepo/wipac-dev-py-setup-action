@@ -130,6 +130,10 @@ runs:
 
       shell: bash
 
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.14'  # NOTE: update, someday.
+
     - name: Is this most recent commit?
       run: |
         # step: Is this most recent commit?
@@ -144,11 +148,6 @@ runs:
 
     ####################################################################################
     # Now, we continue only if this is the most recent commit on this branch.
-
-    - uses: actions/setup-python@v4
-      if: env.IS_GIT_BEHIND != 'true'
-      with:
-        python-version: '3.14'  # NOTE: update, someday.
 
     - uses: astral-sh/setup-uv@v7
       if: env.IS_GIT_BEHIND != 'true'
