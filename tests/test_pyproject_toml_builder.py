@@ -86,6 +86,14 @@ PYPI_URLS_KEYVALS = {
     }
 }
 
+NON_PYPI_URLS_KEYVALS = {
+    "urls": {
+        "Homepage": "https://github.com/foobarbaz-org/foobarbaz-repo",
+        "Tracker": "https://github.com/foobarbaz-org/foobarbaz-repo/issues",
+        "Source": "https://github.com/foobarbaz-org/foobarbaz-repo",
+    }
+}
+
 VANILLA_PROJECT_KEYVALS_OUT = {
     **VANILLA_SECTIONS_IN["project"],
     "authors": [{"name": AUTHOR, "email": AUTHOR_EMAIL}],
@@ -96,10 +104,19 @@ VANILLA_PROJECT_KEYVALS_OUT = {
     "requires-python": ">=3.10, <3.12",
     "dynamic": ["version"],
 }
-NO_PYPI_VANILLA_PROJECT_KEYVALS_OUT = {  # even MORE vanilla than vanilla
-    k: v
-    for k, v in VANILLA_PROJECT_KEYVALS_OUT.items()
-    if k in ["dependencies", "optional-dependencies", "requires-python", "dynamic"]
+
+NO_PYPI_VANILLA_PROJECT_KEYVALS_OUT = {
+    **VANILLA_SECTIONS_IN["project"],
+    "description": "Ceci n’est pas une pipe",
+    "readme": "README.md",
+    "license": "MIT",
+    "license-files": ["MY_LICENSE"],
+    "requires-python": ">=3.10, <3.12",
+    "dynamic": ["version"],
+    "classifiers": [
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+    ],
 }
 
 
@@ -230,7 +247,7 @@ subprocess_orig_run = subprocess.run
 
 
 def patch_subprocess_calls(cmd, *a, **kw):
-    """Patch the subprocess calls function for various situations, default to actual call."""
+    """Patch subprocess calls for test-only scenarios, defaulting to the real call."""
     if isinstance(cmd, str):
         _cmd_str = cmd
     elif isinstance(cmd, list):
@@ -243,9 +260,15 @@ def patch_subprocess_calls(cmd, *a, **kw):
     # the 'git' commands
     if _cmd_str.startswith("git "):
         return CompletedProcess(cmd, 0)
-    # the pip package compatibility commands
-    elif _cmd_str.startswith("python -m pip install") and "--no-deps" in _cmd_str:
-        return CompletedProcess(cmd, 0)
+
+    # the pip dependency compatibility commands
+    elif (
+        _cmd_str.startswith("python -m pip install")
+        and "--dry-run" in _cmd_str
+        and "--python-version=" in _cmd_str
+    ):
+        return CompletedProcess(cmd, 0, stdout="", stderr="")
+
     # some other command
     else:
         return subprocess_orig_run(cmd, *a, **kw)
@@ -280,7 +303,8 @@ def test_000_minimum_input(directory: Path, requests_mock: Any) -> None:
         **BUILD_SYSTEM_SECTION,
         "project": {
             "name": "mock-package",
-            **NO_PYPI_VANILLA_PROJECT_KEYVALS_OUT,  # the true minimum is more vanilla than vanilla)
+            **NO_PYPI_VANILLA_PROJECT_KEYVALS_OUT,
+            **NON_PYPI_URLS_KEYVALS,
         },
         "tool": {
             "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
@@ -627,7 +651,7 @@ def test_340_package_dirs__multi_autoname__no_pypi(
         **BUILD_SYSTEM_SECTION,
         "project": {
             "name": "mock-package-another-one",
-            **NO_PYPI_VANILLA_PROJECT_KEYVALS_OUT,  # the true minimum is more vanilla than vanilla
+            **NO_PYPI_VANILLA_PROJECT_KEYVALS_OUT,
             "authors": [{"name": AUTHOR, "email": AUTHOR_EMAIL}],
             "keywords": [
                 "python",
@@ -638,6 +662,7 @@ def test_340_package_dirs__multi_autoname__no_pypi(
                 "tracing",
                 "telemetry",
             ],
+            **NON_PYPI_URLS_KEYVALS,
         },
         "tool": {
             "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
@@ -1388,15 +1413,12 @@ def test_800_auto_mypy_option(directory: Path, requests_mock: Any) -> None:
         **BUILD_SYSTEM_SECTION,
         "project": {
             "name": "mock-package",
-            **NO_PYPI_VANILLA_PROJECT_KEYVALS_OUT,  # the true minimum is more vanilla than vanilla)
-            **{
-                "optional-dependencies": {
-                    **NO_PYPI_VANILLA_PROJECT_KEYVALS_OUT["optional-dependencies"],  # type: ignore[dict-item]
-                    **{
-                        "mypy": sorted(["wipac-telemetry", "pen", "paper", "hard-work"])
-                    },
-                }
+            **NO_PYPI_VANILLA_PROJECT_KEYVALS_OUT,
+            "optional-dependencies": {
+                **NO_PYPI_VANILLA_PROJECT_KEYVALS_OUT["optional-dependencies"],  # type: ignore[dict-item]
+                "mypy": sorted(["wipac-telemetry", "pen", "paper", "hard-work"]),
             },
+            **NON_PYPI_URLS_KEYVALS,
         },
         "tool": {
             "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
