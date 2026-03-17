@@ -11,7 +11,6 @@ import logging
 import os
 import re
 import subprocess
-import tempfile
 from pathlib import Path
 from typing import Any, Final, Iterable, Literal, cast
 
@@ -317,36 +316,35 @@ class PythonVersioning:
             flush=True,
         )
 
-        with tempfile.TemporaryDirectory() as tmpdir:
-            uv_command = [
-                "uv",
-                "pip",
-                "install",
-                "--dry-run",
-                f"--python={python[0]}.{python[1]}",
-                "--prefix",
-                tmpdir,
-                "--no-python-downloads",
-                *dependencies,
-            ]
+        uv_command = [
+            "python",
+            "-m",
+            "pip",
+            "install",
+            "--dry-run",
+            f"--python-version {python[0]}.{python[1]}",
+            "--ignore-installed",  # Forces pip to re-evaluate the package resolution
+            "--only-binary=:all:",  # only consider wheel files, don't involve sdists
+            *dependencies,
+        ]
 
-            print(f"Running: {' '.join(uv_command)}", flush=True)
+        print(f"Running: {' '.join(uv_command)}", flush=True)
 
-            try:
-                result = subprocess.run(
-                    uv_command,
-                    check=True,
-                    capture_output=True,
-                    text=True,
-                )
-                print(result.stdout, flush=True)
-                print("##[endgroup]", flush=True)
-                return True
-            except subprocess.CalledProcessError as e:
-                print(e.stdout, flush=True)
-                print(e.stderr, flush=True)
-                print("##[endgroup]", flush=True)
-                return False
+        try:
+            result = subprocess.run(
+                uv_command,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            print(result.stdout, flush=True)
+            print("##[endgroup]", flush=True)
+            return True
+        except subprocess.CalledProcessError as e:
+            print(e.stdout, flush=True)
+            print(e.stderr, flush=True)
+            print("##[endgroup]", flush=True)
+            return False
 
 
 class FromFiles:

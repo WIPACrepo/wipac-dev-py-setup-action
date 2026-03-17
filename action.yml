@@ -149,11 +149,6 @@ runs:
     ####################################################################################
     # Now, we continue only if this is the most recent commit on this branch.
 
-    - uses: astral-sh/setup-uv@v7
-      if: env.IS_GIT_BEHIND != 'true'
-      with:
-        enable-cache: true
-
     - name: Git config
       if: env.IS_GIT_BEHIND != 'true'
       run: |
