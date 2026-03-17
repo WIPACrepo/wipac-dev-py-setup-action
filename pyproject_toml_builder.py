@@ -727,7 +727,8 @@ class PyProjectTomlBuilder:
             "classifiers": py_ver.python_classifiers(),
             "requires-python": py_ver.get_requires_python(),
         }
-        toml_project.update({k: v for k, v in updates.items() if v})
+        updates = {k: v for k, v in updates.items() if v}  # remove empties
+        toml_project.update(updates)
         for u in updates:
             PyProjectTomlBuilder._inline_dont_change_this_comment(toml_project[u])
 
