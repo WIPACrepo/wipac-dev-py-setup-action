@@ -311,28 +311,11 @@ class PythonVersioning:
     def _are_all_deps_compatible_w_python(
         dependencies: list[str], python: tuple[int, int]
     ) -> bool:
-        """Get the first incompatible dependency, else None."""
+        """Check whether the full dependency set resolves for a target Python version."""
         print(
             f"##[group]python {PythonVersioning.pystr(python)} dependency compatibility",
             flush=True,
         )
-        for dep in dependencies:
-            if not PythonVersioning._is_dep_compatible_w_python(dep, python):
-                print("##[endgroup]", flush=True)
-                print(
-                    (
-                        f"::warning::dependency is incompatible with "
-                        f"python {PythonVersioning.pystr(python)}: {dep}"
-                    ),
-                    flush=True,
-                )
-                return False
-        print("##[endgroup]", flush=True)
-        return True
-
-    @staticmethod
-    def _is_dep_compatible_w_python(dependency: str, python: tuple[int, int]) -> bool:
-        """Check whether a dependency resolves for a target Python version."""
 
         with tempfile.TemporaryDirectory() as tmpdir:
             uv_command = [
@@ -340,31 +323,30 @@ class PythonVersioning:
                 "pip",
                 "install",
                 "--dry-run",
-                "--no-deps",
                 f"--python={python[0]}.{python[1]}",
                 "--prefix",
                 tmpdir,
                 "--no-python-downloads",
-                dependency,
+                *dependencies,
             ]
 
-        print(f"Running: {' '.join(uv_command)}", flush=True)
+            print(f"Running: {' '.join(uv_command)}", flush=True)
 
-        try:
-            # Run the command
-            result = subprocess.run(
-                uv_command,
-                check=True,  # Raise an exception for non-zero exit codes (i.e., failure)
-                capture_output=True,
-                text=True,
-            )
-            # If successful, it means the package is compatible with the target version
-            print(result.stdout, flush=True)
-            return True
-        except subprocess.CalledProcessError as e:
-            # If it fails, pip will usually output a dependency conflict error
-            print(e.stderr, flush=True)
-            return False
+            try:
+                result = subprocess.run(
+                    uv_command,
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
+                print(result.stdout, flush=True)
+                print("##[endgroup]", flush=True)
+                return True
+            except subprocess.CalledProcessError as e:
+                print(e.stdout, flush=True)
+                print(e.stderr, flush=True)
+                print("##[endgroup]", flush=True)
+                return False
 
 
 class FromFiles:
