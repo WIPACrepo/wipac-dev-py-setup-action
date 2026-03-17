@@ -65,7 +65,7 @@ runs:
     - name: check required inputs
       run: |
         # step: check required inputs
-        set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        set -euo pipefail
         
         #
         # required inputs
@@ -98,7 +98,7 @@ runs:
     - name: validate inputs -- simple
       run: |
         # step: validate inputs -- simple
-        set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        set -euo pipefail
         
         #
         # python_min & python_max
@@ -130,14 +130,10 @@ runs:
 
       shell: bash
 
-    - uses: actions/setup-python@v4
-      with:
-        python-version: '3.12'  # NOTE: update, someday.
-
     - name: Is this most recent commit?
       run: |
         # step: Is this most recent commit?
-        set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        set -euo pipefail
         
         git fetch &> /dev/null
         if [[ $(git status -sb | grep behind) ]]; then
@@ -146,11 +142,24 @@ runs:
         fi
       shell: bash
 
+    ####################################################################################
+    # Now, we continue only if this is the most recent commit on this branch.
+
+    - uses: actions/setup-python@v4
+      if: env.IS_GIT_BEHIND != 'true'
+      with:
+        python-version: '3.14'  # NOTE: update, someday.
+
+    - uses: astral-sh/setup-uv@v7
+      if: env.IS_GIT_BEHIND != 'true'
+      with:
+        enable-cache: true
+
     - name: Git config
       if: env.IS_GIT_BEHIND != 'true'
       run: |
         # step: Git config
-        set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        set -euo pipefail
         git config user.name ${{ inputs.git_committer_name }}
         git config user.email ${{ inputs.git_committer_email }}
       shell: bash
@@ -159,7 +168,7 @@ runs:
       if: env.IS_GIT_BEHIND != 'true'
       run: |
         # step: Check Docker files for setuptools-scm compliance
-        set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        set -euo pipefail
         echo "##[group]validate_docker_setuptools_scm_compliance.sh"
         ${{ github.action_path }}/validate_docker_setuptools_scm_compliance.sh
         echo "##[endgroup]"
@@ -169,7 +178,7 @@ runs:
       if: env.IS_GIT_BEHIND != 'true'
       run: |
         # step: Setup Python Venv
-        set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        set -euo pipefail
         
         echo "##[group]venv installs"
         
@@ -190,7 +199,7 @@ runs:
       if: env.IS_GIT_BEHIND != 'true'
       run: |
         # step: Check pyproject.toml for project migration
-        set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        set -euo pipefail
         
         # if needed: auto-create a minimal pyproject.toml
         if [[ ! -f pyproject.toml ]]; then
@@ -232,7 +241,7 @@ runs:
       if: env.IS_GIT_BEHIND != 'true'
       run: |
         # step: Detect MIT License or fallback only if missing
-        set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        set -euo pipefail
 
         LICENSE_FILE="LICENSE"
 
@@ -255,7 +264,7 @@ runs:
       if: env.IS_GIT_BEHIND != 'true'
       run: |
         # step: Ensure dependabot.yml has canon settings
-        set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        set -euo pipefail
         
         . "$SETUP_PY_GHA_PYVENV"/bin/activate
         ${{ github.action_path }}/ensure_dependabot.py .github/dependabot.yml
@@ -269,7 +278,7 @@ runs:
       if: env.IS_GIT_BEHIND != 'true'
       run: |
         # step: Build pyproject.toml + README.md (and commit)
-        set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        set -euo pipefail
 
         . "$SETUP_PY_GHA_PYVENV"/bin/activate
         
@@ -307,7 +316,7 @@ runs:
       if: env.IS_GIT_BEHIND != 'true'
       run: |
         # step: Add py.typed file(s) (and commit)
-        set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        set -euo pipefail
         
         python -c '
         import os, sys
@@ -337,7 +346,7 @@ runs:
       if: env.IS_GIT_BEHIND != 'true'
       run: |
         # step: Push changes
-        set -euo pipefail; echo "now: $(date -u +"%Y-%m-%dT%H:%M:%S.%3N")"
+        set -euo pipefail
         
         status=`git status 2>&1 | tee`
         ahead=`echo -n "${status}" 2> /dev/null | grep "Your branch is ahead of" &> /dev/null; echo "$?"`
