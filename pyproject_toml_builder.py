@@ -11,6 +11,7 @@ import logging
 import os
 import re
 import subprocess
+import tempfile
 from pathlib import Path
 from typing import Any, Final, Iterable, Literal, cast
 
@@ -331,26 +332,26 @@ class PythonVersioning:
 
     @staticmethod
     def _is_dep_compatible_w_python(dependency: str, python: tuple[int, int]) -> bool:
-        """
-        Performs a dry-run install, forcing a compatibility check
-        for an installed package against a target Python version.
-        """
-        pip_command = [
-            "python",
-            "-m",
-            "pip",
-            "install",
-            dependency,
-            "--dry-run",
-            f"--python-version={python[0]}.{python[1]}",
-            "--ignore-installed",  # Forces pip to re-evaluate the package resolution
-            "--no-deps",  # required by pip for isolation/security reasons
-        ]
+        """Check whether a dependency resolves for a target Python version."""
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            uv_command = [
+                "uv",
+                "pip",
+                "install",
+                "--dry-run",
+                "--no-deps",
+                f"--python={python[0]}.{python[1]}",
+                "--prefix",
+                tmpdir,
+                "--no-python-downloads",
+                dependency,
+            ]
 
         try:
             # Run the command
             result = subprocess.run(
-                pip_command,
+                uv_command,
                 check=True,  # Raise an exception for non-zero exit codes (i.e., failure)
                 capture_output=True,
                 text=True,
