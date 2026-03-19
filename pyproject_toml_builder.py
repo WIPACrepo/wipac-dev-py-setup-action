@@ -109,10 +109,9 @@ class GitHubAPI:
     def __init__(self, gh_full_repo: str, gh_token: str) -> None:
         self.url = f"https://github.com/{gh_full_repo}"
 
-        _headers = {"authorization": f"Bearer {gh_token}"}
         _req = requests.get(
             f"https://api.github.com/repos/{gh_full_repo}",
-            headers=_headers,
+            headers={"authorization": f"Bearer {gh_token}"},
         )
         _req.raise_for_status()
         _json = _req.json()
@@ -535,7 +534,7 @@ class PyProjectTomlBuilder:
             toml_dict["tool"]["setuptools"] = {}
         toml_dict["tool"]["setuptools"].update(
             {
-                "packages": self._tool_setuptools_packages(ffile),
+                "packages": self._tool_setuptools_packages(self.ffile),
                 "package-data": {
                     **toml_dict["tool"].get("setuptools", {}).get("package-data", {}),
                     "*": self._tool_setuptools_packagedata_star(toml_dict),
@@ -548,7 +547,7 @@ class PyProjectTomlBuilder:
         self._inline_dont_change_this_comment(
             toml_dict["tool"]["setuptools"]["package-data"]["*"]
         )
-        if _pkg_dir_map := self._tool_setuptools_package_dir(ffile):
+        if _pkg_dir_map := self._tool_setuptools_package_dir(self.ffile):
             toml_dict["tool"]["setuptools"]["package-dir"] = _pkg_dir_map
             self._inline_dont_change_this_comment(
                 toml_dict["tool"]["setuptools"]["package-dir"]
@@ -753,8 +752,7 @@ def set_multiline_array(
 
 def write_toml(
     toml_file: Path,
-    gh_full_repo: str,
-    gh_token: str,
+    gh_api: GitHubAPI,
     gha_input: GHAInput,
 ) -> None:
     """Build/write the `pyproject.toml` sections."""
@@ -781,7 +779,7 @@ def write_toml(
     builder = PyProjectTomlBuilder(
         toml_file,
         gha_input,
-        GitHubAPI(gh_full_repo, gh_token=gh_token),
+        gh_api,
         pyver,
     )
     builder.build(toml_dict)  # updates dict in-place
@@ -847,9 +845,9 @@ def main() -> None:
         help="Fully-named GitHub repo, ex: WIPACrepo/wipac-dev-tools",
     )
     parser.add_argument(
-        "--token",
+        "--gh-token",
         required=True,
-        help="An OAuth2 token, usually GITHUB_TOKEN",
+        help="A github token, usually GITHUB_TOKEN",
     )
 
     def coerce_python_version(val: str | None) -> None | tuple[int, int]:
@@ -956,8 +954,7 @@ def main() -> None:
 
     write_toml(
         args.toml,
-        args.github_full_repo,
-        args.token,
+        GitHubAPI(args.github_full_repo, args.gh_token),
         gha_input,
     )
 

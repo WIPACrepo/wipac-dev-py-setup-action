@@ -282,7 +282,7 @@ runs:
         python3 ${{ github.action_path }}/pyproject_toml_builder.py \
           --toml pyproject.toml \
           --github-full-repo $GITHUB_REPOSITORY \
-          --token ${{ github.token }} \
+          --gh-token ${{ github.token }} \
           --mode ${{ inputs.mode }} \
           --python-min "${{ inputs.python_min }}" \
           --python-max "${{ inputs.python_max }}" \
