@@ -106,12 +106,12 @@ def _log_error_then_get_exception(msg: str) -> Exception:
 class GitHubAPI:
     """Relay info from the GitHub API."""
 
-    def __init__(self, github_full_repo: str, oauth_token: str) -> None:
-        self.url = f"https://github.com/{github_full_repo}"
+    def __init__(self, gh_full_repo: str, gh_token: str) -> None:
+        self.url = f"https://github.com/{gh_full_repo}"
 
-        _headers = {"authorization": f"Bearer {oauth_token}"}
+        _headers = {"authorization": f"Bearer {gh_token}"}
         _req = requests.get(
-            f"https://api.github.com/repos/{github_full_repo}",
+            f"https://api.github.com/repos/{gh_full_repo}",
             headers=_headers,
         )
         _req.raise_for_status()
@@ -486,35 +486,22 @@ def unique_list_chain(lists: Iterable[list[str]]) -> list[str]:
 
 
 class PyProjectTomlBuilder:
-    """Build out the `[project]`, `[semantic_release]`, and `[options]` sections in `toml_dict`."""
+    """Build out sections in `toml_dict`."""
 
     def __init__(
         self,
-        toml_dict: TOMLDocumentTypeHint,
-        root_path: Path,
-        github_full_repo: str,
-        token: str,
+        toml_file: Path,
         gha_input: GHAInput,
+        gh_api: GitHubAPI,
+        py_ver: PythonVersioning,
     ):
-        ffile = FromFiles(  # things requiring reading files
-            root_path,
-            gha_input,
-        )
-        gh_api = GitHubAPI(github_full_repo, oauth_token=token)
-        py_ver = PythonVersioning(
-            gha_input.python_min,
-            gha_input.python_max,
-            unique_list_chain(
-                # base deps
-                [toml_dict.get("project", {}).get("dependencies", [])]
-                # plus optional deps
-                + list(
-                    toml_dict.get("project", {})
-                    .get("optional-dependencies", {})
-                    .values()
-                )
-            ),
-        )
+        self.gha_input = gha_input
+        self.gh_api = gh_api
+        self.py_ver = py_ver
+        self.ffile = FromFiles(toml_file.parent, gha_input)
+
+    def build(self, toml_dict: TOMLDocumentTypeHint) -> None:
+        """Build out the sections in `toml_dict`."""
         self._validate_repo_initial_state(toml_dict)
 
         # [build-system]
@@ -533,10 +520,10 @@ class PyProjectTomlBuilder:
         # -- mode-based updates
         self.insert_project_metadata(
             toml_dict["project"],
-            gha_input,
-            ffile,
-            gh_api,
-            py_ver,
+            self.gha_input,
+            self.ffile,
+            self.gh_api,
+            self.py_ver,
         )
 
         # [tool]
@@ -582,7 +569,7 @@ class PyProjectTomlBuilder:
 
         # [project.optional-dependencies][mypy]
         if (
-            gha_input.auto_mypy_option
+            self.gha_input.auto_mypy_option
             and "optional-dependencies" in toml_dict["project"]  # only if there's deps
         ):
             self.build_mypy_optional_deps(toml_dict["project"]["optional-dependencies"])
@@ -766,8 +753,8 @@ def set_multiline_array(
 
 def write_toml(
     toml_file: Path,
-    github_full_repo: str,
-    token: str,
+    gh_full_repo: str,
+    gh_token: str,
     gha_input: GHAInput,
 ) -> None:
     """Build/write the `pyproject.toml` sections."""
@@ -778,13 +765,26 @@ def write_toml(
     else:
         toml_dict = TOMLDocument()
 
-    builder = PyProjectTomlBuilder(
-        toml_dict,  # updates this
-        toml_file.parent,
-        github_full_repo,
-        token,
-        gha_input,
+    pyver = PythonVersioning(
+        gha_input.python_min,
+        gha_input.python_max,
+        unique_list_chain(
+            # base deps
+            [toml_dict.get("project", {}).get("dependencies", [])]
+            # plus optional deps
+            + list(
+                toml_dict.get("project", {}).get("optional-dependencies", {}).values()
+            )
+        ),
     )
+
+    builder = PyProjectTomlBuilder(
+        toml_file,
+        gha_input,
+        GitHubAPI(gh_full_repo, gh_token=gh_token),
+        pyver,
+    )
+    builder.build(toml_dict)  # updates dict in-place
 
     # make specific arrays multiline
     set_multiline_array(toml_dict, "project", "dependencies", sort=True)
@@ -818,21 +818,6 @@ def write_toml(
     print("===========================================================================")
     with open(toml_file, "w") as f:
         f.write(out)
-
-
-def work(
-    toml_file: Path,
-    github_full_repo: str,
-    token: str,
-    gha_input: GHAInput,
-) -> None:
-    """Build & write the pyproject.toml."""
-    write_toml(
-        toml_file,
-        github_full_repo,
-        token,
-        gha_input,
-    )
 
 
 def main() -> None:
@@ -911,7 +896,7 @@ def main() -> None:
         default=[],
         help="List of directories to exclude from release, relative to the repository's root directory.",
     )
-    # OPTIONAL (releases)
+    # OPTIONAL (pypi releases)
     parser.add_argument(
         "--pypi-name",
         type=str,
@@ -956,7 +941,7 @@ def main() -> None:
         help="Whether to auto create/update the 'mypy' install option plus its dependencies",
     )
     args = parser.parse_args()
-    logging_tools.set_level("DEBUG", LOGGER, use_coloredlogs=True)
+    logging_tools.set_level("DEBUG", LOGGER)
     logging_tools.log_argparse_args(args, logger=LOGGER)
 
     gha_input = GHAInput(
@@ -969,7 +954,7 @@ def main() -> None:
     )
     LOGGER.info(gha_input)
 
-    work(
+    write_toml(
         args.toml,
         args.github_full_repo,
         args.token,
