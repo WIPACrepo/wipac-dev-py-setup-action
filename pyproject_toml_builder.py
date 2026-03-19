@@ -120,8 +120,8 @@ class GitHubAPI:
 
 
 @dataclasses.dataclass
-class GHAInput:
-    """The inputs passed from the client GitHub Action."""
+class CLArgs:
+    """Command-line arguments."""
 
     # REQUIRED
     mode: Literal["PACKAGING", "PACKAGING_AND_PYPI"]
@@ -349,11 +349,11 @@ class FromFiles:
     def __init__(
         self,
         root: Path,
-        gha_input: GHAInput,
+        cl_args: CLArgs,
     ) -> None:
         if not os.path.exists(root):
             raise NotADirectoryError(root)
-        self.gha_input = gha_input
+        self.cl_args = cl_args
         self.root = root.resolve()
         self.package_paths = self._get_package_paths()
         self.readme_path = self._get_readme_path()
@@ -364,7 +364,7 @@ class FromFiles:
         """Find the package path(s)."""
         found_pkgs = all_packages_relpath(
             self.root,
-            dirs_exclude=self.gha_input.exclude_dirs,
+            dirs_exclude=self.cl_args.exclude_dirs,
             include_namespace_packages=False,
             omit_subpackages=True,
         )
@@ -374,9 +374,9 @@ class FromFiles:
             )
 
         # check the pyproject.toml: package_dirs
-        if self.gha_input.package_dirs:
+        if self.cl_args.package_dirs:
             if missings := [
-                p for p in self.gha_input.package_dirs if p not in found_pkgs
+                p for p in self.cl_args.package_dirs if p not in found_pkgs
             ]:
                 if len(missings) == 1:
                     raise _log_error_then_get_exception(
@@ -391,7 +391,7 @@ class FromFiles:
                         f"Are the directories missing __init__.py files?"
                     )
             else:
-                return [self.root / p for p in self.gha_input.package_dirs]
+                return [self.root / p for p in self.cl_args.package_dirs]
         # use the auto-detected package (if there's ONE)
         else:
             if len(found_pkgs) > 1:
@@ -490,14 +490,14 @@ class PyProjectTomlBuilder:
     def __init__(
         self,
         toml_file: Path,
-        gha_input: GHAInput,
+        cl_args: CLArgs,
         gh_api: GitHubAPI,
         py_ver: PythonVersioning,
     ):
-        self.gha_input = gha_input
+        self.cl_args = cl_args
         self.gh_api = gh_api
         self.py_ver = py_ver
-        self.ffile = FromFiles(toml_file.parent, gha_input)
+        self.ffile = FromFiles(toml_file.parent, cl_args)
 
     def build(self, toml_dict: TOMLDocumentTypeHint) -> None:
         """Build out the sections in `toml_dict`."""
@@ -519,7 +519,7 @@ class PyProjectTomlBuilder:
         # -- mode-based updates
         self.insert_project_metadata(
             toml_dict["project"],
-            self.gha_input,
+            self.cl_args,
             self.ffile,
             self.gh_api,
             self.py_ver,
@@ -568,7 +568,7 @@ class PyProjectTomlBuilder:
 
         # [project.optional-dependencies][mypy]
         if (
-            self.gha_input.auto_mypy_option
+            self.cl_args.auto_mypy_option
             and "optional-dependencies" in toml_dict["project"]  # only if there's deps
         ):
             self.build_mypy_optional_deps(toml_dict["project"]["optional-dependencies"])
@@ -576,27 +576,27 @@ class PyProjectTomlBuilder:
     @staticmethod
     def insert_project_metadata(
         toml_project: TOMLDocumentTypeHint,
-        gha_input: GHAInput,
+        cl_args: CLArgs,
         ffile: FromFiles,
         gh_api: GitHubAPI,
         py_ver: PythonVersioning,
     ) -> None:
         """Add project metadata, w/ additional optional handling for PACKAGING_AND_PYPI."""
-        if gha_input.mode not in ["PACKAGING_AND_PYPI", "PACKAGING"]:
-            raise RuntimeError(f"Unknown mode: {gha_input.mode}")
+        if cl_args.mode not in ["PACKAGING_AND_PYPI", "PACKAGING"]:
+            raise RuntimeError(f"Unknown mode: {cl_args.mode}")
 
         # NOTE - mode-specific required field logic is handled upstream
 
         author_entry = {}
-        if gha_input.author:
-            author_entry["name"] = gha_input.author
-        if gha_input.author_email:
-            author_entry["email"] = gha_input.author_email
+        if cl_args.author:
+            author_entry["name"] = cl_args.author
+        if cl_args.author_email:
+            author_entry["email"] = cl_args.author_email
 
         updates = {
             "name": (
-                gha_input.pypi_name
-                if gha_input.mode == "PACKAGING_AND_PYPI"
+                cl_args.pypi_name
+                if cl_args.mode == "PACKAGING_AND_PYPI"
                 else "-".join(p.name.replace("_", "-") for p in ffile.package_paths)
             ),
             "authors": (  # we currently only support 1 author
@@ -604,11 +604,11 @@ class PyProjectTomlBuilder:
             ),
             "description": gh_api.description,
             "readme": ffile.readme_path.name,
-            "license": gha_input.license_spdx_id,
+            "license": cl_args.license_spdx_id,
             "license-files": (  # we currently only support 1 license file
-                [gha_input.license_file] if gha_input.license_file else []
+                [cl_args.license_file] if cl_args.license_file else []
             ),
-            "keywords": gha_input.keywords,
+            "keywords": cl_args.keywords,
             "classifiers": py_ver.python_classifiers(),
             "requires-python": py_ver.get_requires_python(),
         }
@@ -620,8 +620,8 @@ class PyProjectTomlBuilder:
         # [project.urls]
         toml_project["urls"] = {
             "Homepage": (
-                f"https://pypi.org/project/{gha_input.pypi_name}/"
-                if gha_input.mode == "PACKAGING_AND_PYPI"
+                f"https://pypi.org/project/{cl_args.pypi_name}/"
+                if cl_args.mode == "PACKAGING_AND_PYPI"
                 else gh_api.url
             ),
             "Tracker": f"{gh_api.url}/issues",
@@ -753,7 +753,7 @@ def set_multiline_array(
 def write_toml(
     toml_file: Path,
     gh_api: GitHubAPI,
-    gha_input: GHAInput,
+    cl_args: CLArgs,
 ) -> None:
     """Build/write the `pyproject.toml` sections."""
     toml_file = toml_file.resolve()
@@ -764,8 +764,8 @@ def write_toml(
         toml_dict = TOMLDocument()
 
     pyver = PythonVersioning(
-        gha_input.python_min,
-        gha_input.python_max,
+        cl_args.python_min,
+        cl_args.python_max,
         unique_list_chain(
             # base deps
             [toml_dict.get("project", {}).get("dependencies", [])]
@@ -778,7 +778,7 @@ def write_toml(
 
     builder = PyProjectTomlBuilder(
         toml_file,
-        gha_input,
+        cl_args,
         gh_api,
         pyver,
     )
@@ -942,20 +942,20 @@ def main() -> None:
     logging_tools.set_level("DEBUG", LOGGER)
     logging_tools.log_argparse_args(args, logger=LOGGER)
 
-    gha_input = GHAInput(
+    cl_args = CLArgs(
         **{
             k: v
             for k, v in vars(args).items()
             # use arg if it has non-falsy value -- otherwise, rely on default
-            if v and (k in [f.name for f in dataclasses.fields(GHAInput)])
+            if v and (k in [f.name for f in dataclasses.fields(CLArgs)])
         },
     )
-    LOGGER.info(gha_input)
+    LOGGER.info(cl_args)
 
     write_toml(
         args.toml,
         GitHubAPI(args.github_full_repo, args.gh_token),
-        gha_input,
+        cl_args,
     )
 
 
