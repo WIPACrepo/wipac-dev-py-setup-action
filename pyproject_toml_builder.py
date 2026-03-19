@@ -26,9 +26,6 @@ from wipac_dev_tools import (
 
 from find_packages import all_packages_relpath
 
-REAMDE_BADGES_START_DELIMITER = "<!--- Top of README Badges (automated) --->"
-REAMDE_BADGES_END_DELIMITER = "<!--- End of README Badges (automated) --->"
-
 SCM_FALLBACK_VERSION = "CANNOT_BUILD_WITHOUT_GIT_DIR"
 
 LOGGER = logging.getLogger("setup-builder")
@@ -483,85 +480,13 @@ class FromFiles:
         raise FileNotFoundError(f"No README file found in '{self.root}'")
 
 
-class READMEMarkdownManager:
-    """Add some automation to README.md."""
-
-    def __init__(
-        self,
-        ffile: FromFiles,
-        github_full_repo: str,
-        gha_input: GHAInput,
-        gh_api: GitHubAPI,
-    ) -> None:
-        self.ffile = ffile
-        self.github_full_repo = github_full_repo
-        self.bsec = gha_input
-        self.gh_api = gh_api
-        with open(ffile.readme_path) as f:
-            lines_to_keep = []
-            in_badges = False
-            for line in f.readlines():
-                if line.strip() == REAMDE_BADGES_START_DELIMITER:
-                    in_badges = True
-                    continue
-                if line.strip() == REAMDE_BADGES_END_DELIMITER:
-                    in_badges = False
-                    continue
-                if in_badges:
-                    continue
-                lines_to_keep.append(line)
-        self.lines = self.badges_lines() + lines_to_keep
-
-    @property
-    def readme_path(self) -> Path:
-        """Get the README file path."""
-        return self.ffile.readme_path
-
-    def badges_lines(self) -> list[str]:
-        """Create and return the lines used to append to a README.md containing various linked-badges."""
-        badges_line = ""
-
-        # PyPI badge
-        if self.bsec.pypi_name:
-            badges_line += f"[![PyPI](https://img.shields.io/pypi/v/{self.bsec.pypi_name})](https://pypi.org/project/{self.bsec.pypi_name}/) "
-
-        # GitHub Release badge
-        badges_line += f"[![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/{self.github_full_repo}?include_prereleases)]({self.gh_api.url}/) "
-
-        # Python versions
-        if self.bsec.pypi_name:
-            badges_line += f"[![Versions](https://img.shields.io/pypi/pyversions/{self.bsec.pypi_name}.svg)](https://pypi.org/project/{self.bsec.pypi_name}) "
-
-        # PYPI License badge
-        if self.bsec.pypi_name:
-            badges_line += f"[![PyPI - License](https://img.shields.io/pypi/l/{self.bsec.pypi_name})]({self.gh_api.url}/blob/{self.gh_api.default_branch}/LICENSE) "
-
-        # Other GitHub badges
-        badges_line += (
-            f"[![GitHub issues](https://img.shields.io/github/issues/{self.github_full_repo})]({self.gh_api.url}/issues?q=is%3Aissue+sort%3Aupdated-desc+is%3Aopen) "
-            f"[![GitHub pull requests](https://img.shields.io/github/issues-pr/{self.github_full_repo})]({self.gh_api.url}/pulls?q=is%3Apr+sort%3Aupdated-desc+is%3Aopen) "
-        )
-
-        return [
-            REAMDE_BADGES_START_DELIMITER,
-            "\n",
-            badges_line.strip(),  # remove trailing whitespace
-            "\n",
-            REAMDE_BADGES_END_DELIMITER,
-            "\n",  # only one newline here, otherwise we get an infinite commit-loop
-        ]
-
-
 def unique_list_chain(lists: Iterable[list[str]]) -> list[str]:
     """Return a single sorted/unique'd/combined list."""
     return sorted(set(itertools.chain.from_iterable(lists)))
 
 
 class PyProjectTomlBuilder:
-    """Build out the `[project]`, `[semantic_release]`, and `[options]` sections in `toml_dict`.
-
-    Create a 'READMEMarkdownManager' instance to write out, if needed.
-    """
+    """Build out the `[project]`, `[semantic_release]`, and `[options]` sections in `toml_dict`."""
 
     def __init__(
         self,
@@ -661,15 +586,6 @@ class PyProjectTomlBuilder:
             and "optional-dependencies" in toml_dict["project"]  # only if there's deps
         ):
             self.build_mypy_optional_deps(toml_dict["project"]["optional-dependencies"])
-
-        # Automate some README stuff
-        self.readme_mgr: READMEMarkdownManager | None
-        if ffile.readme_path.suffix == ".md":
-            self.readme_mgr = READMEMarkdownManager(
-                ffile, github_full_repo, gha_input, gh_api
-            )
-        else:
-            self.readme_mgr = None
 
     @staticmethod
     def insert_project_metadata(
@@ -853,11 +769,8 @@ def write_toml(
     github_full_repo: str,
     token: str,
     gha_input: GHAInput,
-) -> READMEMarkdownManager | None:
-    """Build/write the `pyproject.toml` sections.
-
-    Return a 'READMEMarkdownManager' instance to write out. If, necessary.
-    """
+) -> None:
+    """Build/write the `pyproject.toml` sections."""
     toml_file = toml_file.resolve()
     if toml_file.exists():
         with open(toml_file, "r") as f:
@@ -906,8 +819,6 @@ def write_toml(
     with open(toml_file, "w") as f:
         f.write(out)
 
-    return builder.readme_mgr
-
 
 def work(
     toml_file: Path,
@@ -915,24 +826,19 @@ def work(
     token: str,
     gha_input: GHAInput,
 ) -> None:
-    """Build & write the pyproject.toml. Write the readme if necessary."""
-    readme_mgr = write_toml(
+    """Build & write the pyproject.toml."""
+    write_toml(
         toml_file,
         github_full_repo,
         token,
         gha_input,
     )
 
-    if readme_mgr:
-        with open(readme_mgr.readme_path, "w") as f:
-            for line in readme_mgr.lines:
-                f.write(line)
-
 
 def main() -> None:
     """Read and write all necessary files."""
     parser = argparse.ArgumentParser(
-        description="Read/transform 'pyproject.toml' and 'README.md' files",
+        description="Transform 'pyproject.toml' file",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
