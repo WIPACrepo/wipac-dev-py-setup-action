@@ -53,9 +53,11 @@ class HeaderAugmenter:
         self,
         gh_api: GitHubAPI,
         name: str,
+        keywords: list[str],
     ) -> None:
         self.gh_api = gh_api
         self.name = name
+        self.keywords = keywords
 
     def _remove_non_automated_header(self, lines: list[str]) -> None:
         """Assuming there's no automated header, find and remove the non-automated header."""
@@ -113,26 +115,19 @@ class HeaderAugmenter:
                     self.END_DELIMITER,
                 )
 
-        # # <name> — `<full_repo>`
-        # # lta — `WIPACRepo/lta`
-        # <description>
-        # yada yada yada
-        #
-        # ### keywords
-        # <comma-separated list of keywords>
-        #
-        # ### authors
-        # <comma-separated list of authors>
+        section = [
+            self.START_DELIMITER,
+            "\n",
+            f"# {self.name} — `{self.gh_api.full_repo}`",
+            self.gh_api.description.strip(),
+            "\n\n",
+            f"**Keywords:** {', '.join(self.keywords)}\n",
+            self.END_DELIMITER,
+            "\n",  # only one newline here, otherwise we get an infinite commit-loop
+        ]
 
         # write
         with open(readme_path, "w") as f:
-            section = [
-                self.START_DELIMITER,
-                "\n",
-                "foo\n" * 10,
-                self.END_DELIMITER,
-                "\n",  # only one newline here, otherwise we get an infinite commit-loop
-            ]
             for line in before + section + after:
                 f.write(line)
 
@@ -170,16 +165,17 @@ class BadgesAugmenter:
                     self.END_DELIMITER,
                 )
 
+        section = [
+            self.START_DELIMITER,
+            "\n",
+            self._badges_line().strip(),  # remove trailing whitespace
+            "\n",
+            self.END_DELIMITER,
+            "\n",  # only one newline here, otherwise we get an infinite commit-loop
+        ]
+
         # write
         with open(readme_path, "w") as f:
-            section = [
-                self.START_DELIMITER,
-                "\n",
-                self._badges_line().strip(),  # remove trailing whitespace
-                "\n",
-                self.END_DELIMITER,
-                "\n",  # only one newline here, otherwise we get an infinite commit-loop
-            ]
             for line in before + section + after:
                 f.write(line)
 
@@ -293,6 +289,7 @@ def main() -> None:
     ha = HeaderAugmenter(
         gh_api,
         pyproject_toml_dict["project"]["name"],
+        pyproject_toml_dict["project"]["keywords"],
     )
     ha.write(args.readme)
 
