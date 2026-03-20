@@ -66,7 +66,7 @@ class HeaderAugmenter:
             if self.START_DELIMITER + "\n" not in lines:
                 try:
                     # if there's a badges section, put the header right after it
-                    index = lines.index(BadgesAugmenter.END_DELIMITER + "\n")
+                    index = lines.index(BadgesAugmenter.END_DELIMITER + "\n") + 1
                     LOGGER.info(
                         f"No (automated) header found, placing it right after badges {index=}"
                     )
@@ -272,7 +272,7 @@ def main() -> None:
         pyproject_toml_dict["project"]["name"],
         pyproject_toml_dict["project"]["urls"]["Homepage"],
     )
-    # ba.write(args.readme)
+    ba.write(args.readme)
 
 
 if __name__ == "__main__":
