@@ -199,7 +199,7 @@ def main() -> None:
     with open(args.pyproject_toml) as f:
         pyproject_toml_dict = tomlkit.load(f).unwrap()
 
-    gh_api = GitHubAPI(args.github_full_repo, args.gh_token)
+    gh_api = GitHubAPI(args.gh_full_repo, args.gh_token)
 
     # TODO - just read from the pyproject.toml? -- separate from GHA
     # # <name> — `<full_repo>`
