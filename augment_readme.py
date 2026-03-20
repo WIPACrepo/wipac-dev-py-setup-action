@@ -72,7 +72,9 @@ class HeaderAugmenter:
                     )
                 except ValueError:
                     index = 0
-                    LOGGER.info("No badges found, appending to top of README.md")
+                    LOGGER.info(
+                        "No (automated) header found, appending to top of README.md"
+                    )
                 before, after = lines[:index], lines[index:]
             else:
                 LOGGER.info("Header found, replacing it with a new one")
