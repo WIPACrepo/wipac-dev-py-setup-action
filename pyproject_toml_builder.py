@@ -107,6 +107,7 @@ class GitHubAPI:
     """Relay info from the GitHub API."""
 
     def __init__(self, gh_full_repo: str, gh_token: str) -> None:
+        self.full_repo = gh_full_repo
         self.url = f"https://github.com/{gh_full_repo}"
 
         _req = requests.get(
@@ -835,7 +836,7 @@ def main() -> None:
         help="path to the 'pyproject.toml' file",
     )
     parser.add_argument(
-        "--github-full-repo",
+        "--gh-full-repo",
         type=lambda x: argparse_tools.validate_arg(
             x,
             bool(re.match(r"(\w|-)+/(\w|-)+$", x)),
@@ -954,7 +955,7 @@ def main() -> None:
 
     write_toml(
         args.toml,
-        GitHubAPI(args.github_full_repo, args.gh_token),
+        GitHubAPI(args.gh_full_repo, args.gh_token),
         cl_args,
     )
 
