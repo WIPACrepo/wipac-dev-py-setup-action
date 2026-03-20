@@ -70,11 +70,15 @@ class BadgesAugmenter:
 
         # read and strip out existing badges
         with open(self.readme_path) as f:
-            before, after = strip_out_section(
-                f.readlines(),
-                self.BADGES_START_DELIMITER,
-                self.BADGES_END_DELIMITER,
-            )
+            lines = f.readlines()
+            if self.BADGES_START_DELIMITER + "\n" not in lines:
+                before, after = [], lines
+            else:
+                before, after = strip_out_section(
+                    lines,
+                    self.BADGES_START_DELIMITER,
+                    self.BADGES_END_DELIMITER,
+                )
 
         # write
         with open(self.readme_path, "w") as f:
