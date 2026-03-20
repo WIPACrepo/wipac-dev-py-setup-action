@@ -263,6 +263,10 @@ runs:
         . "$SETUP_PY_GHA_PYVENV"/bin/activate
         ${{ github.action_path }}/ensure_dependabot.py .github/dependabot.yml
         
+        echo "##[group].github/dependabot.yml"
+        cat .github/dependabot.yml
+        echo "##[endgroup]"
+        
         # Commits
         git add .github/dependabot.yml
         git commit -m "<bot> update .github/dependabot.yml" || true
@@ -297,7 +301,9 @@ runs:
           --auto-mypy-option "${{ inputs.auto_mypy_option }}"
         set +x
         
+        echo "##[group]pyproject.toml"
         cat pyproject.toml
+        echo "##[endgroup]"
         
         # Commits
         git add pyproject.toml
@@ -315,7 +321,11 @@ runs:
             --readme README.md \
             --pyproject-toml pyproject.toml \
             --gh-full-repo $GITHUB_REPOSITORY \
-            --gh-token ${{ github.token }}         
+            --gh-token ${{ github.token }}
+        
+        echo "##[group]README.md"
+        cat README.md
+        echo "##[endgroup]"         
         
         # Commits
         git add README.md
