@@ -119,6 +119,7 @@ class HeaderAugmenter:
             self.START_DELIMITER,
             "\n",
             f"# {self.name} — `{self.gh_api.full_repo}`",
+            "\n",
             self.gh_api.description.strip(),
             "\n\n",
             f"**Keywords:** {', '.join(self.keywords)}\n",
