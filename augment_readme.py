@@ -14,7 +14,7 @@ from pyproject_toml_builder import GitHubAPI
 LOGGER = logging.getLogger(__name__)
 
 
-def strip_out_section(
+def remove_section(
     lines: list[str], section_start: str, section_end: str
 ) -> tuple[list[str], list[str]]:
     """Return the lines before and after the section.
@@ -57,6 +57,44 @@ class HeaderAugmenter:
         self.gh_api = gh_api
         self.name = name
 
+    def _remove_non_automated_header(self, lines: list[str]) -> None:
+        """Assuming there's no automated header, find and remove the non-automated header."""
+
+        # remove the non-automated header
+        try:
+            og_header_name = lines.index(f"# {self.name}\n")
+            LOGGER.info(
+                f"Removing non-automated header: {lines[og_header_name].strip()}"
+            )
+            del lines[og_header_name]
+        except ValueError:
+            return
+
+        # remove the non-automated description
+        try:
+            og_header_description = lines.index(f"{self.gh_api.description.strip()}\n")
+            # -- assume this is a match only if it's near the 'name'
+            if og_header_description - og_header_name < 3:
+                LOGGER.info(
+                    f"Removing non-automated description: {lines[og_header_description].strip()}"
+                )
+                del lines[og_header_description]
+        except ValueError:
+            return
+
+    def _get_index_after_badges(self, lines: list[str]) -> int:
+        """Return the index of the first line after the badges, else 0."""
+        try:
+            index = lines.index(BadgesAugmenter.END_DELIMITER + "\n") + 1
+            LOGGER.info(
+                f"No (automated) header found, placing it right after badges {index=}"
+            )
+        except ValueError:
+            index = 0
+            LOGGER.info("No (automated) header found, appending to top of README.md")
+
+        return index
+
     def write(self, readme_path: Path) -> None:
         """Write the header."""
 
@@ -64,21 +102,12 @@ class HeaderAugmenter:
         with open(readme_path) as f:
             lines = f.readlines()
             if self.START_DELIMITER + "\n" not in lines:
-                try:
-                    # if there's a badges section, put the header right after it
-                    index = lines.index(BadgesAugmenter.END_DELIMITER + "\n") + 1
-                    LOGGER.info(
-                        f"No (automated) header found, placing it right after badges {index=}"
-                    )
-                except ValueError:
-                    index = 0
-                    LOGGER.info(
-                        "No (automated) header found, appending to top of README.md"
-                    )
+                self._remove_non_automated_header(lines)
+                index = self._get_index_after_badges(lines)
                 before, after = lines[:index], lines[index:]
             else:
                 LOGGER.info("Header found, replacing it with a new one")
-                before, after = strip_out_section(
+                before, after = remove_section(
                     lines,
                     self.START_DELIMITER,
                     self.END_DELIMITER,
@@ -135,7 +164,7 @@ class BadgesAugmenter:
                 before, after = [], lines
             else:
                 LOGGER.info("Badges found, replacing them with new ones")
-                before, after = strip_out_section(
+                before, after = remove_section(
                     lines,
                     self.START_DELIMITER,
                     self.END_DELIMITER,
