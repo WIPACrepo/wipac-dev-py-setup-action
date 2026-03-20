@@ -64,14 +64,15 @@ class HeaderAugmenter:
         with open(readme_path) as f:
             lines = f.readlines()
             if self.START_DELIMITER + "\n" not in lines:
-                LOGGER.info(
-                    "No (automated) header found, appending near top of README.md"
-                )
                 try:
                     # if there's a badges section, put the header right after it
                     index = lines.index(BadgesAugmenter.END_DELIMITER + "\n")
+                    LOGGER.info(
+                        f"No (automated) header found, placing it right after badges {index=}"
+                    )
                 except ValueError:
                     index = 0
+                    LOGGER.info("No badges found, appending to top of README.md")
                 before, after = lines[:index], lines[index:]
             else:
                 LOGGER.info("Header found, replacing it with a new one")
