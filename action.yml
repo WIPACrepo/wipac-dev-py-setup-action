@@ -260,29 +260,35 @@ runs:
         # step: Ensure dependabot.yml has canon settings
         set -euo pipefail
         
+        echo "##[group]logs (click to expand)"
         . "$SETUP_PY_GHA_PYVENV"/bin/activate
         ${{ github.action_path }}/ensure_dependabot.py .github/dependabot.yml
+        echo "##[endgroup]"
+        
+        echo "##[group].github/dependabot.yml"
+        cat .github/dependabot.yml
+        echo "##[endgroup]"
         
         # Commits
         git add .github/dependabot.yml
         git commit -m "<bot> update .github/dependabot.yml" || true
       shell: bash
 
-    - name: Build pyproject.toml + README.md (and commit)
+    - name: Build pyproject.toml
       if: env.IS_GIT_BEHIND != 'true'
       run: |
-        # step: Build pyproject.toml + README.md (and commit)
+        # step: Build pyproject.toml
         set -euo pipefail
 
-        . "$SETUP_PY_GHA_PYVENV"/bin/activate
-        
         # Build!
+        echo "##[group]logs (click to expand)"
+        . "$SETUP_PY_GHA_PYVENV"/bin/activate
         set -x
         export PYPROJECT_KEYWORDS_JSON
         python3 ${{ github.action_path }}/pyproject_toml_builder.py \
           --toml pyproject.toml \
-          --github-full-repo $GITHUB_REPOSITORY \
-          --token ${{ github.token }} \
+          --gh-full-repo $GITHUB_REPOSITORY \
+          --gh-token ${{ github.token }} \
           --mode ${{ inputs.mode }} \
           --python-min "${{ inputs.python_min }}" \
           --python-max "${{ inputs.python_max }}" \
@@ -296,13 +302,38 @@ runs:
           --license-file "$LICENSE_FILE" \
           --auto-mypy-option "${{ inputs.auto_mypy_option }}"
         set +x
+        echo "##[endgroup]"
         
+        echo "##[group]pyproject.toml"
         cat pyproject.toml
+        echo "##[endgroup]"
         
         # Commits
         git add pyproject.toml
         git commit -m "<bot> update pyproject.toml" || true
-        git add README.md || true
+      shell: bash
+
+    - name: Augment README.md
+      if: env.IS_GIT_BEHIND != 'true'
+      run: |
+        # step: Augment README.md
+        set -euo pipefail
+
+        echo "##[group]logs (click to expand)"
+        . "$SETUP_PY_GHA_PYVENV"/bin/activate
+        python3 ${{ github.action_path }}/augment_readme.py \
+            --readme README.md \
+            --pyproject-toml pyproject.toml \
+            --gh-full-repo $GITHUB_REPOSITORY \
+            --gh-token ${{ github.token }}
+        echo "##[endgroup]"
+        
+        echo "##[group]README.md"
+        cat README.md
+        echo "##[endgroup]"         
+        
+        # Commits
+        git add README.md
         git commit -m "<bot> update README.md" || true
       shell: bash
 
