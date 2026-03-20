@@ -43,48 +43,116 @@ def strip_out_section(
     return before, after
 
 
-class BadgesAugmenter:
-    """Add some automation to README.md."""
+class HeaderAugmenter:
+    """Automation to add/maintain a header in README.md."""
 
-    BADGES_START_DELIMITER = "<!--- Top of README Badges (automated) --->"
-    BADGES_END_DELIMITER = "<!--- End of README Badges (automated) --->"
+    START_DELIMITER = "<!--- Top of README Header (automated) --->"
+    END_DELIMITER = "<!--- End of README Header (automated) --->"
 
     def __init__(
         self,
-        readme_path: Path,
+        gh_api: GitHubAPI,
+        name: str,
+    ) -> None:
+        self.gh_api = gh_api
+        self.name = name
+
+    def write(self, readme_path: Path) -> None:
+        """Write the header."""
+
+        # read and strip out existing badges
+        with open(readme_path) as f:
+            lines = f.readlines()
+            if self.START_DELIMITER + "\n" not in lines:
+                LOGGER.info(
+                    "No (automated) header found, appending near top of README.md"
+                )
+                try:
+                    # if there's a badges section, put the header right after it
+                    index = lines.index(BadgesAugmenter.END_DELIMITER + "\n")
+                except ValueError:
+                    index = 0
+                before, after = lines[:index], lines[index:]
+            else:
+                LOGGER.info("Header found, replacing it with a new one")
+                before, after = strip_out_section(
+                    lines,
+                    self.START_DELIMITER,
+                    self.END_DELIMITER,
+                )
+
+                # # <name> — `<full_repo>`
+                # # lta — `WIPACRepo/lta`
+                # <description>
+                # yada yada yada
+                #
+                # ### keywords
+                # <comma-separated list of keywords>
+                #
+                # ### authors
+                # <comma-separated list of authors>
+
+        # write
+        with open(readme_path, "w") as f:
+            section = [
+                self.START_DELIMITER,
+                "\n",
+                ["foo\n" * 10],
+                self.END_DELIMITER,
+                "\n",  # only one newline here, otherwise we get an infinite commit-loop
+            ]
+            for line in before + section + after:
+                f.write(line)
+
+
+class BadgesAugmenter:
+    """Automation to add/maintain badges in README.md."""
+
+    START_DELIMITER = "<!--- Top of README Badges (automated) --->"
+    END_DELIMITER = "<!--- End of README Badges (automated) --->"
+
+    def __init__(
+        self,
         gh_api: GitHubAPI,
         name: str,
         homepage: str,
     ) -> None:
-        self.readme_path = readme_path
         self.gh_api = gh_api
         self.name = name
         self.pypi_url = homepage if "pypi.org" in homepage else ""
 
-    def write(self) -> None:
-        """Add badges to the top of the README.md."""
+    def write(self, readme_path: Path) -> None:
+        """Write the badges."""
 
         # read and strip out existing badges
-        with open(self.readme_path) as f:
+        with open(readme_path) as f:
             lines = f.readlines()
-            if self.BADGES_START_DELIMITER + "\n" not in lines:
+            if self.START_DELIMITER + "\n" not in lines:
                 LOGGER.info("No badges found, appending to top of README.md")
                 before, after = [], lines
             else:
                 LOGGER.info("Badges found, replacing them with new ones")
                 before, after = strip_out_section(
                     lines,
-                    self.BADGES_START_DELIMITER,
-                    self.BADGES_END_DELIMITER,
+                    self.START_DELIMITER,
+                    self.END_DELIMITER,
                 )
 
         # write
-        with open(self.readme_path, "w") as f:
-            for line in before + self._badges_lines() + after:
+        with open(readme_path, "w") as f:
+            section = [
+                self.START_DELIMITER,
+                "\n",
+                self._badges_line().strip(),  # remove trailing whitespace
+                "\n",
+                self.END_DELIMITER,
+                "\n",  # only one newline here, otherwise we get an infinite commit-loop
+            ]
+            for line in before + section + after:
                 f.write(line)
 
-    def _badges_lines(self) -> list[str]:
-        """Create and return the lines used to append to a README.md containing various linked-badges."""
+    def _badges_line(self) -> str:
+        """Create and return the line containing various linked-badges."""
         badges_line = ""
 
         # PyPI badge
@@ -137,14 +205,7 @@ class BadgesAugmenter:
             f"({self.gh_api.url}/pulls?q=is%3Apr+sort%3Aupdated-desc+is%3Aopen) "
         )
 
-        return [
-            self.BADGES_START_DELIMITER,
-            "\n",
-            badges_line.strip(),  # remove trailing whitespace
-            "\n",
-            self.BADGES_END_DELIMITER,
-            "\n",  # only one newline here, otherwise we get an infinite commit-loop
-        ]
+        return badges_line
 
 
 def main() -> None:
@@ -197,26 +258,15 @@ def main() -> None:
 
     gh_api = GitHubAPI(args.gh_full_repo, args.gh_token)
 
-    # TODO - just read from the pyproject.toml? -- separate from GHA
-    # # <name> — `<full_repo>`
-    # # lta — `WIPACRepo/lta`
-    # <description>
-    # yada yada yada
-    #
-    # ### keywords
-    # <comma-separated list of keywords>
-    #
-    # ### authors
-    # <comma-separated list of authors>
+    ha = HeaderAugmenter()
+    ha.write(args.readme)
 
-    # write badges
     ba = BadgesAugmenter(
-        args.readme,
         gh_api,
         pyproject_toml_dict["project"]["name"],
         pyproject_toml_dict["project"]["urls"]["Homepage"],
     )
-    ba.write()
+    ba.write(args.readme)
 
 
 if __name__ == "__main__":
