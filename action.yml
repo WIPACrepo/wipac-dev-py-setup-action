@@ -260,8 +260,10 @@ runs:
         # step: Ensure dependabot.yml has canon settings
         set -euo pipefail
         
+        echo "##[group]logs"
         . "$SETUP_PY_GHA_PYVENV"/bin/activate
         ${{ github.action_path }}/ensure_dependabot.py .github/dependabot.yml
+        echo "##[endgroup]"
         
         echo "##[group].github/dependabot.yml"
         cat .github/dependabot.yml
@@ -278,9 +280,9 @@ runs:
         # step: Build pyproject.toml
         set -euo pipefail
 
-        . "$SETUP_PY_GHA_PYVENV"/bin/activate
-        
         # Build!
+        echo "##[group]logs"
+        . "$SETUP_PY_GHA_PYVENV"/bin/activate
         set -x
         export PYPROJECT_KEYWORDS_JSON
         python3 ${{ github.action_path }}/pyproject_toml_builder.py \
@@ -300,6 +302,7 @@ runs:
           --license-file "$LICENSE_FILE" \
           --auto-mypy-option "${{ inputs.auto_mypy_option }}"
         set +x
+        echo "##[endgroup]"
         
         echo "##[group]pyproject.toml"
         cat pyproject.toml
@@ -316,12 +319,14 @@ runs:
         # step: Augment README.md
         set -euo pipefail
 
+        echo "##[group]logs"
         . "$SETUP_PY_GHA_PYVENV"/bin/activate
         python3 ${{ github.action_path }}/augment_readme.py \
             --readme README.md \
             --pyproject-toml pyproject.toml \
             --gh-full-repo $GITHUB_REPOSITORY \
             --gh-token ${{ github.token }}
+        echo "##[endgroup]"
         
         echo "##[group]README.md"
         cat README.md
