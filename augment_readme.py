@@ -122,8 +122,8 @@ class HeaderAugmenter:
             "\n\n",
             f"**{self.gh_api.description.strip()}**",
             "\n\n",
-            f"<sub>**KEYWORDS:** {' · '.join(self.keywords)}</sub>",
-            "\n\n",
+            f"<sub>**KEYWORDS:** &nbsp; {' · '.join(self.keywords)}</sub>",
+            "\n<br>\n",  # extra line break
             self.END_DELIMITER,
             "\n",  # only one newline here, otherwise we get an infinite commit-loop
         ]
