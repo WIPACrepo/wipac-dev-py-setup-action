@@ -4,10 +4,9 @@ import argparse
 import logging
 import re
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 import tomlkit
-from tomlkit import TOMLDocument
 from wipac_dev_tools import argparse_tools, logging_tools
 
 from pyproject_toml_builder import GitHubAPI
@@ -53,7 +52,7 @@ class BadgesAugmenter:
     def __init__(
         self,
         readme_path: Path,
-        pyproject_toml_dict: TOMLDocument,
+        pyproject_toml_dict: dict[str, Any],
         gh_api: GitHubAPI,
     ) -> None:
         self.readme_path = readme_path
@@ -192,7 +191,7 @@ def main() -> None:
     logging_tools.log_argparse_args(args, logger=LOGGER)
 
     with open(args.pyproject_toml) as f:
-        pyproject_toml_dict = tomlkit.load(f)
+        pyproject_toml_dict = tomlkit.load(f).unwrap()
 
     gh_api = GitHubAPI(args.github_full_repo, args.gh_token)
 
