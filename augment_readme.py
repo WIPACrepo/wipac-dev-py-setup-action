@@ -97,7 +97,7 @@ class HeaderAugmenter:
             section = [
                 self.START_DELIMITER,
                 "\n",
-                ["foo\n" * 10],
+                "foo\n" * 10,
                 self.END_DELIMITER,
                 "\n",  # only one newline here, otherwise we get an infinite commit-loop
             ]
