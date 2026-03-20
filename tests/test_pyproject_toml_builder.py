@@ -316,10 +316,9 @@ def test_000_minimum_input(directory: Path, requests_mock: Any) -> None:
     }
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.work(
+    pyproject_toml_builder.write_toml(
         pyproject_toml_path,
-        GITHUB_FULL_REPO,
-        TOKEN,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
         cl_args,
     )
 
@@ -373,10 +372,9 @@ def test_010_minimum_input_w_pypi(directory: Path, requests_mock: Any) -> None:
     }
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.work(
+    pyproject_toml_builder.write_toml(
         pyproject_toml_path,
-        GITHUB_FULL_REPO,
-        TOKEN,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
         cl_args,
     )
 
@@ -450,10 +448,9 @@ def test_100_keywords(directory: Path, requests_mock: Any) -> None:
     }
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.work(
+    pyproject_toml_builder.write_toml(
         pyproject_toml_path,
-        GITHUB_FULL_REPO,
-        TOKEN,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
         cl_args,
     )
 
@@ -524,10 +521,9 @@ def test_200_python_max(directory: Path, requests_mock: Any) -> None:
     }
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.work(
+    pyproject_toml_builder.write_toml(
         pyproject_toml_path,
-        GITHUB_FULL_REPO,
-        TOKEN,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
         cl_args,
     )
 
@@ -602,10 +598,9 @@ def test_300_package_dirs__single(directory: Path, requests_mock: Any) -> None:
     Path(directory / "mock_package_test/__init__.py").touch()
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.work(
+    pyproject_toml_builder.write_toml(
         pyproject_toml_path,
-        GITHUB_FULL_REPO,
-        TOKEN,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
         cl_args,
     )
 
@@ -682,10 +677,9 @@ def test_340_package_dirs__multi_autoname__no_pypi(
     Path(directory / "another_one/__init__.py").touch()
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.work(
+    pyproject_toml_builder.write_toml(
         pyproject_toml_path,
-        GITHUB_FULL_REPO,
-        TOKEN,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
         cl_args,
     )
 
@@ -764,10 +758,9 @@ def test_341_package_dirs__multi(directory: Path, requests_mock: Any) -> None:
     Path(directory / "another_one/__init__.py").touch()
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.work(
+    pyproject_toml_builder.write_toml(
         pyproject_toml_path,
-        GITHUB_FULL_REPO,
-        TOKEN,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
         cl_args,
     )
 
@@ -868,10 +861,9 @@ def test_342_package_dirs__multi_subpackages(
     Path(directory / "another_one/also-not-a-subpackage/bar.txt").touch()
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.work(
+    pyproject_toml_builder.write_toml(
         pyproject_toml_path,
-        GITHUB_FULL_REPO,
-        TOKEN,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
         cl_args,
     )
 
@@ -929,10 +921,9 @@ def test_345_package_dirs__multi_missing_init__error(
             "Is the directory missing an __init__.py?"
         ),
     ):
-        pyproject_toml_builder.work(
+        pyproject_toml_builder.write_toml(
             pyproject_toml_path,
-            GITHUB_FULL_REPO,
-            TOKEN,
+            pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
             cl_args,
         )
 
@@ -1022,10 +1013,9 @@ def test_350_package_dirs__src_layout_single(
     Path(directory / "other_ignored_pkg" / "__init__.py").touch()
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.work(
+    pyproject_toml_builder.write_toml(
         pyproject_toml_path,
-        GITHUB_FULL_REPO,
-        TOKEN,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
         cl_args,
     )
 
@@ -1117,10 +1107,9 @@ def test_351_package_dirs__src_layout_single_implicit(
     shutil.rmtree(directory / "mock_package")  # added by fixture
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.work(
+    pyproject_toml_builder.write_toml(
         pyproject_toml_path,
-        GITHUB_FULL_REPO,
-        TOKEN,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
         cl_args,
     )
 
@@ -1214,10 +1203,9 @@ def test_355_package_dirs__src_layout_mixed_explicit(
     # shutil.rmtree(directory / "mock_package")  # added by fixture
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.work(
+    pyproject_toml_builder.write_toml(
         pyproject_toml_path,
-        GITHUB_FULL_REPO,
-        TOKEN,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
         cl_args,
     )
 
@@ -1299,10 +1287,9 @@ def test_400_extra_stuff(directory: Path, requests_mock: Any) -> None:
     }
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.work(
+    pyproject_toml_builder.write_toml(
         pyproject_toml_path,
-        GITHUB_FULL_REPO,
-        TOKEN,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
         cl_args,
     )
 
@@ -1342,10 +1329,9 @@ def test_600_defined_project_version__error(
         Exception,
         match=re.escape("pyproject.toml must NOT define 'project.version'"),
     ):
-        pyproject_toml_builder.work(
+        pyproject_toml_builder.write_toml(
             pyproject_toml_path,
-            GITHUB_FULL_REPO,
-            TOKEN,
+            pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
             cl_args,
         )
 
@@ -1381,10 +1367,9 @@ def test_700_defined_init_version__error(directory: Path, requests_mock: Any) ->
             "Module(s) ['mock_package']: '__init__.py' must not define '__version__' — see the auto-inserted python comment(s)."
         ),
     ):
-        pyproject_toml_builder.work(
+        pyproject_toml_builder.write_toml(
             pyproject_toml_path,
-            GITHUB_FULL_REPO,
-            TOKEN,
+            pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
             cl_args,
         )
 
@@ -1430,10 +1415,9 @@ def test_800_auto_mypy_option(directory: Path, requests_mock: Any) -> None:
     }
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.work(
+    pyproject_toml_builder.write_toml(
         pyproject_toml_path,
-        GITHUB_FULL_REPO,
-        TOKEN,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
         cl_args,
     )
 
