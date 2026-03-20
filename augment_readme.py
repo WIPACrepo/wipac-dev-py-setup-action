@@ -81,16 +81,16 @@ class HeaderAugmenter:
                     self.END_DELIMITER,
                 )
 
-                # # <name> — `<full_repo>`
-                # # lta — `WIPACRepo/lta`
-                # <description>
-                # yada yada yada
-                #
-                # ### keywords
-                # <comma-separated list of keywords>
-                #
-                # ### authors
-                # <comma-separated list of authors>
+        # # <name> — `<full_repo>`
+        # # lta — `WIPACRepo/lta`
+        # <description>
+        # yada yada yada
+        #
+        # ### keywords
+        # <comma-separated list of keywords>
+        #
+        # ### authors
+        # <comma-separated list of authors>
 
         # write
         with open(readme_path, "w") as f:
@@ -258,7 +258,10 @@ def main() -> None:
 
     gh_api = GitHubAPI(args.gh_full_repo, args.gh_token)
 
-    ha = HeaderAugmenter()
+    ha = HeaderAugmenter(
+        gh_api,
+        pyproject_toml_dict["project"]["name"],
+    )
     ha.write(args.readme)
 
     ba = BadgesAugmenter(
