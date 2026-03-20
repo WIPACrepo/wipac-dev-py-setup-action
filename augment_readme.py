@@ -4,7 +4,7 @@ import argparse
 import logging
 import re
 from pathlib import Path
-from typing import Any, Literal
+from typing import Literal
 
 import tomlkit
 from wipac_dev_tools import argparse_tools, logging_tools
@@ -52,18 +52,14 @@ class BadgesAugmenter:
     def __init__(
         self,
         readme_path: Path,
-        pyproject_toml_dict: dict[str, Any],
         gh_api: GitHubAPI,
+        name: str,
+        homepage: str,
     ) -> None:
         self.readme_path = readme_path
         self.gh_api = gh_api
-
-        self.name = pyproject_toml_dict["project"]["name"]
-
-        if "pypi.org" in pyproject_toml_dict["project"]["urls"]["Homepage"]:
-            self.pypi_url = pyproject_toml_dict["project"]["urls"]["Homepage"]
-        else:
-            self.pypi_url = ""
+        self.name = name
+        self.pypi_url = homepage if "pypi.org" in homepage else ""
 
     def write(self) -> None:
         """Add badges to the top of the README.md."""
@@ -216,8 +212,9 @@ def main() -> None:
     # write badges
     ba = BadgesAugmenter(
         args.readme,
-        pyproject_toml_dict,
         gh_api,
+        pyproject_toml_dict["project"]["name"],
+        pyproject_toml_dict["project"]["urls"]["Homepage"],
     )
     ba.write()
 
