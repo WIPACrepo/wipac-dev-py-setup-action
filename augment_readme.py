@@ -125,6 +125,7 @@ class HeaderAugmenter:
             f"**Keywords:** {', '.join(self.keywords)}",
             "\n\n",
             "---",
+            "\n\n",
             self.END_DELIMITER,
             "\n",  # only one newline here, otherwise we get an infinite commit-loop
         ]
