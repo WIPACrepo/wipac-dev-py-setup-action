@@ -272,7 +272,7 @@ def main() -> None:
         pyproject_toml_dict["project"]["name"],
         pyproject_toml_dict["project"]["urls"]["Homepage"],
     )
-    ba.write(args.readme)
+    # ba.write(args.readme)
 
 
 if __name__ == "__main__":
