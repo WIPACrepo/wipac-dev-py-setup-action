@@ -72,8 +72,10 @@ class BadgesAugmenter:
         with open(self.readme_path) as f:
             lines = f.readlines()
             if self.BADGES_START_DELIMITER + "\n" not in lines:
+                LOGGER.info("No badges found, appending to top of README.md")
                 before, after = [], lines
             else:
+                LOGGER.info("Badges found, replacing them with new ones")
                 before, after = strip_out_section(
                     lines,
                     self.BADGES_START_DELIMITER,
@@ -218,3 +220,8 @@ def main() -> None:
         gh_api,
     )
     ba.write()
+
+
+if __name__ == "__main__":
+    main()
+    LOGGER.info("Done.")
