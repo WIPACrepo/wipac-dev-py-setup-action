@@ -120,9 +120,11 @@ class HeaderAugmenter:
             "\n\n",
             f"# {self.name} — `{self.gh_api.full_repo}`",
             "\n\n",
-            self.gh_api.description.strip(),
+            f"> {self.gh_api.description.strip()}",
             "\n\n",
-            f"**Keywords:** {', '.join(self.keywords)}\n",
+            f"**Keywords:** {', '.join(self.keywords)}",
+            "\n\n",
+            "---",
             self.END_DELIMITER,
             "\n",  # only one newline here, otherwise we get an infinite commit-loop
         ]
