@@ -26,9 +26,6 @@ from wipac_dev_tools import (
 
 from find_packages import all_packages_relpath
 
-REAMDE_BADGES_START_DELIMITER = "<!--- Top of README Badges (automated) --->"
-REAMDE_BADGES_END_DELIMITER = "<!--- End of README Badges (automated) --->"
-
 SCM_FALLBACK_VERSION = "CANNOT_BUILD_WITHOUT_GIT_DIR"
 
 LOGGER = logging.getLogger("setup-builder")
@@ -109,13 +106,13 @@ def _log_error_then_get_exception(msg: str) -> Exception:
 class GitHubAPI:
     """Relay info from the GitHub API."""
 
-    def __init__(self, github_full_repo: str, oauth_token: str) -> None:
-        self.url = f"https://github.com/{github_full_repo}"
+    def __init__(self, gh_full_repo: str, gh_token: str) -> None:
+        self.full_repo = gh_full_repo
+        self.url = f"https://github.com/{gh_full_repo}"
 
-        _headers = {"authorization": f"Bearer {oauth_token}"}
         _req = requests.get(
-            f"https://api.github.com/repos/{github_full_repo}",
-            headers=_headers,
+            f"https://api.github.com/repos/{gh_full_repo}",
+            headers={"authorization": f"Bearer {gh_token}"},
         )
         _req.raise_for_status()
         _json = _req.json()
@@ -124,8 +121,8 @@ class GitHubAPI:
 
 
 @dataclasses.dataclass
-class GHAInput:
-    """The inputs passed from the client GitHub Action."""
+class CLArgs:
+    """Command-line arguments."""
 
     # REQUIRED
     mode: Literal["PACKAGING", "PACKAGING_AND_PYPI"]
@@ -353,11 +350,11 @@ class FromFiles:
     def __init__(
         self,
         root: Path,
-        gha_input: GHAInput,
+        cl_args: CLArgs,
     ) -> None:
         if not os.path.exists(root):
             raise NotADirectoryError(root)
-        self.gha_input = gha_input
+        self.cl_args = cl_args
         self.root = root.resolve()
         self.package_paths = self._get_package_paths()
         self.readme_path = self._get_readme_path()
@@ -368,7 +365,7 @@ class FromFiles:
         """Find the package path(s)."""
         found_pkgs = all_packages_relpath(
             self.root,
-            dirs_exclude=self.gha_input.exclude_dirs,
+            dirs_exclude=self.cl_args.exclude_dirs,
             include_namespace_packages=False,
             omit_subpackages=True,
         )
@@ -378,9 +375,9 @@ class FromFiles:
             )
 
         # check the pyproject.toml: package_dirs
-        if self.gha_input.package_dirs:
+        if self.cl_args.package_dirs:
             if missings := [
-                p for p in self.gha_input.package_dirs if p not in found_pkgs
+                p for p in self.cl_args.package_dirs if p not in found_pkgs
             ]:
                 if len(missings) == 1:
                     raise _log_error_then_get_exception(
@@ -395,7 +392,7 @@ class FromFiles:
                         f"Are the directories missing __init__.py files?"
                     )
             else:
-                return [self.root / p for p in self.gha_input.package_dirs]
+                return [self.root / p for p in self.cl_args.package_dirs]
         # use the auto-detected package (if there's ONE)
         else:
             if len(found_pkgs) > 1:
@@ -483,113 +480,28 @@ class FromFiles:
         raise FileNotFoundError(f"No README file found in '{self.root}'")
 
 
-class READMEMarkdownManager:
-    """Add some automation to README.md."""
-
-    def __init__(
-        self,
-        ffile: FromFiles,
-        github_full_repo: str,
-        gha_input: GHAInput,
-        gh_api: GitHubAPI,
-    ) -> None:
-        self.ffile = ffile
-        self.github_full_repo = github_full_repo
-        self.bsec = gha_input
-        self.gh_api = gh_api
-        with open(ffile.readme_path) as f:
-            lines_to_keep = []
-            in_badges = False
-            for line in f.readlines():
-                if line.strip() == REAMDE_BADGES_START_DELIMITER:
-                    in_badges = True
-                    continue
-                if line.strip() == REAMDE_BADGES_END_DELIMITER:
-                    in_badges = False
-                    continue
-                if in_badges:
-                    continue
-                lines_to_keep.append(line)
-        self.lines = self.badges_lines() + lines_to_keep
-
-    @property
-    def readme_path(self) -> Path:
-        """Get the README file path."""
-        return self.ffile.readme_path
-
-    def badges_lines(self) -> list[str]:
-        """Create and return the lines used to append to a README.md containing various linked-badges."""
-        badges_line = ""
-
-        # PyPI badge
-        if self.bsec.pypi_name:
-            badges_line += f"[![PyPI](https://img.shields.io/pypi/v/{self.bsec.pypi_name})](https://pypi.org/project/{self.bsec.pypi_name}/) "
-
-        # GitHub Release badge
-        badges_line += f"[![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/{self.github_full_repo}?include_prereleases)]({self.gh_api.url}/) "
-
-        # Python versions
-        if self.bsec.pypi_name:
-            badges_line += f"[![Versions](https://img.shields.io/pypi/pyversions/{self.bsec.pypi_name}.svg)](https://pypi.org/project/{self.bsec.pypi_name}) "
-
-        # PYPI License badge
-        if self.bsec.pypi_name:
-            badges_line += f"[![PyPI - License](https://img.shields.io/pypi/l/{self.bsec.pypi_name})]({self.gh_api.url}/blob/{self.gh_api.default_branch}/LICENSE) "
-
-        # Other GitHub badges
-        badges_line += (
-            f"[![GitHub issues](https://img.shields.io/github/issues/{self.github_full_repo})]({self.gh_api.url}/issues?q=is%3Aissue+sort%3Aupdated-desc+is%3Aopen) "
-            f"[![GitHub pull requests](https://img.shields.io/github/issues-pr/{self.github_full_repo})]({self.gh_api.url}/pulls?q=is%3Apr+sort%3Aupdated-desc+is%3Aopen) "
-        )
-
-        return [
-            REAMDE_BADGES_START_DELIMITER,
-            "\n",
-            badges_line.strip(),  # remove trailing whitespace
-            "\n",
-            REAMDE_BADGES_END_DELIMITER,
-            "\n",  # only one newline here, otherwise we get an infinite commit-loop
-        ]
-
-
 def unique_list_chain(lists: Iterable[list[str]]) -> list[str]:
     """Return a single sorted/unique'd/combined list."""
     return sorted(set(itertools.chain.from_iterable(lists)))
 
 
 class PyProjectTomlBuilder:
-    """Build out the `[project]`, `[semantic_release]`, and `[options]` sections in `toml_dict`.
-
-    Create a 'READMEMarkdownManager' instance to write out, if needed.
-    """
+    """Build out sections in `toml_dict`."""
 
     def __init__(
         self,
-        toml_dict: TOMLDocumentTypeHint,
-        root_path: Path,
-        github_full_repo: str,
-        token: str,
-        gha_input: GHAInput,
+        toml_file: Path,
+        cl_args: CLArgs,
+        gh_api: GitHubAPI,
+        py_ver: PythonVersioning,
     ):
-        ffile = FromFiles(  # things requiring reading files
-            root_path,
-            gha_input,
-        )
-        gh_api = GitHubAPI(github_full_repo, oauth_token=token)
-        py_ver = PythonVersioning(
-            gha_input.python_min,
-            gha_input.python_max,
-            unique_list_chain(
-                # base deps
-                [toml_dict.get("project", {}).get("dependencies", [])]
-                # plus optional deps
-                + list(
-                    toml_dict.get("project", {})
-                    .get("optional-dependencies", {})
-                    .values()
-                )
-            ),
-        )
+        self.cl_args = cl_args
+        self.gh_api = gh_api
+        self.py_ver = py_ver
+        self.ffile = FromFiles(toml_file.parent, cl_args)
+
+    def build(self, toml_dict: TOMLDocumentTypeHint) -> None:
+        """Build out the sections in `toml_dict`."""
         self._validate_repo_initial_state(toml_dict)
 
         # [build-system]
@@ -608,10 +520,10 @@ class PyProjectTomlBuilder:
         # -- mode-based updates
         self.insert_project_metadata(
             toml_dict["project"],
-            gha_input,
-            ffile,
-            gh_api,
-            py_ver,
+            self.cl_args,
+            self.ffile,
+            self.gh_api,
+            self.py_ver,
         )
 
         # [tool]
@@ -623,7 +535,7 @@ class PyProjectTomlBuilder:
             toml_dict["tool"]["setuptools"] = {}
         toml_dict["tool"]["setuptools"].update(
             {
-                "packages": self._tool_setuptools_packages(ffile),
+                "packages": self._tool_setuptools_packages(self.ffile),
                 "package-data": {
                     **toml_dict["tool"].get("setuptools", {}).get("package-data", {}),
                     "*": self._tool_setuptools_packagedata_star(toml_dict),
@@ -636,7 +548,7 @@ class PyProjectTomlBuilder:
         self._inline_dont_change_this_comment(
             toml_dict["tool"]["setuptools"]["package-data"]["*"]
         )
-        if _pkg_dir_map := self._tool_setuptools_package_dir(ffile):
+        if _pkg_dir_map := self._tool_setuptools_package_dir(self.ffile):
             toml_dict["tool"]["setuptools"]["package-dir"] = _pkg_dir_map
             self._inline_dont_change_this_comment(
                 toml_dict["tool"]["setuptools"]["package-dir"]
@@ -657,44 +569,35 @@ class PyProjectTomlBuilder:
 
         # [project.optional-dependencies][mypy]
         if (
-            gha_input.auto_mypy_option
+            self.cl_args.auto_mypy_option
             and "optional-dependencies" in toml_dict["project"]  # only if there's deps
         ):
             self.build_mypy_optional_deps(toml_dict["project"]["optional-dependencies"])
 
-        # Automate some README stuff
-        self.readme_mgr: READMEMarkdownManager | None
-        if ffile.readme_path.suffix == ".md":
-            self.readme_mgr = READMEMarkdownManager(
-                ffile, github_full_repo, gha_input, gh_api
-            )
-        else:
-            self.readme_mgr = None
-
     @staticmethod
     def insert_project_metadata(
         toml_project: TOMLDocumentTypeHint,
-        gha_input: GHAInput,
+        cl_args: CLArgs,
         ffile: FromFiles,
         gh_api: GitHubAPI,
         py_ver: PythonVersioning,
     ) -> None:
         """Add project metadata, w/ additional optional handling for PACKAGING_AND_PYPI."""
-        if gha_input.mode not in ["PACKAGING_AND_PYPI", "PACKAGING"]:
-            raise RuntimeError(f"Unknown mode: {gha_input.mode}")
+        if cl_args.mode not in ["PACKAGING_AND_PYPI", "PACKAGING"]:
+            raise RuntimeError(f"Unknown mode: {cl_args.mode}")
 
         # NOTE - mode-specific required field logic is handled upstream
 
         author_entry = {}
-        if gha_input.author:
-            author_entry["name"] = gha_input.author
-        if gha_input.author_email:
-            author_entry["email"] = gha_input.author_email
+        if cl_args.author:
+            author_entry["name"] = cl_args.author
+        if cl_args.author_email:
+            author_entry["email"] = cl_args.author_email
 
         updates = {
             "name": (
-                gha_input.pypi_name
-                if gha_input.mode == "PACKAGING_AND_PYPI"
+                cl_args.pypi_name
+                if cl_args.mode == "PACKAGING_AND_PYPI"
                 else "-".join(p.name.replace("_", "-") for p in ffile.package_paths)
             ),
             "authors": (  # we currently only support 1 author
@@ -702,11 +605,11 @@ class PyProjectTomlBuilder:
             ),
             "description": gh_api.description,
             "readme": ffile.readme_path.name,
-            "license": gha_input.license_spdx_id,
+            "license": cl_args.license_spdx_id,
             "license-files": (  # we currently only support 1 license file
-                [gha_input.license_file] if gha_input.license_file else []
+                [cl_args.license_file] if cl_args.license_file else []
             ),
-            "keywords": gha_input.keywords,
+            "keywords": cl_args.keywords,
             "classifiers": py_ver.python_classifiers(),
             "requires-python": py_ver.get_requires_python(),
         }
@@ -718,8 +621,8 @@ class PyProjectTomlBuilder:
         # [project.urls]
         toml_project["urls"] = {
             "Homepage": (
-                f"https://pypi.org/project/{gha_input.pypi_name}/"
-                if gha_input.mode == "PACKAGING_AND_PYPI"
+                f"https://pypi.org/project/{cl_args.pypi_name}/"
+                if cl_args.mode == "PACKAGING_AND_PYPI"
                 else gh_api.url
             ),
             "Tracker": f"{gh_api.url}/issues",
@@ -850,14 +753,10 @@ def set_multiline_array(
 
 def write_toml(
     toml_file: Path,
-    github_full_repo: str,
-    token: str,
-    gha_input: GHAInput,
-) -> READMEMarkdownManager | None:
-    """Build/write the `pyproject.toml` sections.
-
-    Return a 'READMEMarkdownManager' instance to write out. If, necessary.
-    """
+    gh_api: GitHubAPI,
+    cl_args: CLArgs,
+) -> None:
+    """Build/write the `pyproject.toml` sections."""
     toml_file = toml_file.resolve()
     if toml_file.exists():
         with open(toml_file, "r") as f:
@@ -865,13 +764,26 @@ def write_toml(
     else:
         toml_dict = TOMLDocument()
 
-    builder = PyProjectTomlBuilder(
-        toml_dict,  # updates this
-        toml_file.parent,
-        github_full_repo,
-        token,
-        gha_input,
+    pyver = PythonVersioning(
+        cl_args.python_min,
+        cl_args.python_max,
+        unique_list_chain(
+            # base deps
+            [toml_dict.get("project", {}).get("dependencies", [])]
+            # plus optional deps
+            + list(
+                toml_dict.get("project", {}).get("optional-dependencies", {}).values()
+            )
+        ),
     )
+
+    builder = PyProjectTomlBuilder(
+        toml_file,
+        cl_args,
+        gh_api,
+        pyver,
+    )
+    builder.build(toml_dict)  # updates dict in-place
 
     # make specific arrays multiline
     set_multiline_array(toml_dict, "project", "dependencies", sort=True)
@@ -888,9 +800,6 @@ def write_toml(
 
     # all done
     out = tomlkit.dumps(toml_dict, sort_keys=True)
-    print("===raw=====================================================================")
-    print(out)
-    print("===========================================================================")
     # -- check header block comment
     if not out.strip().startswith(HEADER_BLOCK_COMMENT.strip()):
         out = out.replace("# pyproject.toml", "")  # the new comment will have this
@@ -900,39 +809,14 @@ def write_toml(
     # -- common auto-generation whitespace gotchas
     out = normalize_toml_whitespace(out)
     # -- write it!
-    print("===done====================================================================")
-    print(out)
-    print("===========================================================================")
     with open(toml_file, "w") as f:
         f.write(out)
-
-    return builder.readme_mgr
-
-
-def work(
-    toml_file: Path,
-    github_full_repo: str,
-    token: str,
-    gha_input: GHAInput,
-) -> None:
-    """Build & write the pyproject.toml. Write the readme if necessary."""
-    readme_mgr = write_toml(
-        toml_file,
-        github_full_repo,
-        token,
-        gha_input,
-    )
-
-    if readme_mgr:
-        with open(readme_mgr.readme_path, "w") as f:
-            for line in readme_mgr.lines:
-                f.write(line)
 
 
 def main() -> None:
     """Read and write all necessary files."""
     parser = argparse.ArgumentParser(
-        description="Read/transform 'pyproject.toml' and 'README.md' files",
+        description="Transform 'pyproject.toml' file",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
@@ -946,7 +830,7 @@ def main() -> None:
         help="path to the 'pyproject.toml' file",
     )
     parser.add_argument(
-        "--github-full-repo",
+        "--gh-full-repo",
         type=lambda x: argparse_tools.validate_arg(
             x,
             bool(re.match(r"(\w|-)+/(\w|-)+$", x)),
@@ -956,9 +840,9 @@ def main() -> None:
         help="Fully-named GitHub repo, ex: WIPACrepo/wipac-dev-tools",
     )
     parser.add_argument(
-        "--token",
+        "--gh-token",
         required=True,
-        help="An OAuth2 token, usually GITHUB_TOKEN",
+        help="A github token, usually GITHUB_TOKEN",
     )
 
     def coerce_python_version(val: str | None) -> None | tuple[int, int]:
@@ -1005,7 +889,7 @@ def main() -> None:
         default=[],
         help="List of directories to exclude from release, relative to the repository's root directory.",
     )
-    # OPTIONAL (releases)
+    # OPTIONAL (pypi releases)
     parser.add_argument(
         "--pypi-name",
         type=str,
@@ -1050,24 +934,23 @@ def main() -> None:
         help="Whether to auto create/update the 'mypy' install option plus its dependencies",
     )
     args = parser.parse_args()
-    logging_tools.set_level("DEBUG", LOGGER, use_coloredlogs=True)
+    logging_tools.set_level("DEBUG", LOGGER)
     logging_tools.log_argparse_args(args, logger=LOGGER)
 
-    gha_input = GHAInput(
+    cl_args = CLArgs(
         **{
             k: v
             for k, v in vars(args).items()
             # use arg if it has non-falsy value -- otherwise, rely on default
-            if v and (k in [f.name for f in dataclasses.fields(GHAInput)])
+            if v and (k in [f.name for f in dataclasses.fields(CLArgs)])
         },
     )
-    LOGGER.info(gha_input)
+    LOGGER.info(cl_args)
 
-    work(
+    write_toml(
         args.toml,
-        args.github_full_repo,
-        args.token,
-        gha_input,
+        GitHubAPI(args.gh_full_repo, args.gh_token),
+        cl_args,
     )
 
 

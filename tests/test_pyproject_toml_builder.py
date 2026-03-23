@@ -287,7 +287,7 @@ def test_000_minimum_input(directory: Path, requests_mock: Any) -> None:
 
     pyproject_toml_path = directory / "pyproject.toml"
 
-    gha_input = pyproject_toml_builder.GHAInput(
+    cl_args = pyproject_toml_builder.CLArgs(
         auto_mypy_option=False,
         mode="PACKAGING",
         python_min=(3, 10),
@@ -316,11 +316,10 @@ def test_000_minimum_input(directory: Path, requests_mock: Any) -> None:
     }
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.work(
+    pyproject_toml_builder.write_toml(
         pyproject_toml_path,
-        GITHUB_FULL_REPO,
-        TOKEN,
-        gha_input,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
+        cl_args,
     )
 
     # assert outputted pyproject.toml
@@ -335,7 +334,7 @@ def test_010_minimum_input_w_pypi(directory: Path, requests_mock: Any) -> None:
 
     pyproject_toml_path = directory / "pyproject.toml"
 
-    gha_input = pyproject_toml_builder.GHAInput(
+    cl_args = pyproject_toml_builder.CLArgs(
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         mode="PACKAGING_AND_PYPI",
@@ -373,11 +372,10 @@ def test_010_minimum_input_w_pypi(directory: Path, requests_mock: Any) -> None:
     }
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.work(
+    pyproject_toml_builder.write_toml(
         pyproject_toml_path,
-        GITHUB_FULL_REPO,
-        TOKEN,
-        gha_input,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
+        cl_args,
     )
 
     # assert outputted pyproject.toml
@@ -392,7 +390,7 @@ def test_100_keywords(directory: Path, requests_mock: Any) -> None:
 
     pyproject_toml_path = directory / "pyproject.toml"
 
-    gha_input = pyproject_toml_builder.GHAInput(
+    cl_args = pyproject_toml_builder.CLArgs(
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         mode="PACKAGING_AND_PYPI",
@@ -450,11 +448,10 @@ def test_100_keywords(directory: Path, requests_mock: Any) -> None:
     }
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.work(
+    pyproject_toml_builder.write_toml(
         pyproject_toml_path,
-        GITHUB_FULL_REPO,
-        TOKEN,
-        gha_input,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
+        cl_args,
     )
 
     # assert outputted pyproject.toml
@@ -469,7 +466,7 @@ def test_200_python_max(directory: Path, requests_mock: Any) -> None:
 
     pyproject_toml_path = directory / "pyproject.toml"
 
-    gha_input = pyproject_toml_builder.GHAInput(
+    cl_args = pyproject_toml_builder.CLArgs(
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         mode="PACKAGING_AND_PYPI",
@@ -524,11 +521,10 @@ def test_200_python_max(directory: Path, requests_mock: Any) -> None:
     }
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.work(
+    pyproject_toml_builder.write_toml(
         pyproject_toml_path,
-        GITHUB_FULL_REPO,
-        TOKEN,
-        gha_input,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
+        cl_args,
     )
 
     # assert outputted pyproject.toml
@@ -543,7 +539,7 @@ def test_300_package_dirs__single(directory: Path, requests_mock: Any) -> None:
 
     pyproject_toml_path = directory / "pyproject.toml"
 
-    gha_input = pyproject_toml_builder.GHAInput(
+    cl_args = pyproject_toml_builder.CLArgs(
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         mode="PACKAGING_AND_PYPI",
@@ -602,11 +598,10 @@ def test_300_package_dirs__single(directory: Path, requests_mock: Any) -> None:
     Path(directory / "mock_package_test/__init__.py").touch()
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.work(
+    pyproject_toml_builder.write_toml(
         pyproject_toml_path,
-        GITHUB_FULL_REPO,
-        TOKEN,
-        gha_input,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
+        cl_args,
     )
 
     # assert outputted pyproject.toml
@@ -623,7 +618,7 @@ def test_340_package_dirs__multi_autoname__no_pypi(
 
     pyproject_toml_path = directory / "pyproject.toml"
 
-    gha_input = pyproject_toml_builder.GHAInput(
+    cl_args = pyproject_toml_builder.CLArgs(
         auto_mypy_option=False,
         mode="PACKAGING",
         python_min=(3, 10),
@@ -682,11 +677,10 @@ def test_340_package_dirs__multi_autoname__no_pypi(
     Path(directory / "another_one/__init__.py").touch()
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.work(
+    pyproject_toml_builder.write_toml(
         pyproject_toml_path,
-        GITHUB_FULL_REPO,
-        TOKEN,
-        gha_input,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
+        cl_args,
     )
 
     # assert outputted pyproject.toml
@@ -701,7 +695,7 @@ def test_341_package_dirs__multi(directory: Path, requests_mock: Any) -> None:
 
     pyproject_toml_path = directory / "pyproject.toml"
 
-    gha_input = pyproject_toml_builder.GHAInput(
+    cl_args = pyproject_toml_builder.CLArgs(
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         mode="PACKAGING_AND_PYPI",
@@ -764,11 +758,10 @@ def test_341_package_dirs__multi(directory: Path, requests_mock: Any) -> None:
     Path(directory / "another_one/__init__.py").touch()
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.work(
+    pyproject_toml_builder.write_toml(
         pyproject_toml_path,
-        GITHUB_FULL_REPO,
-        TOKEN,
-        gha_input,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
+        cl_args,
     )
 
     # assert outputted pyproject.toml
@@ -785,7 +778,7 @@ def test_342_package_dirs__multi_subpackages(
 
     pyproject_toml_path = directory / "pyproject.toml"
 
-    gha_input = pyproject_toml_builder.GHAInput(
+    cl_args = pyproject_toml_builder.CLArgs(
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         mode="PACKAGING_AND_PYPI",
@@ -868,11 +861,10 @@ def test_342_package_dirs__multi_subpackages(
     Path(directory / "another_one/also-not-a-subpackage/bar.txt").touch()
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.work(
+    pyproject_toml_builder.write_toml(
         pyproject_toml_path,
-        GITHUB_FULL_REPO,
-        TOKEN,
-        gha_input,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
+        cl_args,
     )
 
     # assert outputted pyproject.toml
@@ -889,7 +881,7 @@ def test_345_package_dirs__multi_missing_init__error(
 
     pyproject_toml_path = directory / "pyproject.toml"
 
-    gha_input = pyproject_toml_builder.GHAInput(
+    cl_args = pyproject_toml_builder.CLArgs(
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         mode="PACKAGING_AND_PYPI",
@@ -929,11 +921,10 @@ def test_345_package_dirs__multi_missing_init__error(
             "Is the directory missing an __init__.py?"
         ),
     ):
-        pyproject_toml_builder.work(
+        pyproject_toml_builder.write_toml(
             pyproject_toml_path,
-            GITHUB_FULL_REPO,
-            TOKEN,
-            gha_input,
+            pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
+            cl_args,
         )
 
 
@@ -947,7 +938,7 @@ def test_350_package_dirs__src_layout_single(
 
     pyproject_toml_path = directory / "pyproject.toml"
 
-    gha_input = pyproject_toml_builder.GHAInput(
+    cl_args = pyproject_toml_builder.CLArgs(
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         mode="PACKAGING_AND_PYPI",
@@ -1022,11 +1013,10 @@ def test_350_package_dirs__src_layout_single(
     Path(directory / "other_ignored_pkg" / "__init__.py").touch()
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.work(
+    pyproject_toml_builder.write_toml(
         pyproject_toml_path,
-        GITHUB_FULL_REPO,
-        TOKEN,
-        gha_input,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
+        cl_args,
     )
 
     # assert outputted pyproject.toml
@@ -1043,7 +1033,7 @@ def test_351_package_dirs__src_layout_single_implicit(
 
     pyproject_toml_path = directory / "pyproject.toml"
 
-    gha_input = pyproject_toml_builder.GHAInput(
+    cl_args = pyproject_toml_builder.CLArgs(
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         mode="PACKAGING_AND_PYPI",
@@ -1117,11 +1107,10 @@ def test_351_package_dirs__src_layout_single_implicit(
     shutil.rmtree(directory / "mock_package")  # added by fixture
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.work(
+    pyproject_toml_builder.write_toml(
         pyproject_toml_path,
-        GITHUB_FULL_REPO,
-        TOKEN,
-        gha_input,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
+        cl_args,
     )
 
     # assert outputted pyproject.toml
@@ -1138,7 +1127,7 @@ def test_355_package_dirs__src_layout_mixed_explicit(
 
     pyproject_toml_path = directory / "pyproject.toml"
 
-    gha_input = pyproject_toml_builder.GHAInput(
+    cl_args = pyproject_toml_builder.CLArgs(
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         mode="PACKAGING_AND_PYPI",
@@ -1214,11 +1203,10 @@ def test_355_package_dirs__src_layout_mixed_explicit(
     # shutil.rmtree(directory / "mock_package")  # added by fixture
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.work(
+    pyproject_toml_builder.write_toml(
         pyproject_toml_path,
-        GITHUB_FULL_REPO,
-        TOKEN,
-        gha_input,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
+        cl_args,
     )
 
     # assert outputted pyproject.toml
@@ -1233,7 +1221,7 @@ def test_400_extra_stuff(directory: Path, requests_mock: Any) -> None:
 
     pyproject_toml_path = directory / "pyproject.toml"
 
-    gha_input = pyproject_toml_builder.GHAInput(
+    cl_args = pyproject_toml_builder.CLArgs(
         auto_mypy_option=False,
         pypi_name="wipac-mock-package",
         mode="PACKAGING_AND_PYPI",
@@ -1299,11 +1287,10 @@ def test_400_extra_stuff(directory: Path, requests_mock: Any) -> None:
     }
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.work(
+    pyproject_toml_builder.write_toml(
         pyproject_toml_path,
-        GITHUB_FULL_REPO,
-        TOKEN,
-        gha_input,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
+        cl_args,
     )
 
     # assert outputted pyproject.toml
@@ -1323,7 +1310,7 @@ def test_600_defined_project_version__error(
 
     pyproject_toml_path = directory / "pyproject.toml"
 
-    gha_input = pyproject_toml_builder.GHAInput(
+    cl_args = pyproject_toml_builder.CLArgs(
         auto_mypy_option=False,
         mode="PACKAGING",
         python_min=(3, 10),
@@ -1342,11 +1329,10 @@ def test_600_defined_project_version__error(
         Exception,
         match=re.escape("pyproject.toml must NOT define 'project.version'"),
     ):
-        pyproject_toml_builder.work(
+        pyproject_toml_builder.write_toml(
             pyproject_toml_path,
-            GITHUB_FULL_REPO,
-            TOKEN,
-            gha_input,
+            pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
+            cl_args,
         )
 
 
@@ -1358,7 +1344,7 @@ def test_700_defined_init_version__error(directory: Path, requests_mock: Any) ->
 
     pyproject_toml_path = directory / "pyproject.toml"
 
-    gha_input = pyproject_toml_builder.GHAInput(
+    cl_args = pyproject_toml_builder.CLArgs(
         auto_mypy_option=False,
         mode="PACKAGING",
         python_min=(3, 10),
@@ -1381,11 +1367,10 @@ def test_700_defined_init_version__error(directory: Path, requests_mock: Any) ->
             "Module(s) ['mock_package']: '__init__.py' must not define '__version__' — see the auto-inserted python comment(s)."
         ),
     ):
-        pyproject_toml_builder.work(
+        pyproject_toml_builder.write_toml(
             pyproject_toml_path,
-            GITHUB_FULL_REPO,
-            TOKEN,
-            gha_input,
+            pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
+            cl_args,
         )
 
 
@@ -1397,7 +1382,7 @@ def test_800_auto_mypy_option(directory: Path, requests_mock: Any) -> None:
 
     pyproject_toml_path = directory / "pyproject.toml"
 
-    gha_input = pyproject_toml_builder.GHAInput(
+    cl_args = pyproject_toml_builder.CLArgs(
         mode="PACKAGING",
         python_min=(3, 10),
         license_spdx_id="MIT",
@@ -1430,11 +1415,10 @@ def test_800_auto_mypy_option(directory: Path, requests_mock: Any) -> None:
     }
 
     # run pyproject_toml_builder
-    pyproject_toml_builder.work(
+    pyproject_toml_builder.write_toml(
         pyproject_toml_path,
-        GITHUB_FULL_REPO,
-        TOKEN,
-        gha_input,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
+        cl_args,
     )
 
     # assert outputted pyproject.toml
