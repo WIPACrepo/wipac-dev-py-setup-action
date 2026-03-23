@@ -56,11 +56,13 @@ class HeaderAugmenter:
         name: str,
         keywords: list[str],
         authors: list[dict[str, str]],
+        urls: dict[str, str],
     ) -> None:
         self.gh_api = gh_api
         self.name = name
         self.keywords = keywords
         self.authors = authors
+        self.urls = urls
 
     def _remove_non_automated_header(self, lines: list[str]) -> None:
         """Assuming there's no automated header, find and remove the non-automated header."""
@@ -157,14 +159,17 @@ class HeaderAugmenter:
         if self.keywords:
             details["Keywords"] = " · ".join(self.keywords)
 
+        if self.urls:
+            details["URLs"] = " · ".join(f"[{k}]({v})" for k, v in self.urls.items())
+
         # render in html
         if not details:
             return ""
         else:
             rows = []
             for k, v in details.items():
-                rows.append(f"    <dt><sub>{k}</sub></dt>\n")
-                rows.append(f"    <dd><sub>{v}</sub></dd>\n")
+                rows.append(f"    <dt><sub>{k}</sub></dt>\n")  # 'sub' makes text small
+                rows.append(f"    <dd><sub>{v}</sub></dd>\n")  # 'sub' makes text small
             return "<dl>\n" + "".join(rows) + "</dl>\n"
 
 
@@ -327,6 +332,7 @@ def main() -> None:
         pyproject_toml_dict["project"]["name"],
         pyproject_toml_dict["project"]["keywords"],
         pyproject_toml_dict["project"]["authors"],
+        pyproject_toml_dict["project"]["urls"],
     )
     ha.write(args.readme)
 
