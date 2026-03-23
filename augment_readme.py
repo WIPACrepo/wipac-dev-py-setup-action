@@ -119,22 +119,14 @@ class HeaderAugmenter:
                     self.END_DELIMITER,
                 )
 
-        # create a list of details to add to the header section
-        details = []
+        # create a mapping of details to add to the header section
+        details: dict[str, str] = {}
+
         if self.keywords:
-            details.extend(
-                [
-                    "    <dt><sub>KEYWORDS</sub></dt>\n",
-                    f"    <dd><sub>{' · '.join(self.keywords)}</sub></dd>\n",
-                ]
-            )
+            details["KEYWORDS"] = " · ".join(self.keywords)
+
         if self.license:
-            details.extend(
-                [
-                    "    <dt><sub>LICENSE</sub></dt>\n",
-                    f"    <dd><sub>{self.license}</sub></dd>\n",
-                ]
-            )
+            details["LICENSE"] = self.license
 
         def _get_author_string(entry: dict[str, str]) -> str:
             parts: list[str] = []
@@ -145,14 +137,18 @@ class HeaderAugmenter:
             return " / ".join(parts)
 
         if self.authors:
-            details.extend(
-                [
-                    "    <dt><sub>AUTHORS</sub></dt>\n",
-                    "    <dd><sub>"
-                    + " · ".join(_get_author_string(a) for a in self.authors)
-                    + "</sub></dd>\n",
-                ]
-            )
+            details["AUTHORS"] = " · ".join(_get_author_string(a) for a in self.authors)
+
+        def _render_details_html(dicto: dict[str, str]) -> str:
+            if not dicto:
+                return ""
+            rows = []
+            for k, v in dicto.items():
+                rows.append(f"    <dt><sub>{k}</sub></dt>\n")
+                rows.append(f"    <dd><sub>{v}</sub></dd>\n")
+            return "<dl>\n" + "".join(rows) + "</dl>\n"
+
+        details_html = _render_details_html(details)
 
         # assemble the header section
         section = [
@@ -162,9 +158,7 @@ class HeaderAugmenter:
             "\n\n",
             f"**{self.gh_api.description.strip()}**",
             "\n\n",
-            (  # add if not empty
-                "<dl>\n" + "".join(details) + "</dl>\n" if details else ""
-            ),
+            details_html,
             "\n<br>\n",  # extra line break
             self.END_DELIMITER,
             "\n",  # only one newline here, otherwise we get an infinite commit-loop
