@@ -330,7 +330,7 @@ runs:
         
         echo "##[group]README.md"
         cat README.md
-        echo "##[endgroup]"         
+        echo "##[endgroup]"
         
         # Commits
         git add README.md
