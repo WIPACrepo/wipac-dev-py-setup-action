@@ -156,7 +156,7 @@ class MetadataSectionAugmenter:
         dotty = "&nbsp;&nbsp;·&nbsp;&nbsp;"  # equivalent to "  ·  " (use for spacing)
 
         if add_description and self.gh_api.description:
-            details["Project Description"] = self.gh_api.description.strip()
+            details["Description"] = self.gh_api.description.strip()
 
         if self.authors:
             details["Authors"] = dotty.join(_get_author_string(a) for a in self.authors)
