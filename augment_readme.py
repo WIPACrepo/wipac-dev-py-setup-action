@@ -153,14 +153,18 @@ class HeaderAugmenter:
                 parts.append(f"<a href='mailto:{entry['email']}'>{entry['email']}</a>")
             return " / ".join(parts)
 
+        dotty = "&nbsp;&nbsp;·&nbsp;&nbsp;"  # equivalent to "  ·  " (use for spacing)
+
         if self.authors:
-            details["Authors"] = " · ".join(_get_author_string(a) for a in self.authors)
+            details["Authors"] = dotty.join(_get_author_string(a) for a in self.authors)
 
         if self.keywords:
-            details["Keywords"] = " · ".join(self.keywords)
+            details["Keywords"] = dotty.join(self.keywords)
 
         if self.urls:
-            details["URLs"] = " · ".join(f"[{k}]({v})" for k, v in self.urls.items())
+            details["URLs"] = dotty.join(
+                f"<a href='{v}'>{k}</a>" for k, v in self.urls.items()
+            )
 
         # render in html
         if not details:
