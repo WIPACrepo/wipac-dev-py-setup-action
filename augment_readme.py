@@ -123,13 +123,13 @@ class HeaderAugmenter:
         details = []
         if self.keywords:
             details.append(
-                f"<sub>KEYWORDS: &nbsp; {'&nbsp; · &nbsp;'.join(self.keywords)}</sub>\n"
+                f"<sub>KEYWORDS: &nbsp; {'&nbsp; · &nbsp;'.join(self.keywords)}</sub><br>"
             )
         if self.license:
-            details.append(f"<sub>LICENSE: &nbsp; {self.license}</sub>\n")
+            details.append(f"<sub>LICENSE: &nbsp; {self.license}</sub><br>")
         if self.authors:
             details.append(
-                f"<sub>AUTHORS: &nbsp; {'&nbsp; · &nbsp;'.join(a['name'] + '/' + a['email'] for a in self.authors)}</sub>\n"
+                f"<sub>AUTHORS: &nbsp; {'&nbsp; · &nbsp;'.join(a['name'] + '/' + a['email'] for a in self.authors)}</sub><br>"
             )
 
         # assemble the header section
