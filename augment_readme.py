@@ -64,53 +64,52 @@ class HeaderAugmenter:
         self.authors = authors
         self.urls = urls
 
-    def _remove_non_automated_header(self, lines: list[str]) -> None:
-        """Assuming there's no automated header, find and remove the non-automated header."""
+    def _get_insertion_index(self, lines: list[str]) -> int:
+        """Return the index of where to insert the header section."""
 
-        # remove the non-automated header
-        try:
-            og_header_name = lines.index(f"# {self.name}\n")
-            LOGGER.info(
-                f"Removing non-automated header: {lines[og_header_name].strip()}"
-            )
-            del lines[og_header_name]
-        except ValueError:
-            return
-
-        # remove the non-automated description
-        try:
-            og_header_description = lines.index(f"{self.gh_api.description.strip()}\n")
-            # -- assume this is a match only if it's near the 'name'
-            if og_header_description - og_header_name < 3:
+        # plan A: find the first header line, and insert right after it (more or less)
+        for i, ln in enumerate(lines):
+            # find the first header line
+            if ln.startswith("#"):
+                index = i + 1
                 LOGGER.info(
-                    f"Removing non-automated description: {lines[og_header_description].strip()}"
+                    f"No (automated) header found, inserting after the first header {index=}"
                 )
-                del lines[og_header_description]
-        except ValueError:
-            return
+                # now, we need to find the insertion point
+                # -- skip blank lines and skip comments
+                while lines[index].strip() == "" or lines[index].startswith("<!"):
+                    index += 1
+                # if this line is the known description, remove it (we'll replace it later)
+                if lines[index] == self.gh_api.description.strip() + "\n":
+                    del lines[index]
+                # otherwise, if this line is not a header, then its the user's description -- keep it
+                elif not lines[index].startswith("#"):
+                    index += 1  # pick the following line as the insertion point
+                # all done
+                return index
 
-    def _get_index_after_badges(self, lines: list[str]) -> int:
-        """Return the index of the first line after the badges, else 0."""
+        # plan B: if we didn't find a header, insert right after badges
         try:
             index = lines.index(BadgesAugmenter.END_DELIMITER + "\n") + 1
             LOGGER.info(
-                f"No (automated) header found, placing it right after badges {index=}"
+                f"No (automated) header found, inserting right after badges {index=}"
             )
+            return index
         except ValueError:
-            index = 0
-            LOGGER.info("No (automated) header found, appending to top of README.md")
+            pass
 
-        return index
+        # plan C: insert at top of the file
+        LOGGER.info("No (automated) header found, inserting at top of README.md")
+        return 0
 
     def write(self, readme_path: Path) -> None:
         """Write the header."""
 
-        # read and strip out existing badges
+        # read and strip out existing auto header
         with open(readme_path) as f:
             lines = f.readlines()
-            if self.START_DELIMITER + "\n" not in lines:
-                self._remove_non_automated_header(lines)
-                index = self._get_index_after_badges(lines)
+            if self.START_DELIMITER + "\n" not in lines:  # aka no automated header
+                index = self._get_insertion_index(lines)
                 before, after = lines[:index], lines[index:]
             else:
                 LOGGER.info("Header found, replacing it with a new one")
@@ -125,10 +124,6 @@ class HeaderAugmenter:
             self.START_DELIMITER,
             "\n\n",
             "<!--- note: this information is pulled from the pyproject.toml --->",
-            "\n\n",
-            f"# {self.name}",
-            "\n\n",
-            f"**{self.gh_api.description.strip()}**",
             "\n\n",
             self._details_listings(),
             "\n<br>\n",  # extra line break
@@ -154,6 +149,9 @@ class HeaderAugmenter:
             return " / ".join(parts)
 
         dotty = "&nbsp;&nbsp;·&nbsp;&nbsp;"  # equivalent to "  ·  " (use for spacing)
+
+        if self.gh_api.description:
+            details["Description"] = self.gh_api.description.strip()
 
         if self.authors:
             details["Authors"] = dotty.join(_get_author_string(a) for a in self.authors)
