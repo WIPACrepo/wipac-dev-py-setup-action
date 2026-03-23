@@ -124,14 +124,14 @@ class HeaderAugmenter:
         if self.keywords:
             details.extend(
                 [
-                    "    <dt><sub><strong>KEYWORDS</strong></sub></dt>\n",
+                    "    <dt><sub>KEYWORDS</sub></dt>\n",
                     f"    <dd><sub>{' · '.join(self.keywords)}</sub></dd>\n",
                 ]
             )
         if self.license:
             details.extend(
                 [
-                    "    <dt><sub><strong>LICENSE</strong></sub></dt>\n",
+                    "    <dt><sub>LICENSE</sub></dt>\n",
                     f"    <dd><sub>{self.license}</sub></dd>\n",
                 ]
             )
@@ -147,7 +147,7 @@ class HeaderAugmenter:
         if self.authors:
             details.extend(
                 [
-                    "    <dt><sub><strong>AUTHORS</strong></sub></dt>\n",
+                    "    <dt><sub>AUTHORS</sub></dt>\n",
                     "    <dd><sub>"
                     + " · ".join(_get_author_string(a) for a in self.authors)
                     + "</sub></dd>\n",
@@ -165,7 +165,7 @@ class HeaderAugmenter:
             (  # add if not empty
                 "<dl>\n" + "".join(details) + "</dl>\n" if details else ""
             ),
-            "\n<br><br>\n",  # extra line break
+            "\n<br>\n",  # extra line break
             self.END_DELIMITER,
             "\n",  # only one newline here, otherwise we get an infinite commit-loop
         ]
