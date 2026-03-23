@@ -54,10 +54,14 @@ class HeaderAugmenter:
         gh_api: GitHubAPI,
         name: str,
         keywords: list[str],
+        license: str,
+        authors: list[dict[str, str]],
     ) -> None:
         self.gh_api = gh_api
         self.name = name
         self.keywords = keywords
+        self.license = license
+        self.authors = authors
 
     def _remove_non_automated_header(self, lines: list[str]) -> None:
         """Assuming there's no automated header, find and remove the non-automated header."""
@@ -115,14 +119,27 @@ class HeaderAugmenter:
                     self.END_DELIMITER,
                 )
 
+        # create a list of details to add to the header section
+        details = []
+        if self.keywords:
+            details.append(
+                f"<sub>KEYWORDS: &nbsp; {'&nbsp; · &nbsp;'.join(self.keywords)}</sub>\n"
+            )
+        if self.license:
+            details.append(f"<sub>LICENSE: &nbsp; {self.license}</sub>\n")
+        if self.authors:
+            details.append(
+                f"<sub>AUTHORS: &nbsp; {'&nbsp; · &nbsp;'.join(a['author'] + '/' + a['email'] for a in self.authors)}</sub>\n"
+            )
+
+        # assemble the header section
         section = [
             self.START_DELIMITER,
             "\n\n",
             f"# {self.name}",
             "\n\n",
             f"**{self.gh_api.description.strip()}**",
-            "\n\n",
-            f"<sub>KEYWORDS: &nbsp; {'&nbsp; · &nbsp;'.join(self.keywords)}</sub>",
+            {"\n\n" + "".join(details) if details else ""},  # add if not empty
             "\n<br><br>\n",  # extra line break
             self.END_DELIMITER,
             "\n",  # only one newline here, otherwise we get an infinite commit-loop
@@ -292,6 +309,8 @@ def main() -> None:
         gh_api,
         pyproject_toml_dict["project"]["name"],
         pyproject_toml_dict["project"]["keywords"],
+        pyproject_toml_dict["project"]["license"],
+        pyproject_toml_dict["project"]["authors"],
     )
     ha.write(args.readme)
 
