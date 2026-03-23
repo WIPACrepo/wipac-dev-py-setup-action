@@ -139,7 +139,7 @@ class HeaderAugmenter:
             f"# {self.name}",
             "\n\n",
             f"**{self.gh_api.description.strip()}**",
-            {"\n\n" + "".join(details) if details else ""},  # add if not empty
+            "\n\n" + "".join(details) if details else "",  # add if not empty
             "\n<br><br>\n",  # extra line break
             self.END_DELIMITER,
             "\n",  # only one newline here, otherwise we get an infinite commit-loop
