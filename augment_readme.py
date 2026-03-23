@@ -122,14 +122,36 @@ class HeaderAugmenter:
         # create a list of details to add to the header section
         details = []
         if self.keywords:
-            details.append(
-                f"<sub>KEYWORDS: &nbsp; {'&nbsp; · &nbsp;'.join(self.keywords)}</sub><br>"
+            details.extend(
+                [
+                    "    <dt><sub><strong>KEYWORDS</strong></sub></dt>\n",
+                    f"    <dd><sub>{' · '.join(self.keywords)}</sub></dd>\n",
+                ]
             )
         if self.license:
-            details.append(f"<sub>LICENSE: &nbsp; {self.license}</sub><br>")
+            details.extend(
+                [
+                    "    <dt><sub><strong>LICENSE</strong></sub></dt>\n",
+                    f"    <dd><sub>{self.license}</sub></dd>\n",
+                ]
+            )
+
+        def _get_author_string(entry: dict[str, str]) -> str:
+            string = []
+            if "name" in entry:
+                string += entry["name"]
+            if "email" in entry:
+                string += f"<a href='mailto:{entry['email']}'>{entry['email']}</a>"
+            return " / ".join(string)
+
         if self.authors:
-            details.append(
-                f"<sub>AUTHORS: &nbsp; {'&nbsp; · &nbsp;'.join(a['name'] + '/' + a['email'] for a in self.authors)}</sub><br>"
+            details.extend(
+                [
+                    "    <dt><sub><strong>AUTHORS</strong></sub></dt>\n",
+                    "    <dd><sub>"
+                    + " · ".join(_get_author_string(a) for a in self.authors)
+                    + "</sub></dd>\n",
+                ]
             )
 
         # assemble the header section
@@ -139,7 +161,10 @@ class HeaderAugmenter:
             f"# {self.name}",
             "\n\n",
             f"**{self.gh_api.description.strip()}**",
-            "\n\n" + "".join(details) if details else "",  # add if not empty
+            "\n\n",
+            (  # add if not empty
+                "<dl>\n" + "".join(details) + "</dl>\n" if details else ""
+            ),
             "\n<br><br>\n",  # extra line break
             self.END_DELIMITER,
             "\n",  # only one newline here, otherwise we get an infinite commit-loop
