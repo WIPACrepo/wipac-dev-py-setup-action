@@ -64,8 +64,6 @@ class MetadataSectionAugmenter:
         self.authors = authors
         self.urls = urls
 
-        self.add_description = True
-
     def _get_insertion_index(self, lines: list[str]) -> int:
         """Return the index of where to insert the metadata section."""
 
@@ -83,8 +81,6 @@ class MetadataSectionAugmenter:
                     index += 1
                 # if this line is not a header, then its the user's description -- keep it
                 if not lines[index].startswith("#"):
-                    if lines[index] == self.gh_api.description.strip() + "\n":
-                        self.add_description = False
                     index += 1  # pick the following line as the insertion point
                 # all done
                 return index
@@ -122,13 +118,19 @@ class MetadataSectionAugmenter:
                     self.END_DELIMITER,
                 )
 
+        # if the description is already in the README, don't add it again
+        if self.gh_api.description.strip() + "\n" in before:
+            add_description = False
+        else:
+            add_description = True
+
         # assemble the metadata section
         section = [
             self.START_DELIMITER,
             "\n\n",
             "<!--- note: this information is pulled from the pyproject.toml --->",
             "\n\n",
-            self._details_listings(),
+            self._listings(add_description),
             "\n<br>\n",  # extra line break
             self.END_DELIMITER,
             "\n",  # only one newline here, otherwise we get an infinite commit-loop
@@ -139,8 +141,8 @@ class MetadataSectionAugmenter:
             for line in before + section + after:
                 f.write(line)
 
-    def _details_listings(self) -> str:
-        """Create a mapping of details to add to the metadata section."""
+    def _listings(self, add_description: bool) -> str:
+        """Create a html-listing of details to add to the metadata section."""
         details: OrderedDict[str, str] = OrderedDict()
 
         def _get_author_string(entry: dict[str, str]) -> str:
@@ -153,7 +155,7 @@ class MetadataSectionAugmenter:
 
         dotty = "&nbsp;&nbsp;·&nbsp;&nbsp;"  # equivalent to "  ·  " (use for spacing)
 
-        if self.add_description and self.gh_api.description:
+        if add_description and self.gh_api.description:
             details["Project Description"] = self.gh_api.description.strip()
 
         if self.authors:
