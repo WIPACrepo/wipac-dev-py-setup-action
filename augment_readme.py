@@ -83,9 +83,9 @@ class MetadataSectionAugmenter:
                     index += 1
                 # if this line is not a header, then its the user's description -- keep it
                 if not lines[index].startswith("#"):
-                    index += 1  # pick the following line as the insertion point
                     if lines[index] == self.gh_api.description.strip() + "\n":
                         self.add_description = False
+                    index += 1  # pick the following line as the insertion point
                 # all done
                 return index
 
