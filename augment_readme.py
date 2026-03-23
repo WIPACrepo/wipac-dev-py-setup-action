@@ -129,7 +129,7 @@ class HeaderAugmenter:
             details.append(f"<sub>LICENSE: &nbsp; {self.license}</sub>\n")
         if self.authors:
             details.append(
-                f"<sub>AUTHORS: &nbsp; {'&nbsp; · &nbsp;'.join(a['author'] + '/' + a['email'] for a in self.authors)}</sub>\n"
+                f"<sub>AUTHORS: &nbsp; {'&nbsp; · &nbsp;'.join(a['name'] + '/' + a['email'] for a in self.authors)}</sub>\n"
             )
 
         # assemble the header section
