@@ -44,11 +44,11 @@ def remove_section(
     return before, after
 
 
-class HeaderAugmenter:
-    """Automation to add/maintain a header in README.md."""
+class MetadataSectionAugmenter:
+    """Automation to add/maintain a metadata section in README.md."""
 
-    START_DELIMITER = "<!--- Top of README Header (automated) --->"
-    END_DELIMITER = "<!--- End of README Header (automated) --->"
+    START_DELIMITER = "<!--- Top of README Metadata Section (automated) --->"
+    END_DELIMITER = "<!--- End of README Metadata Section (automated) --->"
 
     def __init__(
         self,
@@ -65,7 +65,7 @@ class HeaderAugmenter:
         self.urls = urls
 
     def _get_insertion_index(self, lines: list[str]) -> int:
-        """Return the index of where to insert the header section."""
+        """Return the index of where to insert the metadata section."""
 
         # plan A: find the first header line, and insert right after it (more or less)
         for i, ln in enumerate(lines):
@@ -73,7 +73,7 @@ class HeaderAugmenter:
             if ln.startswith("#"):
                 index = i + 1
                 LOGGER.info(
-                    f"No (automated) header found, inserting after the first header {index=}"
+                    f"No automated metadata section found, inserting after the first header {index=}"
                 )
                 # now, we need to find the insertion point
                 # -- skip blank lines and skip comments
@@ -92,34 +92,36 @@ class HeaderAugmenter:
         try:
             index = lines.index(BadgesAugmenter.END_DELIMITER + "\n") + 1
             LOGGER.info(
-                f"No (automated) header found, inserting right after badges {index=}"
+                f"No automated metadata section found, inserting right after badges {index=}"
             )
             return index
         except ValueError:
             pass
 
         # plan C: insert at top of the file
-        LOGGER.info("No (automated) header found, inserting at top of README.md")
+        LOGGER.info(
+            "No automated metadata section found, inserting at top of README.md"
+        )
         return 0
 
     def write(self, readme_path: Path) -> None:
-        """Write the header."""
+        """Write the metadata section."""
 
-        # read and strip out existing auto header
+        # read and strip out existing auto metadata section
         with open(readme_path) as f:
             lines = f.readlines()
-            if self.START_DELIMITER + "\n" not in lines:  # aka no automated header
+            if self.START_DELIMITER + "\n" not in lines:  # aka no metadata section
                 index = self._get_insertion_index(lines)
                 before, after = lines[:index], lines[index:]
             else:
-                LOGGER.info("Header found, replacing it with a new one")
+                LOGGER.info("Metadata section found, replacing it with a new one")
                 before, after = remove_section(
                     lines,
                     self.START_DELIMITER,
                     self.END_DELIMITER,
                 )
 
-        # assemble the header section
+        # assemble the metadata section
         section = [
             self.START_DELIMITER,
             "\n\n",
@@ -137,7 +139,7 @@ class HeaderAugmenter:
                 f.write(line)
 
     def _details_listings(self) -> str:
-        """Create a mapping of details to add to the header section."""
+        """Create a mapping of details to add to the metadata section."""
         details: OrderedDict[str, str] = OrderedDict()
 
         def _get_author_string(entry: dict[str, str]) -> str:
@@ -329,7 +331,7 @@ def main() -> None:
 
     gh_api = GitHubAPI(args.gh_full_repo, args.gh_token)
 
-    ha = HeaderAugmenter(
+    ha = MetadataSectionAugmenter(
         gh_api,
         pyproject_toml_dict["project"]["name"],
         pyproject_toml_dict["project"]["keywords"],
