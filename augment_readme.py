@@ -3,6 +3,7 @@
 import argparse
 import logging
 import re
+from collections import OrderedDict
 from pathlib import Path
 from typing import Literal
 
@@ -117,11 +118,30 @@ class HeaderAugmenter:
                     self.END_DELIMITER,
                 )
 
-        # create a mapping of details to add to the header section
-        details: dict[str, str] = {}
+        # assemble the header section
+        section = [
+            self.START_DELIMITER,
+            "\n\n",
+            "<!--- note: this information is pulled from the pyproject.toml --->",
+            "\n\n",
+            f"# {self.name}",
+            "\n\n",
+            f"**{self.gh_api.description.strip()}**",
+            "\n\n",
+            self._details_listings(),
+            "\n<br>\n",  # extra line break
+            self.END_DELIMITER,
+            "\n",  # only one newline here, otherwise we get an infinite commit-loop
+        ]
 
-        if self.keywords:
-            details["Keywords"] = " · ".join(self.keywords)
+        # write
+        with open(readme_path, "w") as f:
+            for line in before + section + after:
+                f.write(line)
+
+    def _details_listings(self) -> str:
+        """Create a mapping of details to add to the header section."""
+        details: OrderedDict[str, str] = OrderedDict()
 
         def _get_author_string(entry: dict[str, str]) -> str:
             parts: list[str] = []
@@ -134,37 +154,18 @@ class HeaderAugmenter:
         if self.authors:
             details["Authors"] = " · ".join(_get_author_string(a) for a in self.authors)
 
-        def _render_details_html(dicto: dict[str, str]) -> str:
-            if not dicto:
-                return ""
+        if self.keywords:
+            details["Keywords"] = " · ".join(self.keywords)
+
+        # render in html
+        if not details:
+            return ""
+        else:
             rows = []
-            for k, v in dicto.items():
+            for k, v in details.items():
                 rows.append(f"    <dt><sub>{k}</sub></dt>\n")
                 rows.append(f"    <dd><sub>{v}</sub></dd>\n")
             return "<dl>\n" + "".join(rows) + "</dl>\n"
-
-        details_html = _render_details_html(details)
-
-        # assemble the header section
-        section = [
-            self.START_DELIMITER,
-            "\n\n",
-            "<!--- note: this information is pulled from the pyproject.toml --->",
-            "\n\n",
-            f"# {self.name}",
-            "\n\n",
-            f"**{self.gh_api.description.strip()}**",
-            "\n\n",
-            details_html,
-            "\n<br>\n",  # extra line break
-            self.END_DELIMITER,
-            "\n",  # only one newline here, otherwise we get an infinite commit-loop
-        ]
-
-        # write
-        with open(readme_path, "w") as f:
-            for line in before + section + after:
-                f.write(line)
 
 
 class BadgesAugmenter:
