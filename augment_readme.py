@@ -204,7 +204,8 @@ class BadgesAugmenter:
             lines = f.readlines()
             if self.START_DELIMITER + "\n" not in lines:
                 LOGGER.info("No badges found, appending to top of README.md")
-                before, after = [], lines
+                before: list[str] = []
+                after: list[str] = lines
             else:
                 LOGGER.info("Badges found, replacing them with new ones")
                 before, after = remove_section(
