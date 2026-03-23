@@ -137,12 +137,12 @@ class HeaderAugmenter:
             )
 
         def _get_author_string(entry: dict[str, str]) -> str:
-            string = []
+            parts: list[str] = []
             if "name" in entry:
-                string += entry["name"]
+                parts.append(entry["name"])
             if "email" in entry:
-                string += f"<a href='mailto:{entry['email']}'>{entry['email']}</a>"
-            return " / ".join(string)
+                parts.append(f"<a href='mailto:{entry['email']}'>{entry['email']}</a>")
+            return " / ".join(parts)
 
         if self.authors:
             details.extend(
