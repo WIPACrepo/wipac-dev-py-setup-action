@@ -68,54 +68,26 @@ class HeaderAugmenter:
         """Assuming there's no automated header, find and remove the non-automated header."""
 
         # remove the non-automated header
-        og_header_name_idx = -1
-        for possible in [
-            f"# {self.name}\n",  # ex: "# wipac-rest-tools\n"
-            f"# {self.gh_api.full_repo.split('/')[-1]}\n",  # ex: "# rest-tools\n"
-        ]:
-            try:
-                og_header_name_idx = lines.index(possible)
-                LOGGER.info(
-                    f"Removing non-automated header: {lines[og_header_name_idx].strip()}"
-                )
-                del lines[og_header_name_idx]
-            except ValueError:
-                continue
-        if og_header_name_idx == -1:
-            return  # IOW: no non-automated header found
+        try:
+            og_header_name = lines.index(f"# {self.name}\n")
+            LOGGER.info(
+                f"Removing non-automated header: {lines[og_header_name].strip()}"
+            )
+            del lines[og_header_name]
+        except ValueError:
+            return
 
         # remove the non-automated description
-        og_header_description_idx = -1
         try:
-            og_header_description_idx = lines.index(
-                f"{self.gh_api.description.strip()}\n"
-            )
+            og_header_description = lines.index(f"{self.gh_api.description.strip()}\n")
             # -- assume this is a match only if it's near the 'name'
-            if og_header_description_idx - og_header_name_idx < 3:
+            if og_header_description - og_header_name < 3:
                 LOGGER.info(
-                    f"Removing non-automated description: {lines[og_header_description_idx].strip()}"
+                    f"Removing non-automated description: {lines[og_header_description].strip()}"
                 )
-                del lines[og_header_description_idx]
+                del lines[og_header_description]
         except ValueError:
-            pass
-
-        # insert header line before non-automated section -- if it exists
-        start = max(og_header_name_idx, og_header_description_idx)
-        for i, line in enumerate(lines):
-            if i < start:
-                continue
-            elif not line.strip():  # aka all whitespace
-                continue
-            elif line.startswith("<!"):  # comment
-                continue
-            elif line.startswith("#"):
-                break  # found a header line, so we're done -- nothing to insert
-            else:
-                LOGGER.info(
-                    f"Inserting header line before non-automated section: {line.strip()}"
-                )
-                lines.insert(i, "## Overview\n")
-                break
+            return
 
     def _get_index_after_badges(self, lines: list[str]) -> int:
         """Return the index of the first line after the badges, else 0."""
