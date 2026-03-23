@@ -54,13 +54,11 @@ class HeaderAugmenter:
         gh_api: GitHubAPI,
         name: str,
         keywords: list[str],
-        license: str,
         authors: list[dict[str, str]],
     ) -> None:
         self.gh_api = gh_api
         self.name = name
         self.keywords = keywords
-        self.license = license
         self.authors = authors
 
     def _remove_non_automated_header(self, lines: list[str]) -> None:
@@ -125,9 +123,6 @@ class HeaderAugmenter:
         if self.keywords:
             details["Keywords"] = " · ".join(self.keywords)
 
-        if self.license:
-            details["License"] = self.license
-
         def _get_author_string(entry: dict[str, str]) -> str:
             parts: list[str] = []
             if "name" in entry:
@@ -153,6 +148,8 @@ class HeaderAugmenter:
         # assemble the header section
         section = [
             self.START_DELIMITER,
+            "\n\n",
+            "<!--- note: this information is pulled from the pyproject.toml --->",
             "\n\n",
             f"# {self.name}",
             "\n\n",
@@ -328,7 +325,6 @@ def main() -> None:
         gh_api,
         pyproject_toml_dict["project"]["name"],
         pyproject_toml_dict["project"]["keywords"],
-        pyproject_toml_dict["project"]["license"],
         pyproject_toml_dict["project"]["authors"],
     )
     ha.write(args.readme)
