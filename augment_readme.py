@@ -123,10 +123,10 @@ class HeaderAugmenter:
         details: dict[str, str] = {}
 
         if self.keywords:
-            details["KEYWORDS"] = " · ".join(self.keywords)
+            details["Keywords"] = " · ".join(self.keywords)
 
         if self.license:
-            details["LICENSE"] = self.license
+            details["License"] = self.license
 
         def _get_author_string(entry: dict[str, str]) -> str:
             parts: list[str] = []
@@ -137,7 +137,7 @@ class HeaderAugmenter:
             return " / ".join(parts)
 
         if self.authors:
-            details["AUTHORS"] = " · ".join(_get_author_string(a) for a in self.authors)
+            details["Authors"] = " · ".join(_get_author_string(a) for a in self.authors)
 
         def _render_details_html(dicto: dict[str, str]) -> str:
             if not dicto:
