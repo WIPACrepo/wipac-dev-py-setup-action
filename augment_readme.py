@@ -64,6 +64,8 @@ class MetadataSectionAugmenter:
         self.authors = authors
         self.urls = urls
 
+        self.add_description = True
+
     def _get_insertion_index(self, lines: list[str]) -> int:
         """Return the index of where to insert the metadata section."""
 
@@ -79,12 +81,11 @@ class MetadataSectionAugmenter:
                 # -- skip blank lines and skip comments
                 while lines[index].strip() == "" or lines[index].startswith("<!"):
                     index += 1
-                # if this line is the known description, remove it (we'll replace it later)
-                if lines[index] == self.gh_api.description.strip() + "\n":
-                    del lines[index]
-                # otherwise, if this line is not a header, then its the user's description -- keep it
-                elif not lines[index].startswith("#"):
+                # if this line is not a header, then its the user's description -- keep it
+                if not lines[index].startswith("#"):
                     index += 1  # pick the following line as the insertion point
+                    if lines[index] == self.gh_api.description.strip() + "\n":
+                        self.add_description = False
                 # all done
                 return index
 
@@ -152,8 +153,8 @@ class MetadataSectionAugmenter:
 
         dotty = "&nbsp;&nbsp;·&nbsp;&nbsp;"  # equivalent to "  ·  " (use for spacing)
 
-        if self.gh_api.description:
-            details["Description"] = self.gh_api.description.strip()
+        if self.add_description and self.gh_api.description:
+            details["Project Description"] = self.gh_api.description.strip()
 
         if self.authors:
             details["Authors"] = dotty.join(_get_author_string(a) for a in self.authors)
