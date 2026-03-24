@@ -53,16 +53,14 @@ class MetadataSectionAugmenter:
     def __init__(
         self,
         gh_api: GitHubAPI,
-        name: str,
-        keywords: list[str],
-        authors: list[dict[str, str]],
-        urls: dict[str, str],
+        keywords: list[str] | None,
+        authors: list[dict[str, str]] | None,
+        urls: dict[str, str] | None,
     ) -> None:
         self.gh_api = gh_api
-        self.name = name
-        self.keywords = keywords
-        self.authors = authors
-        self.urls = urls
+        self.keywords = keywords or []
+        self.authors = authors or []
+        self.urls = urls or {}
 
     def _get_insertion_index(self, lines: list[str]) -> int:
         """Return the index of where to insert the metadata section."""
@@ -190,11 +188,13 @@ class BadgesAugmenter:
         self,
         gh_api: GitHubAPI,
         name: str,
-        homepage: str,
+        homepage: str | None,
     ) -> None:
         self.gh_api = gh_api
         self.name = name
-        self.pypi_url = homepage if "pypi.org" in homepage else ""
+
+        _homepage = homepage or ""
+        self.pypi_url = _homepage if "pypi.org" in _homepage else ""
 
     def write(self, readme_path: Path) -> None:
         """Write the badges."""
@@ -335,19 +335,20 @@ def main() -> None:
 
     gh_api = GitHubAPI(args.gh_full_repo, args.gh_token)
 
+    project = pyproject_toml_dict.get("project", {})  # should always exist
+
     ha = MetadataSectionAugmenter(
         gh_api,
-        pyproject_toml_dict["project"]["name"],
-        pyproject_toml_dict["project"]["keywords"],
-        pyproject_toml_dict["project"]["authors"],
-        pyproject_toml_dict["project"]["urls"],
+        project.get("keywords"),
+        project.get("authors"),
+        project.get("urls"),
     )
     ha.write(args.readme)
 
     ba = BadgesAugmenter(
         gh_api,
-        pyproject_toml_dict["project"]["name"],
-        pyproject_toml_dict["project"]["urls"]["Homepage"],
+        project.get("name", args.gh_full_repo.rsplit("/", maxsplit=1)[-1]),
+        project.get("urls", {}).get("Homepage"),
     )
     ba.write(args.readme)
 
