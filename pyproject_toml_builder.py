@@ -619,7 +619,8 @@ class PyProjectTomlBuilder:
             PyProjectTomlBuilder._inline_dont_change_this_comment(toml_project[u])
 
         # [project.urls]
-        toml_project["urls"] = {
+        existing_urls = dict(toml_project.get("urls", {}))
+        url_overrides = {
             "Homepage": (
                 f"https://pypi.org/project/{cl_args.pypi_name}/"
                 if cl_args.mode == "PACKAGING_AND_PYPI"
@@ -628,7 +629,12 @@ class PyProjectTomlBuilder:
             "Tracker": f"{gh_api.url}/issues",
             "Source": gh_api.url,
         }
-        PyProjectTomlBuilder._inline_dont_change_this_comment(toml_project["urls"])
+        existing_urls.update(url_overrides)
+        toml_project["urls"] = existing_urls
+        for k in url_overrides:
+            PyProjectTomlBuilder._inline_dont_change_this_comment(
+                toml_project["urls"][k]
+            )
 
     @staticmethod
     def build_mypy_optional_deps(toml_proj_optdeps: TOMLDocumentTypeHint) -> None:
