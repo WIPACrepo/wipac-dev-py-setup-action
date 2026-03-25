@@ -635,6 +635,8 @@ class PyProjectTomlBuilder:
             PyProjectTomlBuilder._inline_dont_change_this_comment(
                 toml_project["urls"][k]
             )
+        if toml_project["urls"].trivia.comment == INLINE_DONT_CHANGE_COMMENT:
+            toml_project["urls"].trivia.comment = ""  # clear old comment
 
     @staticmethod
     def build_mypy_optional_deps(toml_proj_optdeps: TOMLDocumentTypeHint) -> None:
