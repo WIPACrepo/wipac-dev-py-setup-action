@@ -347,7 +347,7 @@ def test_001_minimum_input_eol(directory: Path, requests_mock: Any) -> None:
         auto_mypy_option=False,
         mode="PACKAGING",
         python_min=(3, 10),
-        python_max=(3, 12),
+        python_max=(3, 10),
         do_eol_check=False,
         license_spdx_id="MIT",
         license_file="MY_LICENSE",
@@ -365,7 +365,6 @@ def test_001_minimum_input_eol(directory: Path, requests_mock: Any) -> None:
             "requires-python": ">=3.10, <3.11",  # override VANILLA_PROJECT_KEYVALS
             "classifiers": [
                 "Programming Language :: Python :: 3.10",
-                "Programming Language :: Python :: 3.11",
             ],
             **NON_PYPI_URLS_KEYVALS,
         },
