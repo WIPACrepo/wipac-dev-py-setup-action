@@ -332,14 +332,14 @@ def test_001_minimum_input_eol(directory: Path, requests_mock: Any) -> None:
     """Test using bare minimum input."""
     mock_many_requests(requests_mock)
 
-    requests_mock.get(
-        'https://endoflife.date/api/v1/products/python/',
-        json={'result': {'releases': [
-            {"name": "3.10", "eolFrom": "2010-01-01"},
-            {"name": "3.11", "eolFrom": "2011-01-01"},
-            {"name": "3.12", "eolFrom": "2012-01-01"}
-        ]}},
-    )
+    # requests_mock.get(
+    #     'https://endoflife.date/api/v1/products/python/',
+    #     json={'result': {'releases': [
+    #         {"name": "3.10", "eolFrom": "2010-01-01"},
+    #         {"name": "3.11", "eolFrom": "2011-01-01"},
+    #         {"name": "3.12", "eolFrom": "2012-01-01"}
+    #     ]}},
+    # )
 
     pyproject_toml_path = directory / "pyproject.toml"
 
@@ -348,7 +348,7 @@ def test_001_minimum_input_eol(directory: Path, requests_mock: Any) -> None:
         mode="PACKAGING",
         python_min=(3, 10),
         python_max=(3, 10),
-        do_eol_check=False,
+        skip_eol_check=False,
         license_spdx_id="MIT",
         license_file="MY_LICENSE",
     )
