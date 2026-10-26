@@ -324,7 +324,7 @@ def test_000_minimum_input(directory: Path, requests_mock: Any) -> None:
 
     # assert outputted pyproject.toml
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
-    
+
 
 @patch("subprocess.run", patch_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: True)
@@ -334,7 +334,11 @@ def test_001_minimum_input_eol(directory: Path, requests_mock: Any) -> None:
 
     requests_mock.get(
         'https://endoflife.date/api/v1/products/python/',
-        json={'result': {'releases': [{"name": "3.10", "eolFrom": "2010-01-01"}]}},
+        json={'result': {'releases': [
+            {"name": "3.10", "eolFrom": "2010-01-01"},
+            {"name": "3.11", "eolFrom": "2011-01-01"},
+            {"name": "3.12", "eolFrom": "2012-01-01"}
+        ]}},
     )
 
     pyproject_toml_path = directory / "pyproject.toml"
@@ -343,6 +347,7 @@ def test_001_minimum_input_eol(directory: Path, requests_mock: Any) -> None:
         auto_mypy_option=False,
         mode="PACKAGING",
         python_min=(3, 10),
+        python_max=(3, 12),
         do_eol_check=False,
         license_spdx_id="MIT",
         license_file="MY_LICENSE",
