@@ -202,11 +202,11 @@ class PythonVersioning:
 
         # validate python min
         _maj_validate(python_min[0], "python_min")
-        if skip_eol_check:
+        if not skip_eol_check:
             self._eol_check(python_min, "python_min")
         # validate python max
         _maj_validate(python_max[0], "python_max")
-        if skip_eol_check:
+        if not skip_eol_check:
             self._eol_check(python_max, "python_max")
 
         self.python_min = python_min
