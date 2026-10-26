@@ -324,6 +324,54 @@ def test_000_minimum_input(directory: Path, requests_mock: Any) -> None:
 
     # assert outputted pyproject.toml
     assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
+    
+
+@patch("subprocess.run", patch_subprocess_calls)
+@patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: True)
+def test_001_minimum_input_eol(directory: Path, requests_mock: Any) -> None:
+    """Test using bare minimum input."""
+    mock_many_requests(requests_mock)
+
+    pyproject_toml_path = directory / "pyproject.toml"
+
+    cl_args = pyproject_toml_builder.CLArgs(
+        auto_mypy_option=False,
+        mode="PACKAGING",
+        python_min=(3, 10),
+        do_eol_check=False,
+        license_spdx_id="MIT",
+        license_file="MY_LICENSE",
+    )
+
+    # write the original pyproject.toml
+    with open(pyproject_toml_path, "w") as f:
+        tomlkit.dump(VANILLA_SECTIONS_IN, f)
+
+    pyproject_toml_expected = {
+        **BUILD_SYSTEM_SECTION,
+        "project": {
+            "name": "mock-package",
+            **NO_PYPI_VANILLA_PROJECT_KEYVALS_OUT,
+            **NON_PYPI_URLS_KEYVALS,
+        },
+        "tool": {
+            "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
+            "setuptools": {
+                "package-data": {"*": ["py.typed"]},
+                "packages": ["mock_package"],
+            },
+        },
+    }
+
+    # run pyproject_toml_builder
+    pyproject_toml_builder.write_toml(
+        pyproject_toml_path,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
+        cl_args,
+    )
+
+    # assert outputted pyproject.toml
+    assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
 
 
 @patch("subprocess.run", patch_subprocess_calls)

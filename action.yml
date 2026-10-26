@@ -17,6 +17,10 @@ inputs:
     description: 'Maximum supported Python version. If not provided, the most recent Python version will be used.'
     required: false
     default: ''
+  eol_check:
+    description: 'Check Python versions are not End of Life'
+    required: false
+    default: 'True'
   # OPTIONAL (packaging)
   package_dirs:
     description: "Space-separated list of directories to release. If not provided, all packages in the repository's root directory will be used."
@@ -292,6 +296,7 @@ runs:
           --mode ${{ inputs.mode }} \
           --python-min "${{ inputs.python_min }}" \
           --python-max "${{ inputs.python_max }}" \
+          --do-eol-check "${{ inputs.eol_check }}" \
           --package-dirs ${{ inputs.package_dirs }} \
           --exclude-dirs ${{ inputs.exclude_dirs }} \
           --pypi-name "${{ inputs.pypi_name }}" \
