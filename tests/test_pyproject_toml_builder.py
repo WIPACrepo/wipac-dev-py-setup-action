@@ -362,6 +362,11 @@ def test_001_minimum_input_eol(directory: Path, requests_mock: Any) -> None:
         "project": {
             "name": "mock-package",
             **NO_PYPI_VANILLA_PROJECT_KEYVALS_OUT,
+            "requires-python": ">=3.10, <3.11",  # override VANILLA_PROJECT_KEYVALS
+            "classifiers": [
+                "Programming Language :: Python :: 3.10",
+                "Programming Language :: Python :: 3.11",
+            ],
             **NON_PYPI_URLS_KEYVALS,
         },
         "tool": {
