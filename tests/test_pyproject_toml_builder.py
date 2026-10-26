@@ -332,6 +332,11 @@ def test_001_minimum_input_eol(directory: Path, requests_mock: Any) -> None:
     """Test using bare minimum input."""
     mock_many_requests(requests_mock)
 
+    requests_mock.get(
+        'https://endoflife.date/api/v1/products/python/',
+        json={'result': {'releases': [{"name": "3.10", "eolFrom": "2010-01-01"}]}},
+    )
+
     pyproject_toml_path = directory / "pyproject.toml"
 
     cl_args = pyproject_toml_builder.CLArgs(
