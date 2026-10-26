@@ -327,6 +327,68 @@ def test_000_minimum_input(directory: Path, requests_mock: Any) -> None:
 
 
 @patch("subprocess.run", patch_subprocess_calls)
+@patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: True)
+def test_001_minimum_input_eol(directory: Path, requests_mock: Any) -> None:
+    """Test using bare minimum input."""
+    mock_many_requests(requests_mock)
+
+    # requests_mock.get(
+    #     'https://endoflife.date/api/v1/products/python/',
+    #     json={'result': {'releases': [
+    #         {"name": "3.10", "eolFrom": "2010-01-01"},
+    #         {"name": "3.11", "eolFrom": "2011-01-01"},
+    #         {"name": "3.12", "eolFrom": "2012-01-01"}
+    #     ]}},
+    # )
+
+    pyproject_toml_path = directory / "pyproject.toml"
+
+    cl_args = pyproject_toml_builder.CLArgs(
+        auto_mypy_option=False,
+        mode="PACKAGING",
+        python_min=(3, 10),
+        python_max=(3, 10),
+        skip_eol_check=True,
+        license_spdx_id="MIT",
+        license_file="MY_LICENSE",
+    )
+
+    # write the original pyproject.toml
+    with open(pyproject_toml_path, "w") as f:
+        tomlkit.dump(VANILLA_SECTIONS_IN, f)
+
+    pyproject_toml_expected = {
+        **BUILD_SYSTEM_SECTION,
+        "project": {
+            "name": "mock-package",
+            **NO_PYPI_VANILLA_PROJECT_KEYVALS_OUT,
+            "requires-python": ">=3.10, <3.11",  # override VANILLA_PROJECT_KEYVALS
+            "classifiers": [
+                "Programming Language :: Python :: 3.10",
+            ],
+            **NON_PYPI_URLS_KEYVALS,
+        },
+        "tool": {
+            "setuptools_scm": {"fallback_version": "CANNOT_BUILD_WITHOUT_GIT_DIR"},
+            "setuptools": {
+                "package-data": {"*": ["py.typed"]},
+                "packages": ["mock_package"],
+            },
+        },
+    }
+
+    # run pyproject_toml_builder
+    pyproject_toml_builder.write_toml(
+        pyproject_toml_path,
+        pyproject_toml_builder.GitHubAPI(GITHUB_FULL_REPO, TOKEN),
+        cl_args,
+    )
+
+    # assert outputted pyproject.toml
+    assert_outputted_pyproject_toml(pyproject_toml_path, pyproject_toml_expected)
+
+
+@patch("subprocess.run", patch_subprocess_calls)
 @patch("pyproject_toml_builder.semver_parser_tools.is_python_eol", new=lambda _: False)
 def test_010_minimum_input_w_pypi(directory: Path, requests_mock: Any) -> None:
     """Test using the minimum input with pypi attrs."""

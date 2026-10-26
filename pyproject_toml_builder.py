@@ -130,6 +130,7 @@ class CLArgs:
 
     # OPTIONAL (python)
     python_max: tuple[int, int] | None = None
+    skip_eol_check: bool = False
 
     # OPTIONAL (packaging)
     package_dirs: list[str] = dataclasses.field(default_factory=list)
@@ -183,6 +184,7 @@ class PythonVersioning:
         self,
         python_min: tuple[int, int],
         python_max: tuple[int, int] | None,
+        skip_eol_check: bool,
         deps: list[str],
     ):
         if python_max is None:
@@ -200,10 +202,12 @@ class PythonVersioning:
 
         # validate python min
         _maj_validate(python_min[0], "python_min")
-        self._eol_check(python_min, "python_min")
+        if not skip_eol_check:
+            self._eol_check(python_min, "python_min")
         # validate python max
         _maj_validate(python_max[0], "python_max")
-        self._eol_check(python_max, "python_max")
+        if not skip_eol_check:
+            self._eol_check(python_max, "python_max")
 
         self.python_min = python_min
         self.python_max = python_max
@@ -773,6 +777,7 @@ def write_toml(
     pyver = PythonVersioning(
         cl_args.python_min,
         cl_args.python_max,
+        cl_args.skip_eol_check,
         unique_list_chain(
             # base deps
             [toml_dict.get("project", {}).get("dependencies", [])]
@@ -879,6 +884,12 @@ def main() -> None:
         type=coerce_python_version,
         default=None,
         help="Maximum supported Python version. If not provided, the most recent Python version will be used.",
+    )
+    parser.add_argument(
+        '--skip-eol-check',
+        type=strtobool,
+        default='False',
+        help="Skip Python EoL check. Defaults to False"
     )
     # OPTIONAL (packaging)
     parser.add_argument(
