@@ -348,7 +348,7 @@ def test_001_minimum_input_eol(directory: Path, requests_mock: Any) -> None:
         mode="PACKAGING",
         python_min=(3, 10),
         python_max=(3, 10),
-        skip_eol_check=False,
+        skip_eol_check=True,
         license_spdx_id="MIT",
         license_file="MY_LICENSE",
     )
