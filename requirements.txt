@@ -1,5 +1,5 @@
 wipac-dev-tools[semver]
-tomlkit
+tomlkit<0.15.3
 coloredlogs
 requests
 typing-extensions
